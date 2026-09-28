@@ -22,7 +22,7 @@
     "@hookform/resolvers": "^5.9.1",
     "next": "15.5.26",
     "pg": "^8.23.0",
-    "react": "19.1.0",
+    "react": "19.3.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.89.0",
     "server-only": "^0.0.1",
