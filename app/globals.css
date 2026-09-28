@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+/*
+ * Júris Office IA — tokens visuais da marca
+ * Azul-marinho (primária, textos de destaque) e verde-água (acento do símbolo).
+ * O verde-água puro (#13ab9f) tem contraste insuficiente para texto sobre branco;
+ * para texto e foco use --color-teal-strong.
+ */
+@theme {
+  --color-paper: #f6f8fa;
+  --color-surface: #ffffff;
+  --color-ink: #0f1d2e;
+  --color-muted: #4f5d6d;
+  --color-line: #d6dde5;
+  --color-navy: #032f5b;
+  --color-navy-strong: #021f3d;
+  --color-navy-soft: #e5ecf4;
+  --color-teal: #13ab9f;
+  --color-teal-strong: #0b7a70;
+  --color-teal-soft: #e2f5f3;
+  --color-danger: #9e2b1e;
+  --color-danger-soft: #fbedea;
+
+  /* Títulos seguem o logotipo: sans geométrica, peso forte. Sem fontes externas (build offline). */
+  --font-serif:
+    "Avenir Next", "Montserrat", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-teal-strong);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* Impressão do dossiê (A4). Cabeçalho, rodapé e botões usam `print:hidden`. */
+@media print {
+  @page {
+    size: A4;
+    margin: 16mm 14mm;
+  }
+  body {
+    background: #fff;
+    color: #000;
+    font-size: 11pt;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
