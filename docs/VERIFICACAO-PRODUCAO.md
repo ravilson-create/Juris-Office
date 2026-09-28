@@ -32,10 +32,9 @@ deste ambiente (a política de rede do ambiente bloqueia esse domínio: `curl`
 falha com `CONNECT tunnel failed, response 403`, confirmado também via
 `WebFetch` com `EGRESS_BLOCKED`).
 
-**Pendente (dono):** confirmar em `https://juris-office-eta.vercel.app/api/saude`
-que a resposta é `{"status":"ok","banco":"postgresql"}` — isso fecha em
-definitivo a dúvida de que o novo deploy está com o banco configurado
-corretamente em produção.
+**Confirmado pelo dono em 2026-09-28:** `https://juris-office-eta.vercel.app/api/saude`
+responde `{"status":"ok","banco":"postgresql"}`. O deploy correto está no ar
+e a persistência em Neon está ativa em produção.
 
 ## 2. Variáveis de ambiente inesperadas no projeto Vercel
 
@@ -104,7 +103,7 @@ conexões derrubadas em produção. Não alterado nesta verificação.
 
 ## 5. O que ainda falta para fechar o P0
 
-- (dono) Confirmar `/api/saude` em produção.
+- [x] Confirmar `/api/saude` em produção — `ok`/`postgresql`.
 - (dono) Confirmar no painel da Vercel que o build do novo deployment rodou
   `[migrate] aplicada: 0001_atendimentos.sql` (1ª aplicação) — não visível
   pela API neste ambiente por exigir reautenticação SSO.
