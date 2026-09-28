@@ -31,7 +31,7 @@ export function SiteHeader() {
                 aria-label="Meus atendimentos"
                 className="whitespace-nowrap font-medium text-navy hover:underline"
               >
-                <span className="sm:hidden">Meus</span>
+                <span className="sm:hidden">Casos</span>
                 <span className="hidden sm:inline">Meus atendimentos</span>
               </Link>
             </li>

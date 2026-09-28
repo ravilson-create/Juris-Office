@@ -1,5 +1,12 @@
 # Changelog
 
+## Não lançado
+
+### Corrigido
+- **Rótulo "Meus" no cabeçalho em telas pequenas**: texto sozinho, sem contexto, dava a impressão
+  de link cortado/quebrado. Trocado por "Casos" (mantendo `aria-label="Meus atendimentos"` para
+  leitor de tela). Testado em 320 px para não voltar a causar rolagem horizontal.
+
 ## Sprint 4.1 + persistência em PostgreSQL (Neon) — 2026-09-28
 
 ### Corrigido
