@@ -38,6 +38,14 @@ export default async function AtendimentoPage({
           </div>
         )}
 
+        {erro === "limite" && (
+          <div className="mt-6">
+            <Alert tone="error" title="Muitos atendimentos em pouco tempo.">
+              Aguarde alguns minutos e tente de novo.
+            </Alert>
+          </div>
+        )}
+
         {areas.length === 0 ? (
           <div className="mt-8">
             <Alert title="Nenhuma área disponível agora">

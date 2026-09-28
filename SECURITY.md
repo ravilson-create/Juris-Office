@@ -30,8 +30,8 @@ Referência: seção 13 (Privacidade, LGPD e segurança) do plano mestre.
 
 1. **Vínculo por navegador não é autenticação.** Limpar cookies ou trocar de aparelho faz a pessoa perder o acesso ao atendimento. Aceitável para testes; resolvido com login na F5.
 2. **CSP com `'unsafe-inline'` em scripts**, exigido pelos scripts de inicialização do Next.js. Evolução: CSP com nonce via middleware.
-3. **Sem limite de requisições (rate limiting).** Um abuso poderia criar muitos atendimentos e consumir memória do servidor de testes. Evolução: limite por IP no provedor (Vercel/WAF) e cotas no banco.
-4. **Armazenamento em memória sem teto.** Mesmo motivo do item anterior; desaparece com o banco.
+3. ~~Sem limite de requisições (rate limiting).~~ Resolvido: limite por IP/sessão no banco (ver seção de persistência abaixo) e limpeza periódica.
+4. **Armazenamento em memória sem teto.** Só ocorre com `ALLOW_MEMORY_STORE=1`, nunca definido na Vercel; desaparece com o banco.
 5. **Envio de arquivos simulado.** Nenhum conteúdo é recebido; a validação de conteúdo real fica para a F5.
 
 ## Como verificar
@@ -61,10 +61,22 @@ Referência: seção 13 (Privacidade, LGPD e segurança) do plano mestre.
   atendimentos depende do cookie de sessão e do código. RLS só faz sentido com autenticação real.
 - **Papel do banco com privilégio total**: para produção real, separar um papel só de leitura e
   escrita de dados (sem DDL) do papel que aplica migrações.
-- **Sem limite de requisições**: um site público pode receber muitos atendimentos criados por
-  automação. Falta limitação por IP/sessão e rotina de limpeza.
-- **Sem política de retenção, exclusão e backups definidos** para os dados dos atendimentos.
+- **Backups**: confirmar e documentar a janela de restauração (PITR) do plano da Neon.
 - Conexões paralelas foram testadas em PostgreSQL 16 local, **não** contra a Neon.
 - Concorrência entre instâncias serverless na *leitura-e-gravação* de respostas da triagem é
   "última gravação vence"; a finalização não é afetada (verifica a revisão do caso no banco).
 - Arquivos continuam simulados; armazenamento privado de arquivos ainda não existe.
+
+## Limite de requisições e limpeza periódica (P1)
+
+- **Limite de requisições**: contador em `rate_limit_hits` (janela fixa), aplicado a criação de
+  atendimento (por IP), salvamento de rascunho e inclusão de documento (por sessão). Sem banco
+  configurado, nunca limita — não há como um processo local abusar de si mesmo.
+- **Limpeza periódica**: `app/api/cron/limpeza`, chamada pelo Vercel Cron uma vez por dia,
+  protegida por `CRON_SECRET` (a rota recusa sem o segredo certo — fecha por padrão). Remove
+  atendimentos de teste não finalizados há mais de 30 dias e finalizados há mais de 90 dias;
+  exclusão em cascata já existente cuida dos dados relacionados (respostas, documentos, dossiês,
+  rascunhos). Prazos provisórios, propostos pelo plano mestre — revisar com o dono do produto
+  quando houver volume real de uso.
+- **Como verificar**: `tests/postgres/limite-requisicoes.test.ts` e `tests/postgres/limpeza.test.ts`
+  (rodam contra PGlite e, com `TEST_DATABASE_URL`, contra PostgreSQL real).

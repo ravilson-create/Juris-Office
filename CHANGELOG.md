@@ -1,5 +1,16 @@
 # Changelog
 
+## Não lançado
+
+### Adicionado
+- **Limite de requisições** (P1 do plano mestre): criação de atendimento (30/hora por IP),
+  salvamento de rascunho (300/hora por sessão) e inclusão de documento (60/hora por sessão),
+  contados em `rate_limit_hits` no banco. Sem banco (memória/dev), nunca limita.
+- **Limpeza periódica**: rota `app/api/cron/limpeza`, chamada pelo Vercel Cron (`vercel.json`,
+  diariamente às 5h UTC), protegida por `CRON_SECRET`. Remove atendimentos de teste não
+  finalizados há mais de 30 dias e finalizados há mais de 90 dias (prazos provisórios, a
+  revisar com o dono do produto quando houver volume real de uso).
+
 ## Sprint 4.1 + persistência em PostgreSQL (Neon) — 2026-09-28
 
 ### Corrigido

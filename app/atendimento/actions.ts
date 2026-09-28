@@ -3,9 +3,13 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { RawFormValues } from "@/domain/triage/schema";
-import { canAccessCase, ensureSessionHash } from "@/lib/auth/case-access";
+import { canAccessCase, currentSessionHash, ensureSessionHash } from "@/lib/auth/case-access";
+import { clientIp } from "@/lib/http/client-ip";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { getCaseService } from "@/lib/services";
 import { DomainError, type ServiceResult } from "@/lib/services/errors";
+
+const LIMITE_EXCEDIDO = "Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente de novo.";
 
 const idSchema = z.uuid();
 const INVALID = { ok: false, message: "Atendimento não encontrado ou sem permissão." } as const;
@@ -44,6 +48,11 @@ const toNull = <T>(r: ServiceResult<T>): ServiceResult<null> =>
 
 export async function createCaseAction(formData: FormData): Promise<void> {
   const slug = String(formData.get("area") ?? "").slice(0, 40);
+  const ip = await clientIp();
+  // 30 novos atendimentos por IP a cada hora: generoso para uso real, baixo para automação.
+  if (!(await checkRateLimit(`criar-atendimento:${ip}`, 30, 3600))) {
+    redirect("/atendimento?erro=limite");
+  }
   const owner = await ensureSessionHash();
   let target: string;
   try {
@@ -125,6 +134,10 @@ export async function addDocumentAction(
   caseId: string,
   meta: unknown,
 ): Promise<ServiceResult<null>> {
+  const sessionHash = await currentSessionHash();
+  if (sessionHash && !(await checkRateLimit(`documento:${sessionHash}`, 60, 3600))) {
+    return { ok: false, message: LIMITE_EXCEDIDO };
+  }
   return run(caseId, async () => toNull(await getCaseService().addDocument(caseId, meta)));
 }
 
@@ -197,6 +210,11 @@ export async function saveDraftAction(
 ): Promise<DraftSaveResponse> {
   if (!(await authorized(caseId))) {
     return { ok: false, reason: "invalid", message: INVALID.message };
+  }
+  const sessionHash = await currentSessionHash();
+  // Rascunho é salvo a cada pausa de digitação: limite alto para não incomodar quem digita normal.
+  if (sessionHash && !(await checkRateLimit(`rascunho:${sessionHash}`, 300, 3600))) {
+    return { ok: false, reason: "error", message: LIMITE_EXCEDIDO };
   }
   try {
     const r = await getCaseService().saveDraft(caseId, scope, values, meta);
