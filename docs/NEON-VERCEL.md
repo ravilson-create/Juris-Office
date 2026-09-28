@@ -34,6 +34,30 @@ pelo navegador do celular. **Nunca cole a senha do banco em chats, e-mails ou no
 4. Faça um atendimento de teste completo e confira em **Meus atendimentos**. Como os dados agora
    estão no banco, eles sobrevivem a novos deploys e a reinícios.
 
+## 3.1. Papel de banco restrito para o app (P1)
+
+Por padrão, a integração Neon-Vercel preenche `DATABASE_URL`/`DATABASE_URL_UNPOOLED` com o papel
+**dono** do banco (`neondb_owner`), que pode criar e apagar tabelas. Isso é necessário para as
+migrações, mas não para o app rodando em produção — se um único segredo vazar, o ideal é que ele
+não sirva para apagar o esquema inteiro.
+
+Foi criado um papel `juris_app`, só com `SELECT`/`INSERT`/`UPDATE`/`DELETE` nas tabelas do app
+(sem `CREATE`/`ALTER`/`DROP`), com `ALTER DEFAULT PRIVILEGES` garantindo que tabelas criadas por
+migrações futuras já nasçam com essa concessão. A conexão desse papel fica na variável
+`APP_DATABASE_URL` (não gerenciada pela integração — criada manualmente, para não conflitar com a
+sincronização automática do `DATABASE_URL`).
+
+- `lib/db/connection.ts` usa `APP_DATABASE_URL` quando ela existe, e cai em `DATABASE_URL` quando
+  não existe (nada muda em ambientes sem essa variável, como testes e desenvolvimento local).
+- `DATABASE_URL`/`DATABASE_URL_UNPOOLED` continuam sendo usadas só pelo migrador
+  (`scripts/migrate.mjs`), que precisa do papel dono para aplicar `CREATE TABLE`/`ALTER TABLE`.
+- **Limitação conhecida da Neon**: papéis criados pela Neon vêm com `CREATEDB`/`CREATEROLE`
+  habilitados, e isso **não pode ser revogado por SQL** (`ALTER ROLE ... NOCREATEDB` dá "permission
+  denied") nesse plano. Ou seja, `juris_app` não pode alterar o esquema das tabelas existentes,
+  mas em teoria poderia criar um banco ou papel novo dentro do mesmo projeto Neon — um risco menor
+  que vazar o papel dono, mas não zero. Reavaliar se a Neon passar a permitir revogar isso, ou ao
+  avaliar upgrade de plano.
+
 ## 4. Cuidados
 
 - **Preview deployments** usam as variáveis de Preview. Se apontarem para o mesmo banco da

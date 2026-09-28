@@ -2,27 +2,9 @@ import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV !== "production";
 
-/**
- * Política de conteúdo: só recursos do próprio site. O Next.js injeta scripts e estilos
- * inline na hidratação, por isso 'unsafe-inline' (trocar por nonce quando houver middleware).
- * Em desenvolvimento o React precisa de 'unsafe-eval'.
- */
-const csp = [
-  "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
-  "font-src 'self'",
-  `connect-src 'self'${isDev ? " ws:" : ""}`,
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "frame-ancestors 'none'",
-  ...(isDev ? [] : ["upgrade-insecure-requests"]),
-].join("; ");
-
+// A Content-Security-Policy tem nonce por requisição e é montada no middleware (middleware.ts),
+// não aqui: headers() só produz um valor estático, e o nonce precisa mudar a cada requisição.
 const securityHeaders = [
-  { key: "Content-Security-Policy", value: csp },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   // Envia só a origem para outros sites: o endereço do atendimento não vaza por links externos.

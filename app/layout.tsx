@@ -19,6 +19,12 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+// A CSP tem nonce por requisição (ver middleware.ts): uma página pré-renderizada em build não tem
+// como receber esse nonce, e os scripts dela ficariam bloqueados no navegador. Força toda página a
+// renderizar por requisição — inclusive as que hoje são estáticas (home, "como funciona",
+// privacidade) — para o nonce nunca faltar, mesmo em páginas que venham a ser adicionadas depois.
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR">

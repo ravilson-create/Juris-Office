@@ -29,7 +29,14 @@ Referência: seção 13 (Privacidade, LGPD e segurança) do plano mestre.
 ## Limitações conhecidas (aceitas para a F1)
 
 1. **Vínculo por navegador não é autenticação.** Limpar cookies ou trocar de aparelho faz a pessoa perder o acesso ao atendimento. Aceitável para testes; resolvido com login na F5.
-2. **CSP com `'unsafe-inline'` em scripts**, exigido pelos scripts de inicialização do Next.js. Evolução: CSP com nonce via middleware.
+2. ~~CSP com `'unsafe-inline'` em scripts~~ Resolvido: nonce por requisição em `script-src`
+   (`middleware.ts`), gerado a cada requisição e aplicado pelo próprio Next.js aos scripts que
+   ele injeta na hidratação. Exigiu forçar toda página a renderizar por requisição
+   (`app/layout.tsx`, `dynamic = "force-dynamic"`) — uma página pré-renderizada em build nunca
+   teria o nonce certo, e todo script nela ficaria bloqueado (bug real, encontrado e corrigido
+   nesta mudança; teste de regressão em `seguranca-acessibilidade.spec.ts`). `style-src` continua
+   com `'unsafe-inline'`: o Next injeta alguns estilos inline sem propagar nonce a eles, e o risco
+   de um estilo injetado é bem menor que o de um script.
 3. ~~Sem limite de requisições (rate limiting).~~ Resolvido: limite por IP/sessão no banco (ver seção de persistência abaixo) e limpeza periódica.
 4. **Armazenamento em memória sem teto.** Só ocorre com `ALLOW_MEMORY_STORE=1`, nunca definido na Vercel; desaparece com o banco.
 5. **Envio de arquivos simulado.** Nenhum conteúdo é recebido; a validação de conteúdo real fica para a F5.
@@ -59,9 +66,17 @@ Referência: seção 13 (Privacidade, LGPD e segurança) do plano mestre.
 **Limitações conhecidas (não resolvidas)**
 - **Sem autenticação nem RLS**: o app acessa o banco com um único papel; o isolamento entre
   atendimentos depende do cookie de sessão e do código. RLS só faz sentido com autenticação real.
-- **Papel do banco com privilégio total**: para produção real, separar um papel só de leitura e
-  escrita de dados (sem DDL) do papel que aplica migrações.
-- **Backups**: confirmar e documentar a janela de restauração (PITR) do plano da Neon.
+- ~~Papel do banco com privilégio total~~ Resolvido em parte: papel `juris_app`, só com
+  SELECT/INSERT/UPDATE/DELETE nas tabelas do app (`APP_DATABASE_URL`, ver docs/NEON-VERCEL.md
+  §3.1); migrações continuam com o papel dono. Limitação da Neon: `CREATEDB`/`CREATEROLE` do papel
+  não podem ser revogados por SQL nesse plano — o papel não altera o esquema, mas em teoria
+  poderia criar banco/papel novo dentro do mesmo projeto Neon.
+- **Backups**: confirmado — plano Neon `free_v3`, janela de restauração (PITR) de **6 horas**
+  (`history_retention_seconds: 21600`). Não é configurável nesse plano (a Neon recusa mudar
+  `suspend_timeout_seconds` pelo mesmo motivo). Um incidente percebido depois de 6 horas não tem
+  como ser restaurado a um ponto anterior — só planos pagos da Neon (Launch/Scale) ampliam essa
+  janela (7 a 30 dias). Decisão do dono: aceitar o risco enquanto o app só tem dados fictícios, ou
+  avaliar upgrade de plano antes de dados reais (P2 em diante).
 - Conexões paralelas foram testadas em PostgreSQL 16 local, **não** contra a Neon.
 - Concorrência entre instâncias serverless na *leitura-e-gravação* de respostas da triagem é
   "última gravação vence"; a finalização não é afetada (verifica a revisão do caso no banco).
@@ -80,3 +95,15 @@ Referência: seção 13 (Privacidade, LGPD e segurança) do plano mestre.
   quando houver volume real de uso.
 - **Como verificar**: `tests/postgres/limite-requisicoes.test.ts` e `tests/postgres/limpeza.test.ts`
   (rodam contra PGlite e, com `TEST_DATABASE_URL`, contra PostgreSQL real).
+
+## Observabilidade (P1)
+
+Auditoria do código: existe apenas **um** `console.error` em todo o app
+(`app/atendimento/actions.ts`), e ele já registra só o **nome da classe do erro**
+(`error.name`), nunca a mensagem, a pilha ou dados do formulário — confirmado pela leitura de
+`app/**`, `lib/**`, `domain/**` e `components/**` (nenhum outro `console.*` fora de scripts de
+build). Não havia nada para corrigir aqui.
+
+O que falta é ativar o produto **Vercel Observability** (erros e latência agregados) no
+dashboard do projeto — não há chamada de API para isso a partir daqui; é uma decisão/ação do
+dono na Vercel.

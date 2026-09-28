@@ -34,6 +34,25 @@ async function startCase(page: Page) {
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Seus dados de contato");
 }
 
+test("páginas públicas carregam sem violar a CSP (script/estilo bloqueado)", async ({ page }) => {
+  // As páginas públicas eram estáticas (pré-renderizadas em build); com CSP por nonce, uma
+  // página assim nunca recebe o nonce da requisição e todo script nela fica bloqueado no
+  // navegador — quebra silenciosa que nenhum outro teste aqui cobria (todos partem de
+  // /atendimento, já dinâmico). Ver app/layout.tsx: dynamic = "force-dynamic".
+  for (const path of ["/", "/como-funciona", "/privacidade"]) {
+    const erros: string[] = [];
+    page.removeAllListeners("console");
+    page.removeAllListeners("pageerror");
+    page.on("console", (msg) => {
+      if (msg.type() === "error") erros.push(msg.text());
+    });
+    page.on("pageerror", (e) => erros.push(`pageerror: ${e.message}`));
+    await page.goto(path, { waitUntil: "networkidle" });
+    await expect(page, `título em ${path}`).toHaveTitle(/\S/);
+    expect(erros, `console em ${path}`).toEqual([]);
+  }
+});
+
 test("cabeçalhos de segurança e não indexação", async ({ request }) => {
   const home = await request.get("/");
   const h = home.headers();

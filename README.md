@@ -198,9 +198,10 @@ Nunca commite `.env.local`.
 Prioridade: **persistência real e autenticação antes de qualquer dado real, contrato ou IA.**
 
 1. **F5 — Persistência e acesso** (em andamento): ✅ PostgreSQL/Neon, transações, unicidade e
-   idempotência; ✅ limite de requisições e limpeza periódica; ⏳ autenticação e papéis (cliente,
+   idempotência; ✅ limite de requisições e limpeza periódica; ✅ CI no GitHub Actions e Dependabot;
+   ✅ papel de banco restrito para o app; ✅ CSP com nonce; ⏳ autenticação e papéis (cliente,
    advogado, administrador); isolamento por escritório e atribuição de casos; RLS; armazenamento
-   privado de arquivos; auditoria; backups; CI no GitHub Actions.
+   privado de arquivos; auditoria; backups (janela de 6h confirmada, plano atual não permite mais).
 2. **F3 (parte) — Portal do advogado**: recebimento dos dossiês e decisão de viabilidade.
 3. **F2 — Contrato e financeiro**: honorários, procuração, assinatura eletrônica, parcelas.
 4. **F3 — Apoio jurídico com IA**: saída estruturada, sempre revisada pelo advogado.

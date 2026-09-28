@@ -10,6 +10,18 @@
   diariamente às 5h UTC), protegida por `CRON_SECRET`. Remove atendimentos de teste não
   finalizados há mais de 30 dias e finalizados há mais de 90 dias (prazos provisórios, a
   revisar com o dono do produto quando houver volume real de uso).
+- **CI no GitHub Actions**: lint, typecheck, build, `npm audit`, testes (memória/PGlite e
+  PostgreSQL real via serviço do Actions) e E2E, a cada push/PR em `main`. Dependabot semanal.
+- **Papel de banco restrito para o app** (`juris_app`, só SELECT/INSERT/UPDATE/DELETE, sem DDL),
+  usado via `APP_DATABASE_URL`; migrações continuam com o papel dono. Ver docs/NEON-VERCEL.md §3.1.
+- **CSP com nonce por requisição** em `script-src`, substituindo `'unsafe-inline'`.
+
+### Corrigido
+- **Páginas públicas (`/`, "como funciona", privacidade) ficariam com todo script bloqueado** ao
+  ativar a CSP com nonce, por serem pré-renderizadas em build (sem nonce nenhum). Corrigido
+  forçando renderização por requisição em todo o app (`app/layout.tsx`). Bug pego só com teste
+  manual em navegador real — nenhum teste E2E existente carregava essas páginas; teste de
+  regressão adicionado em `seguranca-acessibilidade.spec.ts`.
 
 ## Sprint 4.1 + persistência em PostgreSQL (Neon) — 2026-09-28
 
