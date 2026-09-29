@@ -169,14 +169,14 @@ Tipos de pergunta suportados: `text`, `textarea`, `date`, `number`, `currency`, 
 
 Veja `.env.example`. Principais:
 
-| Variável | Para quê |
-| --- | --- |
-| `DATABASE_URL` | PostgreSQL (Neon), URL *pooled*. Sem ela, o app usa a memória (só dev/testes). |
-| `DATABASE_URL_UNPOOLED` | URL direta, usada só pelas migrações (opcional). |
-| `ALLOW_MEMORY_STORE=1` | Permite memória em produção. **Nunca na Vercel.** |
-| `NEXT_PUBLIC_APP_NAME` | Nome exibido (vazio usa "Júris Office IA"). |
-| `INDEXAR_SITE=1` | Libera indexação das páginas públicas (lida no **build**). |
-| `TEST_DATABASE_URL` | PostgreSQL real para `npm run test:pg-real` (opcional). |
+| Variável                | Para quê                                                                       |
+| ----------------------- | ------------------------------------------------------------------------------ |
+| `DATABASE_URL`          | PostgreSQL (Neon), URL _pooled_. Sem ela, o app usa a memória (só dev/testes). |
+| `DATABASE_URL_UNPOOLED` | URL direta, usada só pelas migrações (opcional).                               |
+| `ALLOW_MEMORY_STORE=1`  | Permite memória em produção. **Nunca na Vercel.**                              |
+| `NEXT_PUBLIC_APP_NAME`  | Nome exibido (vazio usa "Júris Office IA").                                    |
+| `INDEXAR_SITE=1`        | Libera indexação das páginas públicas (lida no **build**).                     |
+| `TEST_DATABASE_URL`     | PostgreSQL real para `npm run test:pg-real` (opcional).                        |
 
 Nunca commite `.env.local`.
 
@@ -189,7 +189,7 @@ Nunca commite `.env.local`.
 - `npm test` roda dois projetos: **memoria** (unitários + integração) e **postgres** (as mesmas
   suítes de integração contra PostgreSQL em WebAssembly, sem servidor).
 - `npm run test:pg-real` roda contra um PostgreSQL de verdade (`TEST_DATABASE_URL`, por exemplo um
-  banco local ou uma *branch* de teste da Neon; **as tabelas são apagadas a cada teste**, use um
+  banco local ou uma _branch_ de teste da Neon; **as tabelas são apagadas a cada teste**, use um
   banco descartável). É aqui que o bloqueio de linha é exercitado com conexões paralelas.
 - E2E (`npm run test:e2e`) roda sem banco, com `ALLOW_MEMORY_STORE=1`.
 

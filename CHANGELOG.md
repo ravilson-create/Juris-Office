@@ -3,6 +3,7 @@
 ## Não lançado
 
 ### Adicionado
+
 - **Limite de requisições** (P1 do plano mestre): criação de atendimento (30/hora por IP),
   salvamento de rascunho (300/hora por sessão) e inclusão de documento (60/hora por sessão),
   contados em `rate_limit_hits` no banco. Sem banco (memória/dev), nunca limita.
@@ -19,6 +20,7 @@
   para o SDK oficial da Neon Auth (P2), que só suporta Next.js ≥ 16.
 
 ### Corrigido
+
 - **Páginas públicas (`/`, "como funciona", privacidade) ficariam com todo script bloqueado** ao
   ativar a CSP com nonce, por serem pré-renderizadas em build (sem nonce nenhum). Corrigido
   forçando renderização por requisição em todo o app (`app/layout.tsx`). Bug pego só com teste
@@ -42,6 +44,7 @@
 ## Sprint 4.1 + persistência em PostgreSQL (Neon) — 2026-09-28
 
 ### Corrigido
+
 - **Finalização duplicada sob concorrência**: finalização idempotente, com trava por atendimento,
   controle otimista por revisão do caso e gravação atômica do dossiê e do status.
 - **Valores monetários**: parser estrito em centavos inteiros (`1.2.3` e `1.2345` agora são recusados).
@@ -55,6 +58,7 @@
   feita pelo servidor (ver relatório, item I).
 
 ### Adicionado
+
 - **Persistência em PostgreSQL (Neon)**: esquema versionado (`db/migrations`), migrador idempotente
   (`npm run db:migrate`, também no build da Vercel), cinco repositórios PostgreSQL, restrições
   UNIQUE/CHECK/FOREIGN KEY e `/api/saude`.
@@ -64,6 +68,7 @@
 - Testes: 229 na memória + 69 em PostgreSQL (PGlite) + suíte opcional em PostgreSQL real; 5 áreas em E2E.
 
 ### Alterado
+
 - Em produção, o app **recusa** usar a memória do servidor sem `ALLOW_MEMORY_STORE=1`.
 - Site fora de buscadores por padrão (`INDEXAR_SITE=1` no build libera).
 - Roadmap: persistência real e autenticação antes de dados reais, contratos ou IA.
