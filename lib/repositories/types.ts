@@ -19,6 +19,7 @@ export interface CreateCaseInput {
   legalAreaId: string;
   protocol: string;
   ownerSessionHash?: string;
+  citizenId?: string;
 }
 
 export interface UpdateCaseInput {

@@ -99,7 +99,11 @@ export class CaseService {
     return this.repos.legalAreas.list();
   }
 
-  async createCase(areaSlug: string, ownerSessionHash?: string): Promise<LegalCase> {
+  async createCase(
+    areaSlug: string,
+    ownerSessionHash?: string,
+    citizenId?: string,
+  ): Promise<LegalCase> {
     const slug = legalAreaSlugSchema.safeParse(areaSlug);
     const area = slug.success ? await this.repos.legalAreas.findBySlug(slug.data) : null;
     if (!area || !area.active) {
@@ -112,6 +116,7 @@ export class CaseService {
           legalAreaId: area.id,
           protocol: generateProtocol(this.now()),
           ownerSessionHash,
+          citizenId,
         });
       } catch (error) {
         if (!(error instanceof ProtocolConflictError) || attempt >= 5) throw error;

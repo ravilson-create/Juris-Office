@@ -81,7 +81,7 @@ export type Applicant = z.output<typeof applicantSchema>;
 export const legalCaseSchema = z.object({
   id: z.uuid(),
   protocol: z.string(),
-  citizenId: z.uuid().optional(),
+  citizenId: z.string().min(1).optional(),
   /** Hash da sessão do navegador que criou o caso (acesso provisório até a fase F5). */
   ownerSessionHash: z
     .string()

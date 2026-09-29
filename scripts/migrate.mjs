@@ -37,6 +37,12 @@ try {
   let applied = 0;
   for (const file of files) {
     if (done.has(file)) continue;
+    // A P2 exige Neon Auth e o papel de execução já configurados. O build da versão
+    // anterior pode continuar seguro até a ativação coordenada no ambiente de destino.
+    if (/^000[34]_p2_/.test(file) && process.env.ENABLE_P2_AUTH_MIGRATION !== "1") {
+      console.log(`[migrate] aguardando ativação: ${file}`);
+      continue;
+    }
     const sql = readFileSync(join(dir, file), "utf8");
     try {
       await client.query("BEGIN");
