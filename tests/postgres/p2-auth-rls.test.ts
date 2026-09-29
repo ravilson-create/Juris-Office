@@ -4,6 +4,53 @@ import { PGlite } from "@electric-sql/pglite";
 import { describe, expect, it } from "vitest";
 
 describe("P2: isolamento por identidade verificada no banco", () => {
+  it("mantém notas profissionais invisíveis ao cidadão e revoga acesso sem assinatura", async () => {
+    const db = new PGlite();
+    try {
+      const dir = join(process.cwd(), "db/migrations");
+      for (const file of readdirSync(dir)
+        .filter((f) => /^\d+_.*\.sql$/.test(f))
+        .sort()) {
+        await db.exec(readFileSync(join(dir, file), "utf8"));
+      }
+      const caseId = crypto.randomUUID();
+      const noteId = crypto.randomUUID();
+      const office = "00000000-0000-4000-8000-000000000001";
+      await db.query(
+        `INSERT INTO legal_cases(id, protocol, legal_area_id, citizen_id, status,
+           submitted_at, created_at, updated_at) VALUES($1, 'JO-NOTE', $2, 'citizen',
+           'submitted', now(), now(), now())`,
+        [caseId, crypto.randomUUID()],
+      );
+      await db.query(
+        "INSERT INTO profiles(user_id, role, office_id) VALUES ('lawyer', 'lawyer', $1)",
+        [office],
+      );
+      await db.query(
+        "INSERT INTO case_assignments(case_id, lawyer_id, office_id) VALUES ($1, 'lawyer', $2)",
+        [caseId, office],
+      );
+      await db.query(`INSERT INTO lawyer_subscriptions(lawyer_id, status, valid_until, provider, external_ref)
+        VALUES ('lawyer', 'active', now() + interval '1 month', 'test', 'note-paid')`);
+      await db.query(
+        "INSERT INTO case_notes(id, case_id, author_id, body) VALUES ($1, $2, 'lawyer', 'Nota privada')",
+        [noteId, caseId],
+      );
+      await db.exec(
+        "CREATE ROLE note_reader; GRANT SELECT ON case_notes TO note_reader; SET ROLE note_reader",
+      );
+      await db.query("SELECT set_config('app.user_id', 'citizen', false)");
+      expect((await db.query("SELECT id FROM case_notes")).rows).toHaveLength(0);
+      await db.query("SELECT set_config('app.user_id', 'lawyer', false)");
+      expect((await db.query("SELECT id FROM case_notes")).rows).toEqual([{ id: noteId }]);
+      await db.exec(
+        "RESET ROLE; UPDATE lawyer_subscriptions SET status = 'canceled' WHERE lawyer_id = 'lawyer'; SET ROLE note_reader",
+      );
+      expect((await db.query("SELECT id FROM case_notes")).rows).toHaveLength(0);
+    } finally {
+      await db.close();
+    }
+  });
   it("advogado só vê casos atribuídos e administrador só os do escritório", async () => {
     const db = new PGlite();
     try {
