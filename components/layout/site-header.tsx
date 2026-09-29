@@ -26,6 +26,11 @@ export function SiteHeader() {
               </Link>
             </li>
             <li>
+              <Link href="/advogado" className="whitespace-nowrap text-navy hover:underline">
+                Advogados
+              </Link>
+            </li>
+            <li>
               <Link
                 href="/atendimento/meus"
                 aria-label="Meus atendimentos"

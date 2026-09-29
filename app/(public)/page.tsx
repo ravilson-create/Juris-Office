@@ -31,6 +31,9 @@ export default function HomePage() {
               <ButtonLink href="/como-funciona" variant="ghost">
                 Como funciona
               </ButtonLink>
+              <ButtonLink href="/advogado" variant="ghost">
+                Área do advogado
+              </ButtonLink>
             </div>
             <p className="text-sm text-muted">
               Versão de demonstração: use dados fictícios. Leva cerca de 10 minutos, sem cadastro.

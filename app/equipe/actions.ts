@@ -29,3 +29,16 @@ export async function assignLawyer(form: FormData) {
   });
   revalidatePath("/equipe");
 }
+
+export async function addCaseNote(form: FormData) {
+  const caseId = z.uuid().safeParse(form.get("caseId"));
+  const body = z.string().trim().min(1).max(4000).safeParse(form.get("body"));
+  const actor = await currentUserId();
+  if (!actor || !caseId.success || !body.success) return;
+  // A política RLS exige acesso profissional ao caso e registra o autor da sessão.
+  await getDb().query(
+    "INSERT INTO case_notes(id, case_id, author_id, body) VALUES ($1, $2, $3, $4)",
+    [crypto.randomUUID(), caseId.data, actor, body.data],
+  );
+  revalidatePath(`/equipe/${caseId.data}`);
+}

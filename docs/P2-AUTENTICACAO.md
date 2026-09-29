@@ -6,6 +6,7 @@
 - Casos novos pertencem ao identificador da conta. O acesso de cidadão é verificado nas Server Actions e no PostgreSQL.
 - Migração `0003_p2_auth_rls.sql`: perfis (`citizen`, `lawyer`, `admin`), escritório, atribuições, auditoria e RLS em casos, respostas, documentos simulados, dossiês e rascunhos.
 - `/equipe`: administrador vê casos do seu escritório e atribui advogados com assinatura ativa; advogado vê apenas casos atribuídos durante a vigência da assinatura. O dossiê da equipe é somente leitura.
+- `/advogado`: página pública com entrada para a área profissional e planos. A fila em `/equipe` permite busca por protocolo/título e notas internas no detalhe; a migração `0005_p3_portal_advogado.sql` acrescenta as notas com RLS e também depende da chave de ativação P2.
 - A primeira conta administradora é vinculada exclusivamente ao `JURIS_ADMIN_EMAIL` configurado no servidor, depois da verificação do e-mail. Não depende da ordem de cadastro.
 - `lawyer_subscriptions` registra o direito de acesso. Assinaturas vencidas ou canceladas retiram o acesso imediatamente; a cobrança ainda exige um provedor de pagamentos e webhook confiável.
 - Planos definidos para advogados: R$ 39,90 por mês ou R$ 300,00 por ano. Os preços aparecem em `/assinatura`, sem iniciar cobrança até a integração do checkout.
@@ -24,6 +25,6 @@
 
 - Arquivos continuam simulados; conteúdo de arquivos não é transmitido nem armazenado.
 - A cobrança, o checkout e o webhook do provedor ainda não foram definidos. Até sua integração, `/assinatura` mostra os preços e informa que não cobra; nenhum advogado ganha acesso pago automaticamente.
-- A interface de equipe recebe o dossiê, sem fluxo de decisão, notas ou complementação. Esses fluxos pertencem ao portal do advogado posterior.
+- A área profissional recebe dossiês e notas internas. O fluxo de decisão, histórico de mudanças de status e pedido de complementação ainda não foram implementados.
 - A operação real não foi validada nesta sessão contra o projeto Neon e o domínio Vercel: não havia projeto/branch/credenciais selecionados no ambiente de execução. Os testes locais usam PostgreSQL em WebAssembly e a suíte existente.
 - Os casos antigos só podem ser vinculados por quem ainda possui o cookie do navegador original. Casos sem esse cookie exigem reconciliação administrativa fora do produto.
