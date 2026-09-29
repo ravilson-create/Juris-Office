@@ -15,6 +15,8 @@
 - **Papel de banco restrito para o app** (`juris_app`, só SELECT/INSERT/UPDATE/DELETE, sem DDL),
   usado via `APP_DATABASE_URL`; migrações continuam com o papel dono. Ver docs/NEON-VERCEL.md §3.1.
 - **CSP com nonce por requisição** em `script-src`, substituindo `'unsafe-inline'`.
+- **Atualizado para Next.js 16** (de 15.5.26), React 19.3 e `eslint-config-next` 16 — pré-requisito
+  para o SDK oficial da Neon Auth (P2), que só suporta Next.js ≥ 16.
 
 ### Corrigido
 - **Páginas públicas (`/`, "como funciona", privacidade) ficariam com todo script bloqueado** ao
@@ -22,6 +24,20 @@
   forçando renderização por requisição em todo o app (`app/layout.tsx`). Bug pego só com teste
   manual em navegador real — nenhum teste E2E existente carregava essas páginas; teste de
   regressão adicionado em `seguranca-acessibilidade.spec.ts`.
+- **"Voltar" no navegador depois de salvar oficialmente uma etapa mostrava dado desatualizado**
+  (ex.: "rascunho restaurado" reaparecendo). Causa: o roteador do Next reaproveitava, no cliente,
+  a versão em cache da página de antes da gravação — `Cache-Control: no-store` não evita esse
+  reaproveitamento, que é só do lado do cliente. Corrigido com `BfcacheGuard`
+  (`components/case/bfcache-guard.tsx`), que força `router.refresh()` em qualquer navegação por
+  `popstate` dentro de `/atendimento`. Verificado como regressão real do Next.js 16 (ver
+  histórico de commits), não reintroduzir.
+- `eslint.config.mjs`: `eslint-config-next` 16 já exporta config flat nativa; o wrapper
+  `FlatCompat.extends(...)` (necessário nas versões antigas) agora quebra com "Converting circular
+  structure to JSON". Trocado por importar `eslint-config-next` diretamente.
+- `components/draft/use-draft-autosave.ts`: `eslint-plugin-react-hooks` 7 (regras do React
+  Compiler) sinalizou duas referências de `flush` a si mesma antes de `useCallback` terminar de
+  declará-la (recursão e reagendamentos de retentativa). Substituído por um loop e por uma ref
+  (`flushRef`) sempre atualizada — mesmo comportamento, sem a referência circular.
 
 ## Sprint 4.1 + persistência em PostgreSQL (Neon) — 2026-09-28
 

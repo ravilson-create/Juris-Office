@@ -30,7 +30,7 @@ function buildCsp(nonce: string): string {
  * Se BASIC_AUTH_USER/BASIC_AUTH_PASSWORD estiverem definidos, exige usuário e senha em todas as
  * páginas. A verificação de saúde (/api/saude) fica aberta para a hospedagem monitorar o app.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   if (basicAuthConfigured()) {
     const ok = await isBasicAuthValid(
       request.headers.get("authorization"),

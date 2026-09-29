@@ -15,7 +15,7 @@ PostgreSQL (Neon). Para publicar: [docs/NEON-VERCEL.md](docs/NEON-VERCEL.md).
 
 Implementado:
 
-- Fundação: Next.js 15 (App Router), TypeScript strict, Tailwind CSS 4, Zod 4, React Hook Form.
+- Fundação: Next.js 16 (App Router), TypeScript strict, Tailwind CSS 4, Zod 4, React Hook Form.
 - Home, "Como funciona" e página de privacidade (texto provisório).
 - Escolha entre as cinco áreas: Consumidor, Trabalhista, Família, Previdenciário e Cível.
 - Criação do caso em rascunho com protocolo provisório (`JO-AAAAMMDD-XXXXXX`).
