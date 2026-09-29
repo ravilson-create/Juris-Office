@@ -3,6 +3,7 @@
 ## O que entrou no código
 
 - Neon Auth (Managed Better Auth): cadastro, login, saída e sessão validada no servidor.
+- O cadastro com verificação por código leva a `/auth/verify`; após confirmar o e-mail, a pessoa entra na conta. O formulário permite reenviar o código.
 - Casos novos pertencem ao identificador da conta. O acesso de cidadão é verificado nas Server Actions e no PostgreSQL.
 - Migração `0003_p2_auth_rls.sql`: perfis (`citizen`, `lawyer`, `admin`), escritório, atribuições, auditoria e RLS em casos, respostas, documentos simulados, dossiês e rascunhos.
 - `/equipe`: administrador vê casos do seu escritório e atribui advogados com assinatura ativa; advogado vê apenas casos atribuídos durante a vigência da assinatura. O dossiê da equipe é somente leitura.
