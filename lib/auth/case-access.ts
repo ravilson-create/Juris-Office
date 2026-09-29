@@ -3,6 +3,7 @@ import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import type { LegalCase } from "@/domain/case/schema";
+import { authEnabled, currentUserId } from "./session";
 
 /**
  * Vínculo provisório entre o atendimento e o navegador que o criou (fase F1, sem login).
@@ -23,12 +24,18 @@ async function readSessionId(): Promise<string | null> {
 
 /** Hash da sessão atual, sem criar cookie (páginas podem só ler). Null se não houver sessão. */
 export async function currentSessionHash(): Promise<string | null> {
+  if (authEnabled) return currentUserId();
   const id = await readSessionId();
   return id ? hashSession(id) : null;
 }
 
 /** Só pode ser chamado em Server Actions ou Route Handlers (onde cookies podem ser gravados). */
 export async function ensureSessionHash(): Promise<string> {
+  if (authEnabled) {
+    const userId = await currentUserId();
+    if (!userId) throw new Error("É necessário entrar na conta para iniciar um atendimento.");
+    return userId;
+  }
   let id = await readSessionId();
   if (!id) {
     id = randomUUID();
@@ -45,11 +52,25 @@ export async function ensureSessionHash(): Promise<string> {
 
 /** Verdadeiro se o navegador atual é o dono do atendimento. Comparação em tempo constante. */
 export async function canAccessCase(
-  legalCase: Pick<LegalCase, "ownerSessionHash">,
+  legalCase: Pick<LegalCase, "ownerSessionHash" | "citizenId">,
 ): Promise<boolean> {
+  if (authEnabled) {
+    const userId = await currentUserId();
+    return Boolean(userId && legalCase.citizenId === userId);
+  }
   const id = await readSessionId();
   if (!id || !legalCase.ownerSessionHash) return false;
   const a = Buffer.from(hashSession(id), "hex");
   const b = Buffer.from(legalCase.ownerSessionHash, "hex");
   return a.length === b.length && timingSafeEqual(a, b);
+}
+
+/** Vincula casos legados da sessão deste navegador à conta, uma única vez. */
+export async function claimLegacyCases(): Promise<void> {
+  if (!authEnabled || !(await currentUserId())) return;
+  const id = await readSessionId();
+  if (!id) return;
+  const { getDb } = await import("@/lib/db/connection");
+  await getDb().query("SELECT claim_legacy_cases($1)", [hashSession(id)]);
+  (await cookies()).delete(SESSION_COOKIE);
 }

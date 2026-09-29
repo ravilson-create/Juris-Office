@@ -6,6 +6,8 @@ import { CASE_STATUS_LABEL } from "@/domain/case/status";
 import { formatInstantDateTime } from "@/domain/time";
 import { currentSessionHash } from "@/lib/auth/case-access";
 import { getCaseService } from "@/lib/services";
+import { authEnabled } from "@/lib/auth/session";
+import { signOut } from "@/app/auth/actions";
 
 export const metadata: Metadata = { title: "Meus atendimentos" };
 export const dynamic = "force-dynamic";
@@ -19,18 +21,28 @@ export default async function MeusAtendimentosPage() {
     <div className="mx-auto max-w-3xl px-5 py-10">
       <h1 className="text-3xl">Meus atendimentos</h1>
       <p className="mt-2 max-w-prose text-muted">
-        Atendimentos de teste iniciados neste navegador. Aqui você retoma um rascunho ou abre o
-        protocolo e o dossiê de um atendimento finalizado. Esta lista não é acompanhamento por
-        advogado: nenhuma informação é encaminhada a um escritório.
+        Atendimentos de teste iniciados {authEnabled ? "na sua conta" : "neste navegador"}. Aqui
+        você retoma um rascunho ou abre o protocolo e o dossiê de um atendimento finalizado. Esta
+        lista não é acompanhamento por advogado: nenhuma informação é encaminhada a um escritório.
       </p>
 
-      <div className="mt-6">
-        <Alert title="Onde estes dados ficam">
-          A lista depende de um cookie deste navegador: limpar os cookies, usar navegação anônima ou
-          trocar de navegador ou aparelho impede a retomada. Nesta versão de testes os dados ficam
-          só na memória do servidor e são apagados quando ele é reiniciado.
-        </Alert>
-      </div>
+      {!authEnabled && (
+        <div className="mt-6">
+          <Alert title="Onde estes dados ficam">
+            A lista depende de um cookie deste navegador: limpar os cookies, usar navegação anônima
+            ou trocar de navegador ou aparelho impede a retomada. Nesta versão de testes os dados
+            ficam só na memória do servidor e são apagados quando ele é reiniciado.
+          </Alert>
+        </div>
+      )}
+
+      {authEnabled && (
+        <form action={signOut} className="mt-5">
+          <button type="submit" className="text-sm underline">
+            Sair da conta
+          </button>
+        </form>
+      )}
 
       {items.length === 0 ? (
         <section
@@ -38,7 +50,7 @@ export default async function MeusAtendimentosPage() {
           className="mt-8 rounded-md border border-line bg-surface p-6"
         >
           <h2 id="vazio" className="text-xl">
-            Nenhum atendimento neste navegador
+            Nenhum atendimento {authEnabled ? "na sua conta" : "neste navegador"}
           </h2>
           <p className="mt-2 text-muted">
             Quando você iniciar um atendimento de teste, ele aparecerá aqui.

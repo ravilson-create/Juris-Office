@@ -28,6 +28,7 @@ export class MockCaseRepository implements CaseRepository {
       protocol: input.protocol,
       legalAreaId: input.legalAreaId,
       ownerSessionHash: input.ownerSessionHash,
+      citizenId: input.citizenId,
       status: "draft",
       consentAccepted: false,
       createdAt: timestamp,
@@ -58,7 +59,7 @@ export class MockCaseRepository implements CaseRepository {
 
   async listByOwner(ownerSessionHash: string): Promise<LegalCase[]> {
     return [...this.store.cases.values()]
-      .filter((c) => c.ownerSessionHash === ownerSessionHash)
+      .filter((c) => c.ownerSessionHash === ownerSessionHash || c.citizenId === ownerSessionHash)
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
       .map((c) => structuredClone(c));
   }

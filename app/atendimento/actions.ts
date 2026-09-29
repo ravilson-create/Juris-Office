@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { RawFormValues } from "@/domain/triage/schema";
 import { canAccessCase, currentSessionHash, ensureSessionHash } from "@/lib/auth/case-access";
+import { authEnabled } from "@/lib/auth/session";
 import { clientIp } from "@/lib/http/client-ip";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getCaseService } from "@/lib/services";
@@ -56,7 +57,11 @@ export async function createCaseAction(formData: FormData): Promise<void> {
   const owner = await ensureSessionHash();
   let target: string;
   try {
-    const legalCase = await getCaseService().createCase(slug, owner);
+    const legalCase = await getCaseService().createCase(
+      slug,
+      authEnabled ? undefined : owner,
+      authEnabled ? owner : undefined,
+    );
     target = `/atendimento/${legalCase.id}/identificacao`;
   } catch (error) {
     if (!(error instanceof DomainError)) throw error;

@@ -193,6 +193,10 @@ Nunca commite `.env.local`.
   banco descartável). É aqui que o bloqueio de linha é exercitado com conexões paralelas.
 - E2E (`npm run test:e2e`) roda sem banco, com `ALLOW_MEMORY_STORE=1`.
 
+## P2 — Autenticação por conta e acesso por perfil
+
+O código da P2 está em uma branch de implementação, com instruções de ativação em [docs/P2-AUTENTICACAO.md](docs/P2-AUTENTICACAO.md). É necessário configurar Neon Auth e aplicar a migração coordenadamente antes de publicar em produção.
+
 ## Roadmap
 
 Prioridade: **persistência real e autenticação antes de qualquer dado real, contrato ou IA.**

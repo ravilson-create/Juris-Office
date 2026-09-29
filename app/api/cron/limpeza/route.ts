@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb, hasDatabase } from "@/lib/db/connection";
+import { getMaintenanceDb, hasDatabase } from "@/lib/db/connection";
 import { runRetentionCleanup } from "@/lib/services/retention";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +17,11 @@ export async function GET(request: Request) {
   if (!hasDatabase()) {
     return NextResponse.json({ status: "sem banco: nada a limpar" });
   }
-  const result = await runRetentionCleanup(getDb());
-  return NextResponse.json({ status: "ok", ...result });
+  const db = getMaintenanceDb();
+  try {
+    const result = await runRetentionCleanup(db);
+    return NextResponse.json({ status: "ok", ...result });
+  } finally {
+    await db.close();
+  }
 }

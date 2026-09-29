@@ -32,15 +32,16 @@ export class PgCaseRepository implements CaseRepository {
     const ts = this.now().toISOString();
     try {
       const rows = await this.db.query(
-        `INSERT INTO legal_cases (id, protocol, legal_area_id, owner_session_hash, status,
+        `INSERT INTO legal_cases (id, protocol, legal_area_id, owner_session_hash, citizen_id, status,
            consent_accepted, revision, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, 'draft', false, 0, $5, $5)
+         VALUES ($1, $2, $3, $4, $5, 'draft', false, 0, $6, $6)
          RETURNING ${CASE_COLUMNS}`,
         [
           crypto.randomUUID(),
           input.protocol,
           input.legalAreaId,
           input.ownerSessionHash ?? null,
+          input.citizenId ?? null,
           ts,
         ],
       );
@@ -59,7 +60,8 @@ export class PgCaseRepository implements CaseRepository {
 
   async listByOwner(ownerSessionHash: string): Promise<LegalCase[]> {
     const rows = await this.db.query(
-      `SELECT ${CASE_COLUMNS} FROM legal_cases WHERE owner_session_hash = $1 ORDER BY updated_at DESC`,
+      `SELECT ${CASE_COLUMNS} FROM legal_cases
+       WHERE owner_session_hash = $1 OR citizen_id = $1 ORDER BY updated_at DESC`,
       [ownerSessionHash],
     );
     return rows.map(toCase);
