@@ -13,6 +13,14 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
   return (
     <main className="mx-auto max-w-md px-5 py-12">
       <h1 className="text-3xl">{signup ? "Criar conta" : "Entrar"}</h1>
+      {!signup && (
+        <p className="mt-3 text-muted">
+          Após o cadastro, confirme seu e-mail com o código recebido.{" "}
+          <Link href="/auth/verify" className="underline">
+            Digitar código
+          </Link>
+        </p>
+      )}
       <form action={action} className="mt-8 flex flex-col gap-5">
         {signup && (
           <label className="flex flex-col gap-1">
