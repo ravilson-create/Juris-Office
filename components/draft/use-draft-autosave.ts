@@ -40,18 +40,25 @@ export function useDraftAutosave({
   const formKey = useRef<string>(crypto.randomUUID());
   const seq = useRef(0);
   const lastSaved = useRef<string>(JSON.stringify(values));
-  const latest = useRef<string>(lastSaved.current);
+  const latest = useRef<string>(JSON.stringify(values));
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inFlight = useRef<Promise<void> | null>(null);
   const stopped = useRef(false);
+  // `flush` precisa se re-agendar (novo timeout de retentativa ou debounce) de dentro do próprio
+  // corpo; chamar a si mesma pelo nome direto é sinalizado pelo linter (referência antes da
+  // declaração terminar). Uma ref sempre atualizada com a versão mais recente evita isso.
+  const flushRef = useRef<() => Promise<void>>(async () => {});
 
   const flush = useCallback(async (): Promise<void> => {
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
     if (stopped.current) return;
-    if (inFlight.current) {
+    // Espera qualquer envio já em andamento (pode haver mais de um em sequência) antes de
+    // decidir se há algo novo pra enviar — sem recursão, pra não referenciar `flush` antes de
+    // `useCallback` terminar de declará-la.
+    while (inFlight.current) {
       await inFlight.current;
-      return flush();
+      if (stopped.current) return;
     }
     const snapshot = latest.current;
     if (snapshot === lastSaved.current) return;
@@ -77,21 +84,25 @@ export function useDraftAutosave({
           setState({ kind: "locked" });
         } else {
           setState({ kind: "error", message: r.message });
-          timer.current = setTimeout(() => void flush(), RETRY_MS);
+          timer.current = setTimeout(() => void flushRef.current(), RETRY_MS);
         }
       } catch {
         // Falha de rede: o conteúdo continua no formulário; tenta de novo depois.
         setState({ kind: "error", message: "Sem conexão com o servidor." });
-        timer.current = setTimeout(() => void flush(), RETRY_MS);
+        timer.current = setTimeout(() => void flushRef.current(), RETRY_MS);
       }
     })();
     inFlight.current = run;
     await run;
     inFlight.current = null;
     if (!stopped.current && latest.current !== lastSaved.current) {
-      timer.current = setTimeout(() => void flush(), DEBOUNCE_MS);
+      timer.current = setTimeout(() => void flushRef.current(), DEBOUNCE_MS);
     }
   }, [baseTime, caseId, scope]);
+
+  useEffect(() => {
+    flushRef.current = flush;
+  }, [flush]);
 
   const serialized = JSON.stringify(values);
   useEffect(() => {

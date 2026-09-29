@@ -44,8 +44,16 @@ describe("limpeza periódica", () => {
   });
 
   it("remove finalizados com mais de 90 dias, preserva os recentes", async () => {
-    const velho = await insertCase({ status: "submitted", updatedAt: DIAS(1), submittedAt: DIAS(91) });
-    const novo = await insertCase({ status: "submitted", updatedAt: DIAS(1), submittedAt: DIAS(10) });
+    const velho = await insertCase({
+      status: "submitted",
+      updatedAt: DIAS(1),
+      submittedAt: DIAS(91),
+    });
+    const novo = await insertCase({
+      status: "submitted",
+      updatedAt: DIAS(1),
+      submittedAt: DIAS(10),
+    });
 
     const result = await runRetentionCleanup(db);
 
@@ -75,8 +83,8 @@ describe("limpeza periódica", () => {
 
     await runRetentionCleanup(db);
 
-    expect(await db.query(`SELECT id FROM case_documents WHERE case_id = $1`, [caseId])).toHaveLength(
-      0,
-    );
+    expect(
+      await db.query(`SELECT id FROM case_documents WHERE case_id = $1`, [caseId]),
+    ).toHaveLength(0);
   });
 });
