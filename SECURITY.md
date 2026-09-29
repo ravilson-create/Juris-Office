@@ -5,20 +5,20 @@ Referência: seção 13 (Privacidade, LGPD e segurança) do plano mestre.
 
 ## Requisitos do plano × situação
 
-| Requisito | Situação na F1 | Evolução prevista |
-| --- | --- | --- |
-| Coletar só o necessário | Identificação com 5 campos + ciência; sem CPF, RG ou endereço completo. O relato orienta a não incluir senhas e dados bancários. | Revisar campos com o jurídico antes da produção. |
-| Informar finalidade / ciência | Caixa de ciência obrigatória na identificação; página de Privacidade. | Textos de Termos, Privacidade e bases legais: **revisão jurídica obrigatória** antes de produção. |
-| Restringir acesso por perfil | Cada atendimento fica vinculado ao navegador que o criou (cookie `jo_sessao` httpOnly, SameSite=Lax, Secure em produção; o caso guarda só o hash SHA-256). Outro navegador recebe 404, sem revelar se o caso existe. Toda Server Action passa pela mesma checagem. | F5: Supabase Auth + RLS por `citizen`, `lawyer`, `admin`, e por `case_assignments` (sigilo advogado–cliente). |
-| Validar uploads, limites e tipos | Extensão × tipo MIME, 10 MB por arquivo, 20 por atendimento, nome sanitizado (sem caminho nem caracteres de controle). Validado no navegador e no servidor. | F5: verificação do conteúdo real no Storage (assinatura do arquivo) e antivírus. |
-| URLs de arquivos não públicas | Não há arquivos armazenados (envio simulado). | F5: buckets privados, URLs assinadas de curta duração. |
-| Sanitizar e validar entradas | Zod em todas as fronteiras; limites de tamanho nas ações (respostas até 10.000 caracteres, até 100 campos, listas até 50 itens; relato até 8.000). React escapa a saída. | Manter schemas compartilhados com o banco. |
-| Não registrar dados pessoais em logs | O único log do servidor registra o tipo do erro, sem conteúdo nem identificadores. | Observabilidade com mascaramento de dados. |
-| Sem stack traces em produção | Mensagens genéricas ao usuário; tela de erro mostra só um código (digest) para suporte; `global-error` para falhas do layout. | — |
-| Variáveis de ambiente / chaves | Nenhum segredo no código; `.env.example` sem valores. | Service role do Supabase só no servidor. |
-| Registrar ações relevantes (auditoria) | Não aplicável sem banco. | F5: tabela `audit_logs`. |
-| Retenção e exclusão | Dados em memória, apagados ao reiniciar o servidor. | Política de retenção a definir com o jurídico (prazos processuais × dados pessoais). |
-| Não treinar modelos com dados do cidadão | Não há IA na F1. | Cláusula contratual com o provedor de IA (F3). |
+| Requisito                                | Situação na F1                                                                                                                                                                                                                                                     | Evolução prevista                                                                                             |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| Coletar só o necessário                  | Identificação com 5 campos + ciência; sem CPF, RG ou endereço completo. O relato orienta a não incluir senhas e dados bancários.                                                                                                                                   | Revisar campos com o jurídico antes da produção.                                                              |
+| Informar finalidade / ciência            | Caixa de ciência obrigatória na identificação; página de Privacidade.                                                                                                                                                                                              | Textos de Termos, Privacidade e bases legais: **revisão jurídica obrigatória** antes de produção.             |
+| Restringir acesso por perfil             | Cada atendimento fica vinculado ao navegador que o criou (cookie `jo_sessao` httpOnly, SameSite=Lax, Secure em produção; o caso guarda só o hash SHA-256). Outro navegador recebe 404, sem revelar se o caso existe. Toda Server Action passa pela mesma checagem. | F5: Supabase Auth + RLS por `citizen`, `lawyer`, `admin`, e por `case_assignments` (sigilo advogado–cliente). |
+| Validar uploads, limites e tipos         | Extensão × tipo MIME, 10 MB por arquivo, 20 por atendimento, nome sanitizado (sem caminho nem caracteres de controle). Validado no navegador e no servidor.                                                                                                        | F5: verificação do conteúdo real no Storage (assinatura do arquivo) e antivírus.                              |
+| URLs de arquivos não públicas            | Não há arquivos armazenados (envio simulado).                                                                                                                                                                                                                      | F5: buckets privados, URLs assinadas de curta duração.                                                        |
+| Sanitizar e validar entradas             | Zod em todas as fronteiras; limites de tamanho nas ações (respostas até 10.000 caracteres, até 100 campos, listas até 50 itens; relato até 8.000). React escapa a saída.                                                                                           | Manter schemas compartilhados com o banco.                                                                    |
+| Não registrar dados pessoais em logs     | O único log do servidor registra o tipo do erro, sem conteúdo nem identificadores.                                                                                                                                                                                 | Observabilidade com mascaramento de dados.                                                                    |
+| Sem stack traces em produção             | Mensagens genéricas ao usuário; tela de erro mostra só um código (digest) para suporte; `global-error` para falhas do layout.                                                                                                                                      | —                                                                                                             |
+| Variáveis de ambiente / chaves           | Nenhum segredo no código; `.env.example` sem valores.                                                                                                                                                                                                              | Service role do Supabase só no servidor.                                                                      |
+| Registrar ações relevantes (auditoria)   | Não aplicável sem banco.                                                                                                                                                                                                                                           | F5: tabela `audit_logs`.                                                                                      |
+| Retenção e exclusão                      | Dados em memória, apagados ao reiniciar o servidor.                                                                                                                                                                                                                | Política de retenção a definir com o jurídico (prazos processuais × dados pessoais).                          |
+| Não treinar modelos com dados do cidadão | Não há IA na F1.                                                                                                                                                                                                                                                   | Cláusula contratual com o provedor de IA (F3).                                                                |
 
 ## Medidas adicionais aplicadas
 
@@ -47,10 +47,10 @@ Referência: seção 13 (Privacidade, LGPD e segurança) do plano mestre.
 - `npm run test:e2e` — `tests/e2e/seguranca-acessibilidade.spec.ts` verifica cabeçalhos, bloqueio de acesso entre navegadores, queda de conexão e acessibilidade (axe, WCAG 2.1 AA) em toda a jornada.
 - `npm audit` — dependências.
 
-
 ## Persistência em PostgreSQL (Neon) — Sprint 4.1
 
 **Feito e verificado**
+
 - Credenciais do banco só em variáveis de ambiente do servidor (`DATABASE_URL`); nada no navegador,
   nos logs ou no repositório (`.env.example` não tem valores).
 - Todas as consultas usam parâmetros (`$1`, `$2`…): nenhuma concatenação de texto do usuário em SQL.
@@ -64,6 +64,7 @@ Referência: seção 13 (Privacidade, LGPD e segurança) do plano mestre.
 - Em produção sem banco, o app recusa usar a memória; `/api/saude` acusa a configuração errada.
 
 **Limitações conhecidas (não resolvidas)**
+
 - **Sem autenticação nem RLS**: o app acessa o banco com um único papel; o isolamento entre
   atendimentos depende do cookie de sessão e do código. RLS só faz sentido com autenticação real.
 - ~~Papel do banco com privilégio total~~ Resolvido em parte: papel `juris_app`, só com
@@ -78,7 +79,7 @@ Referência: seção 13 (Privacidade, LGPD e segurança) do plano mestre.
   janela (7 a 30 dias). Decisão do dono: aceitar o risco enquanto o app só tem dados fictícios, ou
   avaliar upgrade de plano antes de dados reais (P2 em diante).
 - Conexões paralelas foram testadas em PostgreSQL 16 local, **não** contra a Neon.
-- Concorrência entre instâncias serverless na *leitura-e-gravação* de respostas da triagem é
+- Concorrência entre instâncias serverless na _leitura-e-gravação_ de respostas da triagem é
   "última gravação vence"; a finalização não é afetada (verifica a revisão do caso no banco).
 - Arquivos continuam simulados; armazenamento privado de arquivos ainda não existe.
 
