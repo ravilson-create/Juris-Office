@@ -18,6 +18,13 @@ export default async function CasoEquipe({ params }: { params: Promise<{ caseId:
     [actor],
   );
   if (!profile[0] || !["lawyer", "admin"].includes(profile[0].role)) notFound();
+  if (profile[0].role === "lawyer") {
+    const active = await getDb().query(
+      "SELECT 1 FROM lawyer_subscriptions WHERE lawyer_id = $1 AND status = 'active' AND valid_until > now()",
+      [actor],
+    );
+    if (!active.length) redirect("/assinatura");
+  }
   // A política RLS é o filtro definitivo: IDs de outro escritório/sem atribuição retornam vazio.
   const submission = await getCaseService().getSubmission(caseId);
   if (!submission) notFound();

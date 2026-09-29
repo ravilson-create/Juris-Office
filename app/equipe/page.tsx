@@ -14,13 +14,22 @@ export default async function EquipePage() {
     [actor],
   );
   if (!profile[0] || !["lawyer", "admin"].includes(profile[0].role)) redirect("/atendimento/meus");
+  if (profile[0].role === "lawyer") {
+    const active = await db.query(
+      "SELECT 1 FROM lawyer_subscriptions WHERE lawyer_id = $1 AND status = 'active' AND valid_until > now()",
+      [actor],
+    );
+    if (!active.length) redirect("/assinatura");
+  }
   const cases = await db.query<{ id: string; protocol: string; status: string }>(
     "SELECT id, protocol, status FROM legal_cases WHERE status = 'submitted' ORDER BY updated_at DESC LIMIT 100",
   );
   const lawyers =
     profile[0].role === "admin"
       ? await db.query<{ user_id: string }>(
-          "SELECT user_id FROM profiles WHERE role = 'lawyer' AND office_id = $1 ORDER BY user_id",
+          `SELECT p.user_id FROM profiles p JOIN lawyer_subscriptions s ON s.lawyer_id = p.user_id
+           WHERE p.role = 'lawyer' AND p.office_id = $1 AND s.status = 'active'
+             AND s.valid_until > now() ORDER BY p.user_id`,
           [profile[0].office_id],
         )
       : [];

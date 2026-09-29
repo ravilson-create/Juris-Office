@@ -41,6 +41,10 @@ describe("P2: isolamento por identidade verificada no banco", () => {
         "INSERT INTO case_assignments(case_id, lawyer_id, office_id) VALUES ($1, 'lawyer', $2)",
         [assigned, office],
       );
+      await db.query(
+        `INSERT INTO lawyer_subscriptions(lawyer_id, status, valid_until, provider, external_ref)
+         VALUES ('lawyer', 'active', now() + interval '1 month', 'test', 'test-paid')`,
+      );
       await db.exec(
         "CREATE ROLE p2_staff; GRANT SELECT ON legal_cases TO p2_staff; SET ROLE p2_staff",
       );
@@ -65,6 +69,11 @@ describe("P2: isolamento por identidade verificada no banco", () => {
           [elsewhere, otherOffice],
         ),
       ).rejects.toThrow();
+      await db.exec(
+        "RESET ROLE; UPDATE lawyer_subscriptions SET status = 'canceled' WHERE lawyer_id = 'lawyer'; SET ROLE p2_staff",
+      );
+      await db.query("SELECT set_config('app.user_id', 'lawyer', false)");
+      expect((await db.query("SELECT id FROM legal_cases")).rows).toHaveLength(0);
     } finally {
       await db.close();
     }
