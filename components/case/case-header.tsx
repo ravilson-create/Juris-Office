@@ -19,11 +19,11 @@ export function CaseHeader({
             <dt className="text-muted">Área:</dt>
             <dd className="font-medium">{area.name}</dd>
           </div>
-          <div className="flex gap-1.5">
+          <div className="flex min-w-0 flex-wrap gap-1.5">
             <dt className="text-muted">
               {legalCase.submittedAt ? "Protocolo:" : "Protocolo provisório:"}
             </dt>
-            <dd className="font-medium tabular-nums">{legalCase.protocol}</dd>
+            <dd className="min-w-0 break-all font-medium tabular-nums">{legalCase.protocol}</dd>
           </div>
         </dl>
         <JourneyStepper current={step} />

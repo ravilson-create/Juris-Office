@@ -77,7 +77,7 @@ export default async function MeusAtendimentosPage() {
                 <dl className="mt-2 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
                   <div className="flex gap-1.5">
                     <dt className="text-muted">Protocolo:</dt>
-                    <dd className="font-medium tabular-nums">{item.protocol}</dd>
+                    <dd className="min-w-0 break-all font-medium tabular-nums">{item.protocol}</dd>
                   </div>
                   <div className="flex gap-1.5">
                     <dt className="text-muted">Atualizado em:</dt>

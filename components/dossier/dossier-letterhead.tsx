@@ -33,11 +33,9 @@ export function DossierLetterhead({
             <BrandWordmark size="md" />
           </span>
         </span>
-        <p className="text-sm text-muted sm:text-right">
+        <p className="min-w-0 text-sm text-muted sm:text-right">
           Protocolo
-          <span className="block whitespace-nowrap font-semibold tabular-nums text-ink">
-            {protocol}
-          </span>
+          <span className="block break-all font-semibold tabular-nums text-ink">{protocol}</span>
         </p>
       </div>
       <div>

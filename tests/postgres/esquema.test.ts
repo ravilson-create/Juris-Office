@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { authEnabled } from "@/lib/auth/session";
 import { MAX_DOCUMENTS_PER_CASE } from "@/domain/document/rules";
 import { InProcessCaseLock } from "@/lib/services/case-lock";
 import { CaseService } from "@/lib/services/case-service";
@@ -168,8 +169,16 @@ describe("garantias sob concorrência (PostgreSQL)", () => {
 
 describe("isolamento por sessão", () => {
   it("listByOwner devolve só os casos do dono", async () => {
-    const a = await service.createCase("consumidor", HASH_A);
-    await service.createCase("civel", HASH_B);
+    const a = await service.createCase(
+      "consumidor",
+      authEnabled ? undefined : HASH_A,
+      authEnabled ? HASH_A : undefined,
+    );
+    await service.createCase(
+      "civel",
+      authEnabled ? undefined : HASH_B,
+      authEnabled ? HASH_B : undefined,
+    );
     const mine = await service.listMyCases(HASH_A);
     expect(mine.map((i) => i.id)).toEqual([a.id]);
     expect(await service.listMyCases("c".repeat(64))).toEqual([]);

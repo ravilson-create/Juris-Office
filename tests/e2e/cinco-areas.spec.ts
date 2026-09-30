@@ -161,7 +161,7 @@ for (const plan of AREA_PLANS) {
     await page.getByRole("button", { name: "Finalizar atendimento de teste" }).click();
     await expect(h1(page)).toHaveText("Atendimento de teste finalizado");
     await expect(page.getByTestId("protocolo-final")).toHaveText(protocol);
-    await expect(page.getByText(/Nenhuma informação foi encaminhada/)).toBeVisible();
+    await expect(page.getByText(/O atendimento fica disponível à equipe/)).toBeVisible();
 
     // 8. Dossiê
     await page.getByRole("link", { name: "Ver o dossiê gerado" }).click();

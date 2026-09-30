@@ -33,11 +33,12 @@ export class PgDb implements Db {
   }
 
   async transaction<T>(fn: (tx: Queryable) => Promise<T>): Promise<T> {
+    // Resolva a sessão antes de abrir a transação de domínio.
+    const userId = authEnabled && this.bindIdentity ? await currentActorId() : null;
     const client = await this.pool.connect();
     try {
       await client.query("BEGIN");
       if (authEnabled && this.bindIdentity) {
-        const userId = await currentActorId();
         await client.query("SELECT set_config('app.user_id', $1, true)", [userId ?? ""]);
       }
       const tx: Queryable = {
