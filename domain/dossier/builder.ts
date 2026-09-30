@@ -114,7 +114,7 @@ export function buildDossier(input: DossierInput): Dossier {
   if (chronology.length === 1) missingInformation.push("Datas dos fatos não informadas.");
 
   const observations = [
-    "Dossiê gerado em ambiente de testes, para demonstração. Nenhuma informação foi encaminhada a advogado ou escritório.",
+    "Dossiê gerado em ambiente de testes. O acesso profissional depende de encaminhamento ao advogado responsável.",
     "Resumo montado automaticamente a partir das respostas do interessado, sem uso de inteligência artificial.",
   ];
   if (documents.length > 0) {

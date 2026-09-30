@@ -10,7 +10,7 @@ export function SiteFooter() {
           <BrandLogo size="sm" mono />
           <p className="max-w-prose">
             {APP_NAME} (versão de testes) organiza as informações que você digita em um dossiê de
-            demonstração. Não encaminha nada a advogados, não substitui a orientação de um
+            demonstração. Permite acompanhamento pelo advogado responsável. Não substitui a orientação de um
             profissional habilitado nem garante resultado.
           </p>
         </div>
