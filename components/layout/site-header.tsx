@@ -5,7 +5,7 @@ import { APP_NAME } from "@/lib/config";
 export function SiteHeader() {
   return (
     <header className="border-b border-line bg-surface print:hidden">
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-4">
+      <div className="mx-auto flex max-w-5xl items-center justify-between flex-wrap gap-4 px-5 py-4">
         <Link
           href="/"
           aria-label={`${APP_NAME} — página inicial`}
@@ -19,7 +19,7 @@ export function SiteHeader() {
           </span>
         </Link>
         <nav aria-label="Principal">
-          <ul className="flex items-center gap-3 text-sm sm:gap-5">
+          <ul className="flex flex-wrap items-center gap-3 text-sm sm:gap-5">
             <li className="hidden sm:block">
               <Link href="/como-funciona" className="text-muted hover:text-ink">
                 Como funciona
@@ -28,6 +28,11 @@ export function SiteHeader() {
             <li className="hidden sm:block">
               <Link href="/advogado" className="whitespace-nowrap text-navy hover:underline">
                 Advogados
+              </Link>
+            </li>
+            <li>
+              <Link href="/consulta" className="font-medium text-navy hover:underline">
+                Consultar protocolo
               </Link>
             </li>
             <li>

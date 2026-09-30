@@ -12,9 +12,9 @@ export const dynamic = "force-dynamic";
 
 const WHAT_HAPPENED = [
   "O dossiê foi gerado a partir das suas respostas, sem uso de inteligência artificial.",
-  "Nenhuma informação foi encaminhada a um advogado ou escritório, e ninguém entrará em contato.",
+  "O atendimento fica disponível à equipe para encaminhamento a um advogado.",
   "Os documentos aparecem só como registro: nenhum arquivo foi recebido.",
-  "Você pode abrir, imprimir ou salvar o dossiê em PDF, e reencontrá-lo em “Meus atendimentos” enquanto o servidor de testes não for reiniciado.",
+  "Você pode acompanhar o andamento na página de consulta usando seu protocolo.",
 ];
 
 export default async function ProtocoloPage({ params }: { params: Promise<{ caseId: string }> }) {
@@ -41,11 +41,11 @@ export default async function ProtocoloPage({ params }: { params: Promise<{ case
             </h1>
             <p className="mt-2 text-muted">
               Dossiê gerado para demonstração. O número abaixo identifica este atendimento de teste;
-              ele não dá acesso ao atendimento em outro navegador.
+              use-o em “Consultar solicitação” para acompanhar o andamento em qualquer dispositivo.
             </p>
             <p className="mt-5 text-sm text-muted">Número do protocolo</p>
             <p
-              className="mt-1 whitespace-nowrap text-xl font-bold tracking-wide text-navy tabular-nums sm:text-3xl"
+              className="mt-1 break-all text-lg font-bold tracking-wide text-navy tabular-nums sm:text-xl"
               data-testid="protocolo-final"
             >
               {legalCase.protocol}
@@ -56,6 +56,12 @@ export default async function ProtocoloPage({ params }: { params: Promise<{ case
           </div>
         </section>
 
+        <p className="mt-6">
+          Guarde seu protocolo: ele é seu código de acesso ao andamento.{" "}
+          <a className="underline" href="/consulta">
+            Consultar solicitação
+          </a>
+        </p>
         <section aria-labelledby="proximos-passos" className="mt-10">
           <h2 id="proximos-passos" className="text-xl">
             O que aconteceu
@@ -74,8 +80,8 @@ export default async function ProtocoloPage({ params }: { params: Promise<{ case
             ))}
           </ol>
           <p className="mt-4 max-w-prose text-sm text-muted">
-            O encaminhamento a advogados, o acompanhamento e o envio real de arquivos ainda não
-            existem nesta versão.
+            O envio real de arquivos ainda não está disponível. Nesta etapa, use somente dados
+            fictícios.
           </p>
         </section>
 

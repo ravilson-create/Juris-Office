@@ -10,7 +10,7 @@ export function TestEnvironmentBanner() {
     >
       <p className="mx-auto max-w-5xl px-5 py-2 text-sm">
         <strong className="font-semibold">Ambiente de testes.</strong> Use apenas dados fictícios.
-        Nenhuma informação é encaminhada a advogados e nenhum arquivo é recebido.
+        Cadastro e cobrança em teste. Arquivos ainda não são enviados.
       </p>
     </aside>
   );

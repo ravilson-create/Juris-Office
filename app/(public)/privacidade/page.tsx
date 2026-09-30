@@ -12,18 +12,19 @@ export default function PrivacidadePage() {
       </p>
       <div className="mt-6 flex flex-col gap-4">
         <p>
-          <strong>Esta é uma versão de testes. Use apenas dados fictícios.</strong> Nenhuma
-          informação é encaminhada a advogados ou escritórios, e ninguém entrará em contato.
+          <strong>Esta é uma versão de testes. Use apenas dados fictícios.</strong> O advogado
+          responsável pode acessar o atendimento atribuído a ele.
         </p>
         <p>
           O {APP_NAME} usa o que você digita (identificação, contato, respostas às perguntas e
-          relato) somente para montar o dossiê de demonstração deste atendimento. Dos documentos,
-          registra apenas nome, tipo e tamanho: o arquivo em si não sai do seu aparelho.
+          relato) para organizar o atendimento e permitir sua análise pelo advogado responsável. Dos
+          documentos, registra apenas nome, tipo e tamanho: o arquivo em si não sai do seu aparelho.
         </p>
         <p>
-          Os dados ficam só na memória do servidor de testes e são apagados quando ele é reiniciado.
-          Rascunhos também ficam no servidor; nada é gravado no armazenamento permanente do seu
-          navegador, além de um cookie que liga os atendimentos a este navegador.
+          Os dados são armazenados no banco de dados do sistema. Rascunhos também ficam no servidor;
+          cookies de sessão ligam seus atendimentos a este navegador. Guarde o protocolo: ele
+          permite consultar o andamento sem cadastro e deve ser compartilhado apenas com o advogado
+          responsável.
         </p>
         <p>
           Os dados não são usados para treinar modelos de inteligência artificial. Não há

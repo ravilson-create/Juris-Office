@@ -42,7 +42,7 @@ export class RealPgDb implements Db {
   constructor() {
     const url = process.env.TEST_DATABASE_URL;
     if (!url) throw new Error("TEST_DATABASE_URL não definida.");
-    RealPgDb.shared ??= new PgDb(url, 12);
+    RealPgDb.shared ??= new PgDb(url, 12, false);
     const db = RealPgDb.shared;
     this.ready = db.query(TRUNCATE).then(() => db);
   }

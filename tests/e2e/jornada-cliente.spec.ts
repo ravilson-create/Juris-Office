@@ -14,7 +14,7 @@ test("jornada de Consumidor: área → identificação → triagem → relato �
   // Identificação: validação e envio
   await expect(page).toHaveURL(/\/identificacao$/);
   const protocol = await page.getByText(/^JO-\d{8}-/).textContent();
-  expect(protocol).toMatch(/^JO-\d{8}-[A-Z2-9]{6}$/);
+  expect(protocol).toMatch(/^JO-\d{8}-[A-Z2-9]{28}$/);
 
   await page.getByRole("button", { name: "Salvar e continuar" }).click();
   await expect(page.getByRole("alert").first()).toContainText("Revise os campos");

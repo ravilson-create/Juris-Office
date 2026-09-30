@@ -41,7 +41,7 @@ describe("restrições do esquema", () => {
     ).rejects.toBeInstanceOf(ProtocolConflictError);
     // O serviço tenta de novo com outro protocolo.
     const c = await service.createCase("consumidor");
-    expect(c.protocol).toMatch(/^JO-\d{8}-[A-Z0-9]{6}$/);
+    expect(c.protocol).toMatch(/^JO-\d{8}-[A-Z0-9]{28}$/);
   });
 
   it("dossiê: (caso, versão) é único no banco", async () => {

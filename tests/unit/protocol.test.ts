@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import { generateProtocol, isValidProtocol } from "@/domain/case/protocol";
 
 describe("generateProtocol", () => {
-  it("usa o formato JO-AAAAMMDD-XXXXXX com a data UTC", () => {
+  it("usa o formato JO-AAAAMMDD-28 caracteres aleatórios com a data UTC", () => {
     const p = generateProtocol(
       new Date("2026-09-27T23:30:00Z"),
-      () => new Uint8Array([0, 1, 2, 3, 4, 5]),
+      (size) => new Uint8Array(Array.from({ length: size }, (_, i) => i % 6)),
     );
-    expect(p).toBe("JO-20260927-234567");
+    expect(p).toBe("JO-20260927-2345672345672345672345672345");
     expect(isValidProtocol(p)).toBe(true);
   });
 

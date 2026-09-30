@@ -22,7 +22,7 @@ const STEPS = [
   ],
   [
     "Revisão e protocolo",
-    "Você confere tudo e finaliza. O sistema gera o dossiê e um número de protocolo para demonstração. Nenhuma informação é encaminhada a um advogado.",
+    "Você confere tudo e finaliza. O sistema gera o dossiê e seu protocolo confidencial. Guarde esse número para consultar o andamento e as atualizações do advogado responsável.",
   ],
 ];
 

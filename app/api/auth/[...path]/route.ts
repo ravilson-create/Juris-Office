@@ -1,10 +1,5 @@
-import { getAuth } from "@/lib/auth/server";
-
-type Context = { params: Promise<{ path: string[] }> };
-export async function GET(request: Request, context: Context) {
-  return getAuth().handler().GET(request, context);
+// A autenticação profissional agora utiliza Server Actions e sessões próprias.
+export async function GET() {
+  return Response.json({ error: "Use /auth/sign-in" }, { status: 410 });
 }
-
-export async function POST(request: Request, context: Context) {
-  return getAuth().handler().POST(request, context);
-}
+export const POST = GET;

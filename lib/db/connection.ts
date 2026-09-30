@@ -36,5 +36,5 @@ export function hasDatabase(): boolean {
 export function getMaintenanceDb(): PgDb {
   const url = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
   if (!url) throw new Error("Banco de manutenção não configurado.");
-  return new PgDb(url, 1);
+  return new PgDb(url, 1, false);
 }

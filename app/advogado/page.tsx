@@ -20,7 +20,7 @@ export default function AdvogadoPage() {
             href="/auth/sign-up"
             className="rounded-md border border-line px-5 py-3 font-semibold"
           >
-            Criar conta
+            Cadastrar advogado
           </Link>
         </div>
       ) : (
@@ -43,7 +43,8 @@ export default function AdvogadoPage() {
           ))}
         </div>
         <p className="mt-4 text-sm text-muted">
-          A contratação ainda não está disponível. O cadastro não ativa acesso pago ou cobrança.
+          Cadastro com e-mail e senha, sem código de confirmação. Pagamentos em Asaas sandbox, sem
+          cobrança real.
         </p>
       </section>
     </main>

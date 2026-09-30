@@ -1,5 +1,6 @@
 "use server";
 
+import { issueTrackingToken } from "@/lib/tracking";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { RawFormValues } from "@/domain/triage/schema";
@@ -192,6 +193,7 @@ export async function submitCaseAction(formData: FormData): Promise<void> {
   let target = `/atendimento/${caseId}/protocolo`;
   try {
     await getCaseService().submitCase(caseId);
+    if (authEnabled) await issueTrackingToken(caseId);
   } catch (error) {
     // A página de destino sabe levar a pessoa à etapa pendente.
     if (!(error instanceof DomainError)) throw error;

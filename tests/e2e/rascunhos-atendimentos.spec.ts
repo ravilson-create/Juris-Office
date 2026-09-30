@@ -164,7 +164,7 @@ test.describe("Meus atendimentos", () => {
     const urlA = a.url();
     await a.goto("/atendimento/meus");
     const protocolA = (await a
-      .getByText(/^JO-\d{8}-[A-Z0-9]{6}$/)
+      .getByText(/^JO-\d{8}-[A-Z0-9]{28}$/)
       .first()
       .textContent())!;
     await expect(a.getByRole("listitem").filter({ hasText: protocolA })).toContainText(
@@ -187,7 +187,7 @@ test.describe("Meus atendimentos", () => {
     await startConsumidor(b);
     await b.goto("/atendimento/meus");
     const protocolB = (await b
-      .getByText(/^JO-\d{8}-[A-Z0-9]{6}$/)
+      .getByText(/^JO-\d{8}-[A-Z0-9]{28}$/)
       .first()
       .textContent())!;
     expect(protocolB).not.toBe(protocolA);

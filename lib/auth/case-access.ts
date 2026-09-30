@@ -3,7 +3,7 @@ import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import type { LegalCase } from "@/domain/case/schema";
-import { authEnabled, currentUserId } from "./session";
+import { authEnabled, currentUserId, currentActorId } from "./session";
 
 /**
  * Vínculo provisório entre o atendimento e o navegador que o criou (fase F1, sem login).
@@ -24,7 +24,7 @@ async function readSessionId(): Promise<string | null> {
 
 /** Hash da sessão atual, sem criar cookie (páginas podem só ler). Null se não houver sessão. */
 export async function currentSessionHash(): Promise<string | null> {
-  if (authEnabled) return currentUserId();
+  if (authEnabled) return currentActorId();
   const id = await readSessionId();
   return id ? hashSession(id) : null;
 }
@@ -32,9 +32,8 @@ export async function currentSessionHash(): Promise<string | null> {
 /** Só pode ser chamado em Server Actions ou Route Handlers (onde cookies podem ser gravados). */
 export async function ensureSessionHash(): Promise<string> {
   if (authEnabled) {
-    const userId = await currentUserId();
-    if (!userId) throw new Error("É necessário entrar na conta para iniciar um atendimento.");
-    return userId;
+    const actor = await currentActorId();
+    if (actor) return actor;
   }
   let id = await readSessionId();
   if (!id) {
@@ -47,7 +46,7 @@ export async function ensureSessionHash(): Promise<string> {
       maxAge: SESSION_MAX_AGE,
     });
   }
-  return hashSession(id);
+  return authEnabled ? `guest:${createHash("sha256").update(id).digest("hex")}` : hashSession(id);
 }
 
 /** Verdadeiro se o navegador atual é o dono do atendimento. Comparação em tempo constante. */
@@ -55,7 +54,7 @@ export async function canAccessCase(
   legalCase: Pick<LegalCase, "ownerSessionHash" | "citizenId">,
 ): Promise<boolean> {
   if (authEnabled) {
-    const userId = await currentUserId();
+    const userId = await currentActorId();
     return Boolean(userId && legalCase.citizenId === userId);
   }
   const id = await readSessionId();

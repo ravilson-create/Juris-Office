@@ -57,9 +57,7 @@ export const CASE_STATUS_LABEL: Record<CaseStatus, string> = {
   triage: "Em preenchimento (triagem)",
   awaiting_documents: "Em preenchimento (documentos)",
   ready_for_review: "Pronto para finalizar",
-  submitted: "Finalizado (teste)",
-  // Status abaixo reservados para fases futuras (portal do advogado, contrato):
-  // nenhum fluxo desta versão chega a eles.
+  submitted: "Recebido · aguardando análise",
   under_legal_review: "Em análise pelo advogado",
   needs_information: "Aguardando informações",
   accepted: "Causa aceita",

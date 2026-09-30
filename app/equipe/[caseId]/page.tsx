@@ -1,3 +1,4 @@
+import { StatusForm } from "../status-form";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
@@ -18,7 +19,7 @@ export default async function CasoEquipe({ params }: { params: Promise<{ caseId:
     "SELECT role FROM profiles WHERE user_id = $1",
     [actor],
   );
-  if (!profile[0] || !["lawyer", "admin"].includes(profile[0].role)) notFound();
+  if (!profile[0] || profile[0].role !== "lawyer") notFound();
   if (profile[0].role === "lawyer") {
     const active = await getDb().query(
       "SELECT 1 FROM lawyer_subscriptions WHERE lawyer_id = $1 AND status = 'active' AND valid_until > now()",
@@ -45,6 +46,7 @@ export default async function CasoEquipe({ params }: { params: Promise<{ caseId:
         <PrintButton />
       </div>
       <DossierView dossier={submission.dossier} />
+      <StatusForm caseId={caseId} status={submission.legalCase.status} />
       <section
         className="mt-10 border-t border-line pt-6 print:hidden"
         aria-labelledby="notas-title"

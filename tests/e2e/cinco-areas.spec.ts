@@ -107,7 +107,7 @@ for (const plan of AREA_PLANS) {
     await page.goto("/atendimento");
     await page.getByRole("button", { name: `Escolher ${plan.name}` }).click();
     const protocol = (await page
-      .getByText(/^JO-\d{8}-[A-Z0-9]{6}$/)
+      .getByText(/^JO-\d{8}-[A-Z0-9]{28}$/)
       .first()
       .textContent())!;
     await identify(page);

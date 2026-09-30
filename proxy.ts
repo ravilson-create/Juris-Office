@@ -31,7 +31,7 @@ function buildCsp(nonce: string): string {
  * páginas. A verificação de saúde (/api/saude) fica aberta para a hospedagem monitorar o app.
  */
 export async function proxy(request: NextRequest) {
-  if (basicAuthConfigured()) {
+  if (basicAuthConfigured() && request.nextUrl.pathname !== "/api/webhooks/asaas") {
     const ok = await isBasicAuthValid(
       request.headers.get("authorization"),
       process.env.BASIC_AUTH_USER!,
@@ -56,6 +56,11 @@ export async function proxy(request: NextRequest) {
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set("Content-Security-Policy", csp);
+  if (/^\/(consulta|atendimento|equipe|auth|assinatura)(\/|$)/.test(request.nextUrl.pathname)) {
+    response.headers.set("Cache-Control", "private, no-store");
+    response.headers.set("Referrer-Policy", "no-referrer");
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
   return response;
 }
 

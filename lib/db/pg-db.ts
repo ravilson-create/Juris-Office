@@ -1,6 +1,6 @@
 import { Pool } from "pg";
 import type { Db, Queryable } from "./types";
-import { authEnabled, currentUserId } from "@/lib/auth/session";
+import { authEnabled, currentActorId } from "@/lib/auth/session";
 
 /**
  * Cliente PostgreSQL (Neon) sobre `pg`. Em funções serverless, use a URL *pooled* do Neon
@@ -9,7 +9,11 @@ import { authEnabled, currentUserId } from "@/lib/auth/session";
 export class PgDb implements Db {
   private readonly pool: Pool;
 
-  constructor(connectionString: string, maxConnections = 3) {
+  constructor(
+    connectionString: string,
+    maxConnections = 3,
+    private readonly bindIdentity = true,
+  ) {
     this.pool = new Pool({
       connectionString,
       max: maxConnections,
@@ -21,7 +25,7 @@ export class PgDb implements Db {
   }
 
   async query<T = Record<string, unknown>>(text: string, params?: unknown[]): Promise<T[]> {
-    if (authEnabled) {
+    if (authEnabled && this.bindIdentity) {
       return this.transaction((tx) => tx.query<T>(text, params));
     }
     const result = await this.pool.query(text, params as unknown[]);
@@ -32,8 +36,8 @@ export class PgDb implements Db {
     const client = await this.pool.connect();
     try {
       await client.query("BEGIN");
-      if (authEnabled) {
-        const userId = await currentUserId();
+      if (authEnabled && this.bindIdentity) {
+        const userId = await currentActorId();
         await client.query("SELECT set_config('app.user_id', $1, true)", [userId ?? ""]);
       }
       const tx: Queryable = {
