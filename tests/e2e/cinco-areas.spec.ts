@@ -184,7 +184,7 @@ for (const plan of AREA_PLANS) {
     await expect(h1(page)).toHaveText("Meus atendimentos");
     const item = page.getByRole("listitem").filter({ hasText: protocol });
     await expect(item).toContainText(plan.name);
-    await expect(item).toContainText("Finalizado (teste)");
+    await expect(item).toContainText("Recebido · aguardando análise");
     await item.getByRole("link", { name: /Abrir dossiê/ }).click();
     await expect(page.getByRole("article", { name: "Dossiê jurídico preliminar" })).toBeVisible();
   });
