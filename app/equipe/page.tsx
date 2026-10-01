@@ -12,7 +12,10 @@ import {
 } from "@/domain/case/status";
 import { contarCasosPorStatus, contarCasosSemAdvogado } from "@/lib/services/equipe-dashboard";
 import { contarCasosFila, listarCasosFila } from "@/lib/services/equipe-fila";
+import { contarPrazosVencidos, listarPrazosProximos } from "@/lib/services/equipe-prazos";
 import { assignLawyer } from "./actions";
+
+const DIAS_ALERTA_PRAZO = 7;
 
 export const dynamic = "force-dynamic";
 export default async function EquipePage({
@@ -55,6 +58,9 @@ export default async function EquipePage({
   const resumo = resumirContagemPorStatus(await contarCasosPorStatus(db));
   const semAdvogado =
     profile[0].role === "admin" ? await contarCasosSemAdvogado(db) : 0;
+  const prazosProximos = await listarPrazosProximos(db, DIAS_ALERTA_PRAZO);
+  const prazosVencidos = await contarPrazosVencidos(db);
+  const hojeISO = new Date().toISOString().slice(0, 10);
   const lawyers =
     profile[0].role === "admin"
       ? await db.query<{ user_id: string }>(
@@ -111,6 +117,32 @@ export default async function EquipePage({
         <p className="mt-4 rounded-md border border-line bg-surface p-4">
           <strong>{semAdvogado}</strong> caso(s) do escritório ainda sem advogado atribuído.
         </p>
+      )}
+
+      {prazosVencidos > 0 && (
+        <p className="mt-4 rounded-md border border-danger bg-danger-soft p-4">
+          <strong>{prazosVencidos}</strong> prazo(s) vencido(s) sem conclusão.
+        </p>
+      )}
+
+      {prazosProximos.length > 0 && (
+        <div className="mt-4 rounded-md border border-line bg-surface p-4">
+          <p className="font-semibold">
+            Prazos nos próximos {DIAS_ALERTA_PRAZO} dias ({prazosProximos.length})
+          </p>
+          <ul className="mt-2 space-y-1 text-sm">
+            {prazosProximos.map((p) => (
+              <li key={p.id}>
+                <Link href={`/equipe/${p.case_id}`} className="text-navy hover:underline">
+                  {p.type}
+                </Link>{" "}
+                — vence em{" "}
+                {new Date(p.due_date).toLocaleDateString("pt-BR", { timeZone: "UTC" })}
+                {p.due_date <= hojeISO && <strong> (hoje ou atrasado)</strong>}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {profile[0].role === "admin" && Number(pendentesOab[0]?.count ?? 0) > 0 && (
