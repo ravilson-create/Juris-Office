@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getMaintenanceDb, hasDatabase } from "@/lib/db/connection";
 import { runRetentionCleanup } from "@/lib/services/retention";
 import { escalonarPrazosVencidos } from "@/lib/services/equipe-prazos";
+import { escalonarParcelasVencidas } from "@/lib/services/equipe-contratos";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,8 @@ export async function GET(request: Request) {
   try {
     const result = await runRetentionCleanup(db);
     const prazosEscalados = await escalonarPrazosVencidos(db);
-    return NextResponse.json({ status: "ok", ...result, prazosEscalados });
+    const parcelasEscaladas = await escalonarParcelasVencidas(db);
+    return NextResponse.json({ status: "ok", ...result, prazosEscalados, parcelasEscaladas });
   } finally {
     await db.close();
   }

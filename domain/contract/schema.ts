@@ -1,19 +1,21 @@
 import { z } from "zod";
+import type { CaseStatus } from "@/domain/case/schema";
 
-/**
- * Módulo 3 — Fechamento de contrato (Fase F2).
- * Somente tipos nesta fase; nenhuma regra implementada ainda.
- */
+/** Módulo 3 — Fechamento de contrato (Fase F2, PR4 do Portal do Advogado). */
 export const feeTypeSchema = z.enum(["fixed", "success", "hourly", "mixed"]);
 export type FeeType = z.infer<typeof feeTypeSchema>;
+
+export const contractStatusSchema = z.enum(["draft", "sent", "signed", "cancelled"]);
+export type ContractStatus = z.infer<typeof contractStatusSchema>;
 
 export const contractSchema = z.object({
   id: z.uuid(),
   caseId: z.uuid(),
   feeType: feeTypeSchema,
-  feeValue: z.number().nonnegative(),
+  /** Centavos inteiros (mesma convenção de domain/triage/money.ts), nunca reais fracionados. */
+  feeValue: z.number().int().nonnegative(),
   successPercentage: z.number().min(0).max(100).optional(),
-  status: z.enum(["draft", "sent", "signed", "cancelled"]),
+  status: contractStatusSchema,
   signedAt: z.iso.datetime().optional(),
   signatureHash: z.string().optional(),
   createdAt: z.iso.datetime(),
@@ -25,17 +27,39 @@ export const installmentSchema = z.object({
   id: z.uuid(),
   contractId: z.uuid(),
   dueDate: z.iso.date(),
-  amount: z.number().positive(),
+  /** Centavos inteiros. */
+  amount: z.number().int().positive(),
   status: z.enum(["pending", "paid", "overdue"]),
 });
 export type Installment = z.infer<typeof installmentSchema>;
 
 export const caseViabilitySchema = z.object({
   caseId: z.uuid(),
-  feasibilityNote: z.string(),
+  feasibilityNote: z.string().trim().min(1),
   risk: z.enum(["low", "medium", "high"]),
   decision: z.enum(["accepted", "rejected", "needs_info"]),
-  decidedBy: z.uuid(),
+  // ID de ator nesta base é texto (profiles.user_id), nunca uuid — mesma correção já feita em
+  // domain/deadline/schema.ts (assignedTo): o tipo original nunca tinha sido validado contra
+  // dado real porque o módulo nunca foi implementado.
+  decidedBy: z.string().min(1),
   decidedAt: z.iso.datetime(),
 });
 export type CaseViability = z.infer<typeof caseViabilitySchema>;
+
+/**
+ * A decisão de viabilidade não fica num status à parte: ela move o próprio status do caso
+ * (domain/case/status.ts já prevê under_legal_review/needs_information → accepted/rejected →
+ * in_negotiation). Dois conceitos de "status do caso" que pudessem divergir seria pior do que
+ * um só — por isso a decisão de viabilidade é sempre também uma transição de CaseStatus,
+ * validada por assertTransition antes de gravar.
+ */
+export function statusCasoParaDecisao(decision: CaseViability["decision"]): CaseStatus {
+  switch (decision) {
+    case "accepted":
+      return "accepted";
+    case "rejected":
+      return "rejected";
+    case "needs_info":
+      return "needs_information";
+  }
+}
