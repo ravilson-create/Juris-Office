@@ -1,5 +1,5 @@
 import "server-only";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type { Db } from "@/lib/db/types";
 import type { CaseStatus } from "@/domain/case/schema";
 import { assertTransition } from "@/domain/case/status";
@@ -90,6 +90,11 @@ export async function listarContratos(db: Db, caseId: string): Promise<ContratoR
   );
 }
 
+export async function buscarContrato(db: Db, contractId: string): Promise<ContratoRow | null> {
+  const rows = await db.query<ContratoRow>("SELECT * FROM contracts WHERE id = $1", [contractId]);
+  return rows[0] ?? null;
+}
+
 export async function criarContrato(
   db: Db,
   params: {
@@ -150,6 +155,63 @@ export async function marcarParcelaPaga(db: Db, installmentId: string): Promise<
     "UPDATE contract_installments SET status = 'paid' WHERE id = $1 AND status != 'paid'",
     [installmentId],
   );
+}
+
+/**
+ * Aceite eletrônico (PR5): move o contrato de 'sent' para 'signed' e grava a trilha de auditoria
+ * na mesma transação — nunca uma sem a outra. A RLS (contracts_citizen_sign/signatures_insert,
+ * migração 0012) garante que só o próprio cliente, e só a partir de 'sent', chega aqui; a
+ * verificação de transição abaixo é defesa em profundidade, não a autorização em si.
+ *
+ * O hash cobre contrato + quem assinou + IP + o instante exato, para que a trilha prove o que foi
+ * assinado e quando sem depender só do relógio do servidor no momento da leitura.
+ */
+export async function assinarContrato(
+  db: Db,
+  params: {
+    contractId: string;
+    statusAtual: ContractStatus;
+    signedBy: string | null;
+    signedByHash: string | null;
+    ip: string;
+    userAgent: string;
+  },
+): Promise<void> {
+  assertContractTransition(params.statusAtual, "signed");
+  const assinadoEm = new Date().toISOString();
+  const signatureHash = createHash("sha256")
+    .update(
+      [
+        params.contractId,
+        params.signedBy ?? params.signedByHash ?? "",
+        params.ip,
+        assinadoEm,
+      ].join("|"),
+    )
+    .digest("hex");
+  await db.transaction(async (tx) => {
+    // A ordem importa: signatures_insert (migração 0012) só aceita a trilha enquanto o contrato
+    // ainda está 'sent'. Gravando-a antes de mudar o status, a própria RLS garante que nunca
+    // existe um contrato 'signed' sem uma assinatura correspondente.
+    await tx.query(
+      `INSERT INTO contract_signatures(id, contract_id, signed_by, signed_by_hash, signed_at, ip, user_agent, signature_hash)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [
+        randomUUID(),
+        params.contractId,
+        params.signedBy,
+        params.signedByHash,
+        assinadoEm,
+        params.ip,
+        params.userAgent,
+        signatureHash,
+      ],
+    );
+    await tx.query(
+      "UPDATE contracts SET status = 'signed', signed_at = $2, signature_hash = $3, updated_at = now() WHERE id = $1",
+      [params.contractId, assinadoEm, signatureHash],
+    );
+  });
 }
 
 /** Job de manutenção (cron), mesmo padrão de escalonarPrazosVencidos: roda fora da RLS. */
