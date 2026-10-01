@@ -17,10 +17,10 @@ export default function AdvogadoPage() {
             Acessar área profissional
           </Link>
           <Link
-            href="/auth/sign-up"
+            href="/advogado/cadastro"
             className="rounded-md border border-line px-5 py-3 font-semibold"
           >
-            Criar conta
+            Começar teste grátis
           </Link>
         </div>
       ) : (
@@ -43,7 +43,7 @@ export default function AdvogadoPage() {
           ))}
         </div>
         <p className="mt-4 text-sm text-muted">
-          A contratação ainda não está disponível. O cadastro não ativa acesso pago ou cobrança.
+          7 dias grátis, sem cartão. A fatura só é gerada perto do fim do teste.
         </p>
       </section>
     </main>

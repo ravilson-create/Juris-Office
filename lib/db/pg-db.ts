@@ -33,8 +33,17 @@ export class PgDb implements Db {
     try {
       await client.query("BEGIN");
       if (authEnabled) {
-        const userId = await currentUserId();
-        await client.query("SELECT set_config('app.user_id', $1, true)", [userId ?? ""]);
+        // app.anon_hash viaja junto com app.user_id: entrar na conta é sempre opcional, então a
+        // política de linha (RLS) precisa reconhecer tanto quem está logado quanto quem não
+        // está — ver migração 0007. Importação tardia: evita que lib/auth/case-access.ts (e o
+        // next/headers que ele carrega) entre no grafo estático deste módulo, usado também fora
+        // de um request Next.js (ex.: testes de integração com repositórios PG).
+        const { currentAnonHash } = await import("@/lib/auth/case-access");
+        const [userId, anonHash] = await Promise.all([currentUserId(), currentAnonHash()]);
+        await client.query(
+          "SELECT set_config('app.user_id', $1, true), set_config('app.anon_hash', $2, true)",
+          [userId ?? "", anonHash ?? ""],
+        );
       }
       const tx: Queryable = {
         query: async <R = Record<string, unknown>>(text: string, params?: unknown[]) =>

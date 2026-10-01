@@ -20,7 +20,7 @@ export default async function EquipePage({
   if (!profile[0] || !["lawyer", "admin"].includes(profile[0].role)) redirect("/atendimento/meus");
   if (profile[0].role === "lawyer") {
     const active = await db.query(
-      "SELECT 1 FROM lawyer_subscriptions WHERE lawyer_id = $1 AND status = 'active' AND valid_until > now()",
+      "SELECT 1 FROM lawyer_subscriptions WHERE lawyer_id = $1 AND status IN ('active', 'trial') AND valid_until > now()",
       [actor],
     );
     if (!active.length) redirect("/assinatura");
@@ -44,7 +44,7 @@ export default async function EquipePage({
     profile[0].role === "admin"
       ? await db.query<{ user_id: string }>(
           `SELECT p.user_id FROM profiles p JOIN lawyer_subscriptions s ON s.lawyer_id = p.user_id
-           WHERE p.role = 'lawyer' AND p.office_id = $1 AND s.status = 'active'
+           WHERE p.role = 'lawyer' AND p.office_id = $1 AND s.status IN ('active', 'trial')
              AND s.valid_until > now() ORDER BY p.user_id`,
           [profile[0].office_id],
         )
