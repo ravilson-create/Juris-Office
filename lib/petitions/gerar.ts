@@ -2,6 +2,7 @@ import type { Applicant } from "@/domain/case/schema";
 import type { LegalAreaSlug } from "@/domain/legal-area/schema";
 import type { AnswerMap } from "@/domain/triage/engine";
 import type { PetitionDocument } from "@/domain/petition/schema";
+import { decidirModelosCivel, gerarPeticaoCivel, type ModeloCivelId } from "./civel";
 import { decidirModelosFamilia, gerarPeticaoFamilia, type ModeloFamiliaId } from "./familia";
 
 /**
@@ -13,6 +14,8 @@ export function modelosDisponiveis(area: LegalAreaSlug, answers: AnswerMap): str
   switch (area) {
     case "familia":
       return decidirModelosFamilia(answers);
+    case "civel":
+      return decidirModelosCivel(answers);
     default:
       return [];
   }
@@ -24,8 +27,15 @@ export function gerarPeticao(
   applicant: Applicant,
   answers: AnswerMap,
 ): PetitionDocument | null {
-  if (area !== "familia") return null;
-  const permitidos = decidirModelosFamilia(answers);
-  if (!permitidos.includes(modeloId as ModeloFamiliaId)) return null;
-  return gerarPeticaoFamilia(modeloId as ModeloFamiliaId, applicant, answers);
+  if (area === "familia") {
+    const permitidos = decidirModelosFamilia(answers);
+    if (!permitidos.includes(modeloId as ModeloFamiliaId)) return null;
+    return gerarPeticaoFamilia(modeloId as ModeloFamiliaId, applicant, answers);
+  }
+  if (area === "civel") {
+    const permitidos = decidirModelosCivel(answers);
+    if (!permitidos.includes(modeloId as ModeloCivelId)) return null;
+    return gerarPeticaoCivel(modeloId as ModeloCivelId, applicant, answers);
+  }
+  return null;
 }

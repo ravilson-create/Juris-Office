@@ -16,6 +16,11 @@ const NOMES_MODELO: Record<string, string> = {
   "familia.divorcio_litigioso": "Ação de Divórcio Litigioso",
   "familia.uniao_estavel": "Ação de Reconhecimento e Dissolução de União Estável",
   "familia.partilha_bens": "Ação de Partilha de Bens",
+  "civel.rescisao_contratual": "Ação de Rescisão Contratual c/c Indenização",
+  "civel.acao_cobranca": "Ação de Cobrança",
+  "civel.indenizacao_danos": "Ação de Indenização por Danos Morais e Materiais",
+  "civel.despejo_cobranca_alugueis": "Ação de Despejo c/c Cobrança de Aluguéis",
+  "civel.obrigacao_fazer_nao_fazer": "Ação de Obrigação de Fazer/Não Fazer",
 };
 
 export default async function PeticaoPage({ params }: { params: Promise<{ caseId: string }> }) {
