@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getMaintenanceDb, hasDatabase } from "@/lib/db/connection";
 import { runRetentionCleanup } from "@/lib/services/retention";
+import { escalonarPrazosVencidos } from "@/lib/services/equipe-prazos";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,8 @@ export async function GET(request: Request) {
   const db = getMaintenanceDb();
   try {
     const result = await runRetentionCleanup(db);
-    return NextResponse.json({ status: "ok", ...result });
+    const prazosEscalados = await escalonarPrazosVencidos(db);
+    return NextResponse.json({ status: "ok", ...result, prazosEscalados });
   } finally {
     await db.close();
   }
