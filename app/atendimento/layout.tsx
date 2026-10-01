@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { BfcacheGuard } from "@/components/case/bfcache-guard";
-import { redirect } from "next/navigation";
 import { authEnabled, currentIdentity } from "@/lib/auth/session";
 import { bootstrapAdmin } from "@/lib/auth/bootstrap-admin";
 import { getDb } from "@/lib/db/connection";
@@ -10,14 +9,18 @@ import { getDb } from "@/lib/db/connection";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function AtendimentoLayout({ children }: { children: ReactNode }) {
+  // Entrar na conta é sempre opcional aqui: o atendimento anônimo tem que continuar funcionando
+  // mesmo com a Neon Auth configurada — por isso nunca redireciona para o login. Só identifica
+  // e prepara o perfil de quem já estiver logado (p.ex. vindo de /equipe).
   if (authEnabled) {
     const identity = await currentIdentity();
-    if (!identity) redirect("/auth/sign-in");
-    await getDb().query(
-      "INSERT INTO profiles(user_id, role) VALUES ($1, 'citizen') ON CONFLICT (user_id) DO NOTHING",
-      [identity.id],
-    );
-    await bootstrapAdmin(identity);
+    if (identity) {
+      await getDb().query(
+        "INSERT INTO profiles(user_id, role) VALUES ($1, 'citizen') ON CONFLICT (user_id) DO NOTHING",
+        [identity.id],
+      );
+      await bootstrapAdmin(identity);
+    }
   }
   return (
     <>

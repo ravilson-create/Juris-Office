@@ -21,7 +21,7 @@ export default async function CasoEquipe({ params }: { params: Promise<{ caseId:
   if (!profile[0] || !["lawyer", "admin"].includes(profile[0].role)) notFound();
   if (profile[0].role === "lawyer") {
     const active = await getDb().query(
-      "SELECT 1 FROM lawyer_subscriptions WHERE lawyer_id = $1 AND status = 'active' AND valid_until > now()",
+      "SELECT 1 FROM lawyer_subscriptions WHERE lawyer_id = $1 AND status IN ('active', 'trial') AND valid_until > now()",
       [actor],
     );
     if (!active.length) redirect("/assinatura");

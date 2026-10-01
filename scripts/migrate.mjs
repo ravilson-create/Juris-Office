@@ -39,7 +39,9 @@ try {
     if (done.has(file)) continue;
     // A P2 exige Neon Auth e o papel de execução já configurados. O build da versão
     // anterior pode continuar seguro até a ativação coordenada no ambiente de destino.
-    if (/^000[345]_p[23]_/.test(file) && process.env.ENABLE_P2_AUTH_MIGRATION !== "1") {
+    // Faixa 0003-0007: todas dependem do esquema de identidade/RLS da P2 (profiles, offices,
+    // app_actor_id, lawyer_subscriptions) e precisam da mesma ativação coordenada.
+    if (/^000[3-7]_/.test(file) && process.env.ENABLE_P2_AUTH_MIGRATION !== "1") {
       console.log(`[migrate] aguardando ativação: ${file}`);
       continue;
     }

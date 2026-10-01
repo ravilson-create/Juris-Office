@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { RawFormValues } from "@/domain/triage/schema";
 import { canAccessCase, currentSessionHash, ensureSessionHash } from "@/lib/auth/case-access";
-import { authEnabled } from "@/lib/auth/session";
+import { currentUserId } from "@/lib/auth/session";
 import { clientIp } from "@/lib/http/client-ip";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getCaseService } from "@/lib/services";
@@ -54,13 +54,16 @@ export async function createCaseAction(formData: FormData): Promise<void> {
   if (!(await checkRateLimit(`criar-atendimento:${ip}`, 30, 3600))) {
     redirect("/atendimento?erro=limite");
   }
+  // O login (quando houver) decide o dono do atendimento, não uma configuração global: entrar
+  // na conta é sempre opcional, então quem não está logado continua dono pela sessão anônima.
   const owner = await ensureSessionHash();
+  const loggedIn = Boolean(await currentUserId());
   let target: string;
   try {
     const legalCase = await getCaseService().createCase(
       slug,
-      authEnabled ? undefined : owner,
-      authEnabled ? owner : undefined,
+      loggedIn ? undefined : owner,
+      loggedIn ? owner : undefined,
     );
     target = `/atendimento/${legalCase.id}/identificacao`;
   } catch (error) {

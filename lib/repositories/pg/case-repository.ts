@@ -10,7 +10,6 @@ import {
   type UpdateCaseInput,
 } from "../types";
 import { CASE_COLUMNS, toCase } from "./mappers";
-import { authEnabled } from "@/lib/auth/session";
 
 /** Campos atualizáveis → colunas. `applicant` é jsonb. */
 const UPDATABLE: Record<keyof UpdateCaseInput, string> = {
@@ -60,9 +59,12 @@ export class PgCaseRepository implements CaseRepository {
   }
 
   async listByOwner(ownerSessionHash: string): Promise<LegalCase[]> {
+    // `ownerSessionHash` aqui é o identificador de quem pede — conta logada ou sessão anônima
+    // do navegador — e pode bater com qualquer uma das duas colunas, dependendo de como aquele
+    // atendimento específico foi criado (login é sempre opcional, nunca obrigatório).
     const rows = await this.db.query(
       `SELECT ${CASE_COLUMNS} FROM legal_cases
-       WHERE ${authEnabled ? "citizen_id = $1" : "owner_session_hash = $1"}
+       WHERE owner_session_hash = $1 OR citizen_id = $1
        ORDER BY updated_at DESC`,
       [ownerSessionHash],
     );
