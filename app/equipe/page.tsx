@@ -2,16 +2,23 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
+import type { CaseStatus } from "@/domain/case/schema";
 import { resumirContagemPorStatus } from "@/domain/case/dashboard";
-import { STATUS_PROFISSIONAL } from "@/domain/case/status";
+import { calcularPaginacao, TAMANHO_PAGINA_EQUIPE } from "@/domain/case/listagem";
+import {
+  CASE_STATUS_LABEL,
+  STATUS_PROFISSIONAL,
+  statusProfissionalValido,
+} from "@/domain/case/status";
 import { contarCasosPorStatus, contarCasosSemAdvogado } from "@/lib/services/equipe-dashboard";
+import { contarCasosFila, listarCasosFila } from "@/lib/services/equipe-fila";
 import { assignLawyer } from "./actions";
 
 export const dynamic = "force-dynamic";
 export default async function EquipePage({
   searchParams,
 }: {
-  searchParams: Promise<{ busca?: string }>;
+  searchParams: Promise<{ busca?: string; status?: string; pagina?: string }>;
 }) {
   const actor = await currentUserId();
   if (!actor) redirect("/auth/sign-in");
@@ -33,20 +40,18 @@ export default async function EquipePage({
     );
     if (!oab[0]?.oab_verificado_em) redirect("/advogado/pendente");
   }
-  const { busca } = await searchParams;
+  const { busca, status: statusBruto, pagina: paginaBruta } = await searchParams;
   const query = (busca ?? "").trim().slice(0, 80);
-  const cases = await db.query<{
-    id: string;
-    protocol: string;
-    status: string;
-    title: string | null;
-  }>(
-    `SELECT id, protocol, status, title FROM legal_cases
-     WHERE status = ANY($1)
-       AND ($2 = '' OR protocol ILIKE '%' || $2 || '%' OR title ILIKE '%' || $2 || '%')
-     ORDER BY updated_at DESC LIMIT 100`,
-    [STATUS_PROFISSIONAL, query],
+  const status = statusProfissionalValido(statusBruto);
+  const filtro = { status, busca: query };
+
+  const totalFiltrado = await contarCasosFila(db, filtro);
+  const { pagina, totalPaginas, offset } = calcularPaginacao(
+    totalFiltrado,
+    Number(paginaBruta ?? 1),
   );
+  const cases = await listarCasosFila(db, filtro, TAMANHO_PAGINA_EQUIPE, offset);
+
   const resumo = resumirContagemPorStatus(await contarCasosPorStatus(db));
   const semAdvogado =
     profile[0].role === "admin" ? await contarCasosSemAdvogado(db) : 0;
@@ -81,17 +86,24 @@ export default async function EquipePage({
       </p>
 
       <div className="mt-6 flex flex-wrap gap-3" aria-label="Resumo por status">
-        <div className="rounded-md border border-line bg-surface px-4 py-3">
+        <Link
+          href="/equipe"
+          className={`rounded-md border px-4 py-3 ${status === null ? "border-navy" : "border-line"} bg-surface`}
+        >
           <p className="text-2xl font-semibold">{resumo.total}</p>
           <p className="text-sm text-muted">Total</p>
-        </div>
+        </Link>
         {resumo.porStatus
           .filter((item) => item.total > 0)
           .map((item) => (
-            <div key={item.status} className="rounded-md border border-line bg-surface px-4 py-3">
+            <Link
+              key={item.status}
+              href={`/equipe?status=${item.status}`}
+              className={`rounded-md border px-4 py-3 ${status === item.status ? "border-navy" : "border-line"} bg-surface`}
+            >
               <p className="text-2xl font-semibold">{item.total}</p>
               <p className="text-sm text-muted">{item.label}</p>
-            </div>
+            </Link>
           ))}
       </div>
 
@@ -109,7 +121,7 @@ export default async function EquipePage({
           {pendentesOab[0].count} advogado(s) aguardando confirmação da OAB
         </Link>
       )}
-      <form action="/equipe" className="mt-6 flex gap-2" role="search">
+      <form action="/equipe" className="mt-6 flex flex-wrap gap-2" role="search">
         <label htmlFor="busca" className="sr-only">
           Buscar caso por protocolo ou título
         </label>
@@ -121,16 +133,36 @@ export default async function EquipePage({
           placeholder="Protocolo ou título"
           className="min-w-0 flex-1 rounded border p-2"
         />
+        <label htmlFor="status" className="sr-only">
+          Filtrar por status
+        </label>
+        <select
+          id="status"
+          name="status"
+          defaultValue={status ?? ""}
+          className="rounded border p-2"
+        >
+          <option value="">Todos os status</option>
+          {STATUS_PROFISSIONAL.map((s) => (
+            <option key={s} value={s}>
+              {CASE_STATUS_LABEL[s]}
+            </option>
+          ))}
+        </select>
         <button className="rounded bg-navy px-4 text-white">Buscar</button>
       </form>
-      <ul className="mt-8 space-y-4">
+      <p className="mt-4 text-sm text-muted">
+        {totalFiltrado} caso(s) · página {pagina} de {totalPaginas}
+      </p>
+      <ul className="mt-4 space-y-4">
         {cases.map((item) => (
           <li key={item.id} className="rounded border p-5">
             <Link className="font-semibold underline" href={`/equipe/${item.id}`}>
               {item.protocol}
             </Link>
             <p className="text-sm">
-              {item.title || "Caso sem título"} · {item.status}
+              {item.title || "Caso sem título"} ·{" "}
+              {CASE_STATUS_LABEL[item.status as CaseStatus] ?? item.status}
             </p>
             {profile[0].role === "admin" && lawyers.length > 0 && (
               <form action={assignLawyer} className="mt-4 flex gap-2">
@@ -152,6 +184,36 @@ export default async function EquipePage({
         ))}
       </ul>
       {cases.length === 0 && <p className="mt-6">Nenhum caso disponível.</p>}
+      {totalPaginas > 1 && (
+        <nav className="mt-6 flex items-center justify-between" aria-label="Paginação">
+          <Link
+            href={linkPagina(query, status, pagina - 1)}
+            aria-disabled={pagina <= 1}
+            className={`rounded border px-3 py-2 ${pagina <= 1 ? "pointer-events-none text-muted" : "underline"}`}
+          >
+            ← Anterior
+          </Link>
+          <span className="text-sm text-muted">
+            Página {pagina} de {totalPaginas}
+          </span>
+          <Link
+            href={linkPagina(query, status, pagina + 1)}
+            aria-disabled={pagina >= totalPaginas}
+            className={`rounded border px-3 py-2 ${pagina >= totalPaginas ? "pointer-events-none text-muted" : "underline"}`}
+          >
+            Próxima →
+          </Link>
+        </nav>
+      )}
     </main>
   );
+}
+
+function linkPagina(busca: string, status: CaseStatus | null, pagina: number): string {
+  const params = new URLSearchParams();
+  if (busca) params.set("busca", busca);
+  if (status) params.set("status", status);
+  if (pagina > 1) params.set("pagina", String(pagina));
+  const query = params.toString();
+  return query ? `/equipe?${query}` : "/equipe";
 }
