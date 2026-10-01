@@ -30,6 +30,17 @@ export async function assignLawyer(form: FormData) {
   revalidatePath("/equipe");
 }
 
+export async function verifyLawyerOab(form: FormData) {
+  const lawyerId = z.string().min(1).max(255).safeParse(form.get("lawyerId"));
+  const actor = await currentUserId();
+  if (!actor || !lawyerId.success) return;
+  // A política RLS confere, dentro da função verify_lawyer_oab: só admin, só do mesmo
+  // escritório, só advogado com OAB informada — nunca confia no formulário.
+  await getDb().query("SELECT verify_lawyer_oab($1)", [lawyerId.data]);
+  revalidatePath("/equipe/pendentes");
+  revalidatePath("/equipe");
+}
+
 export async function addCaseNote(form: FormData) {
   const caseId = z.uuid().safeParse(form.get("caseId"));
   const body = z.string().trim().min(1).max(4000).safeParse(form.get("body"));

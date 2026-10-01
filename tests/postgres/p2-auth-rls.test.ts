@@ -22,8 +22,12 @@ describe("P2: isolamento por identidade verificada no banco", () => {
            'submitted', now(), now(), now())`,
         [caseId, crypto.randomUUID()],
       );
+      await db.query("INSERT INTO profiles(user_id, role, office_id) VALUES ('admin', 'admin', $1)", [
+        office,
+      ]);
       await db.query(
-        "INSERT INTO profiles(user_id, role, office_id) VALUES ('lawyer', 'lawyer', $1)",
+        `INSERT INTO profiles(user_id, role, office_id, oab_numero, oab_uf, oab_verificado_em, oab_verificado_por)
+         VALUES ('lawyer', 'lawyer', $1, '123456', 'MA', now(), 'admin')`,
         [office],
       );
       await db.query(
@@ -80,8 +84,12 @@ describe("P2: isolamento por identidade verificada no banco", () => {
           [id, id, crypto.randomUUID(), officeId],
         );
       }
+      await db.query("INSERT INTO profiles(user_id, role, office_id) VALUES ('admin', 'admin', $1)", [
+        office,
+      ]);
       await db.query(
-        "INSERT INTO profiles(user_id, role, office_id) VALUES ('lawyer', 'lawyer', $1), ('admin', 'admin', $1)",
+        `INSERT INTO profiles(user_id, role, office_id, oab_numero, oab_uf, oab_verificado_em, oab_verificado_por)
+         VALUES ('lawyer', 'lawyer', $1, '123456', 'MA', now(), 'admin')`,
         [office],
       );
       await db.query(
