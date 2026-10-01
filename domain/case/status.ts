@@ -64,14 +64,22 @@ export const STATUS_PROFISSIONAL: readonly CaseStatus[] = [
   "closed",
 ];
 
+/**
+ * Valida um status vindo de entrada não confiável (ex.: query string) contra a lista de status
+ * que a tela do escritório realmente filtra — nunca aceita um status de cidadão (`draft` etc.)
+ * nem um valor arbitrário.
+ */
+export function statusProfissionalValido(valor: string | undefined | null): CaseStatus | null {
+  return STATUS_PROFISSIONAL.includes(valor as CaseStatus) ? (valor as CaseStatus) : null;
+}
+
 export const CASE_STATUS_LABEL: Record<CaseStatus, string> = {
   draft: "Rascunho",
   triage: "Em preenchimento (triagem)",
   awaiting_documents: "Em preenchimento (documentos)",
   ready_for_review: "Pronto para finalizar",
   submitted: "Finalizado (teste)",
-  // Status abaixo reservados para fases futuras (portal do advogado, contrato):
-  // nenhum fluxo desta versão chega a eles.
+  // Status usados pelo portal do advogado (painel e fila em /equipe, PRs 1 e 2):
   under_legal_review: "Em análise pelo advogado",
   needs_information: "Aguardando informações",
   accepted: "Causa aceita",
