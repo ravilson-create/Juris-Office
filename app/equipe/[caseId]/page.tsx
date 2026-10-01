@@ -3,11 +3,19 @@ import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { DossierView } from "@/components/dossier/dossier-view";
 import { PrintButton } from "@/components/dossier/print-button";
+import { Alert } from "@/components/ui/alert";
 import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
 import { getCaseService } from "@/lib/services";
+import { CASE_STATUS_LABEL } from "@/domain/case/status";
 import { listarPrazosPorCaso } from "@/lib/services/equipe-prazos";
-import { addCaseNote, concluirPrazoAction, criarPrazoAction } from "../actions";
+import { buscarViabilidade } from "@/lib/services/equipe-contratos";
+import {
+  addCaseNote,
+  concluirPrazoAction,
+  criarPrazoAction,
+  registrarViabilidadeAction,
+} from "../actions";
 
 const ROTULO_STATUS_PRAZO: Record<string, string> = {
   open: "Em aberto",
@@ -15,8 +23,26 @@ const ROTULO_STATUS_PRAZO: Record<string, string> = {
   missed: "Vencido",
 };
 
+const ROTULO_RISCO: Record<string, string> = { low: "Baixo", medium: "Médio", high: "Alto" };
+const ROTULO_DECISAO: Record<string, string> = {
+  accepted: "Causa aceita",
+  rejected: "Causa não aceita",
+  needs_info: "Aguardando mais informações",
+};
+const MENSAGEM_ERRO: Record<string, string> = {
+  viabilidade_dados: "Preencha todos os campos da decisão de viabilidade.",
+  viabilidade_transicao:
+    "Não é possível registrar essa decisão com o caso no status atual — confira a aba de status.",
+};
+
 export const dynamic = "force-dynamic";
-export default async function CasoEquipe({ params }: { params: Promise<{ caseId: string }> }) {
+export default async function CasoEquipe({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ caseId: string }>;
+  searchParams: Promise<{ erro?: string }>;
+}) {
   const actor = await currentUserId();
   if (!actor) redirect("/auth/sign-in");
   const { caseId } = await params;
@@ -51,6 +77,8 @@ export default async function CasoEquipe({ params }: { params: Promise<{ caseId:
     [caseId],
   );
   const prazos = await listarPrazosPorCaso(getDb(), caseId);
+  const viabilidade = await buscarViabilidade(getDb(), caseId);
+  const { erro } = await searchParams;
   const hojeISO = new Date().toISOString().slice(0, 10);
   return (
     <main className="mx-auto max-w-3xl px-5 py-8">
@@ -60,10 +88,85 @@ export default async function CasoEquipe({ params }: { params: Promise<{ caseId:
           <Link href={`/equipe/${caseId}/peticao`} className="underline">
             Petição inicial
           </Link>
+          <Link href={`/equipe/${caseId}/contrato`} className="underline">
+            Contrato
+          </Link>
           <PrintButton />
         </div>
       </div>
       <DossierView dossier={submission.dossier} />
+
+      {erro && MENSAGEM_ERRO[erro] && (
+        <div className="mt-6 print:hidden">
+          <Alert tone="error" title="Não foi possível salvar.">
+            {MENSAGEM_ERRO[erro]}
+          </Alert>
+        </div>
+      )}
+
+      <section
+        className="mt-10 border-t border-line pt-6 print:hidden"
+        aria-labelledby="viabilidade-title"
+      >
+        <h2 id="viabilidade-title" className="text-2xl">
+          Viabilidade da causa
+        </h2>
+        <p className="mt-2 text-sm text-muted">
+          Status atual do caso: <strong>{CASE_STATUS_LABEL[submission.legalCase.status]}</strong>
+        </p>
+
+        {viabilidade && (
+          <div className="mt-4 rounded-md border border-line bg-surface p-4">
+            <p className="font-semibold">{ROTULO_DECISAO[viabilidade.decision]}</p>
+            <p className="mt-1 text-sm text-muted">
+              Risco: {ROTULO_RISCO[viabilidade.risk]} ·{" "}
+              {new Date(viabilidade.decidedAt).toLocaleString("pt-BR", {
+                timeZone: "America/Fortaleza",
+              })}
+            </p>
+            <p className="mt-2 whitespace-pre-wrap text-sm">{viabilidade.feasibilityNote}</p>
+          </div>
+        )}
+
+        <form action={registrarViabilidadeAction} className="mt-5 space-y-3">
+          <input type="hidden" name="caseId" value={caseId} />
+          <div className="flex flex-wrap gap-3">
+            <div>
+              <label htmlFor="decisao" className="block text-sm font-medium">
+                Decisão
+              </label>
+              <select id="decisao" name="decisao" className="mt-1 rounded border border-line p-2">
+                <option value="accepted">Aceitar a causa</option>
+                <option value="rejected">Não aceitar</option>
+                <option value="needs_info">Pedir mais informações</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="risco" className="block text-sm font-medium">
+                Risco
+              </label>
+              <select id="risco" name="risco" className="mt-1 rounded border border-line p-2">
+                <option value="low">Baixo</option>
+                <option value="medium">Médio</option>
+                <option value="high">Alto</option>
+              </select>
+            </div>
+          </div>
+          <label htmlFor="nota" className="block text-sm font-medium">
+            Nota de viabilidade
+          </label>
+          <textarea
+            id="nota"
+            name="nota"
+            required
+            maxLength={4000}
+            rows={3}
+            defaultValue={viabilidade?.feasibilityNote}
+            className="w-full rounded border border-line p-3"
+          />
+          <button className="rounded bg-navy px-4 py-2 text-white">Registrar decisão</button>
+        </form>
+      </section>
 
       <section
         className="mt-10 border-t border-line pt-6 print:hidden"

@@ -1,11 +1,22 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
 import { calcularDataFinal, deadlineCountingRuleSchema } from "@/domain/deadline/schema";
 import { concluirPrazo, criarPrazo } from "@/lib/services/equipe-prazos";
+import type { CaseStatus } from "@/domain/case/schema";
+import { feeTypeSchema, contractStatusSchema } from "@/domain/contract/schema";
+import { parseMoney } from "@/domain/triage/money";
+import {
+  adicionarParcela,
+  atualizarStatusContrato,
+  criarContrato,
+  marcarParcelaPaga,
+  registrarViabilidade,
+} from "@/lib/services/equipe-contratos";
 
 export async function assignLawyer(form: FormData) {
   const caseId = z.uuid().safeParse(form.get("caseId"));
@@ -83,6 +94,120 @@ export async function concluirPrazoAction(form: FormData) {
   await concluirPrazo(getDb(), deadlineId.data);
   revalidatePath(`/equipe/${caseId.data}`);
   revalidatePath("/equipe");
+}
+
+export async function registrarViabilidadeAction(form: FormData) {
+  const caseId = z.uuid().safeParse(form.get("caseId"));
+  const feasibilityNote = z.string().trim().min(1).max(4000).safeParse(form.get("nota"));
+  const risk = z.enum(["low", "medium", "high"]).safeParse(form.get("risco"));
+  const decision = z.enum(["accepted", "rejected", "needs_info"]).safeParse(form.get("decisao"));
+  const actor = await currentUserId();
+  if (
+    !actor ||
+    !caseId.success ||
+    !feasibilityNote.success ||
+    !risk.success ||
+    !decision.success
+  ) {
+    redirect(`/equipe/${form.get("caseId")}?erro=viabilidade_dados`);
+  }
+  const db = getDb();
+  const atual = await db.query<{ status: CaseStatus }>(
+    "SELECT status FROM legal_cases WHERE id = $1",
+    [caseId.data],
+  );
+  if (!atual[0]) redirect(`/equipe/${caseId.data}?erro=viabilidade_dados`);
+  try {
+    await registrarViabilidade(db, {
+      caseId: caseId.data,
+      feasibilityNote: feasibilityNote.data,
+      risk: risk.data,
+      decision: decision.data,
+      decidedBy: actor,
+      statusAtual: atual[0].status,
+    });
+  } catch {
+    redirect(`/equipe/${caseId.data}?erro=viabilidade_transicao`);
+  }
+  revalidatePath(`/equipe/${caseId.data}`);
+  revalidatePath("/equipe");
+}
+
+export async function criarContratoAction(form: FormData) {
+  const caseId = z.uuid().safeParse(form.get("caseId"));
+  const feeType = feeTypeSchema.safeParse(form.get("tipoHonorario"));
+  const feeValue = parseMoney(String(form.get("valor") ?? ""));
+  const successPercentualBruto = String(form.get("percentualExito") ?? "").trim();
+  const actor = await currentUserId();
+  if (!actor || !caseId.success) redirect("/equipe");
+  if (!feeType.success || !feeValue.ok) {
+    redirect(`/equipe/${caseId.data}/contrato?erro=contrato_dados`);
+  }
+  let successPercentage: number | null = null;
+  if (successPercentualBruto) {
+    const pct = Number(successPercentualBruto.replace(",", "."));
+    if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+      redirect(`/equipe/${caseId.data}/contrato?erro=contrato_percentual`);
+    }
+    successPercentage = pct;
+  }
+  await criarContrato(getDb(), {
+    caseId: caseId.data,
+    feeType: feeType.data,
+    feeValueCents: feeValue.cents,
+    successPercentage,
+    createdBy: actor,
+  });
+  revalidatePath(`/equipe/${caseId.data}/contrato`);
+}
+
+export async function mudarStatusContratoAction(form: FormData) {
+  const caseId = z.uuid().safeParse(form.get("caseId"));
+  const contractId = z.uuid().safeParse(form.get("contractId"));
+  const proximoStatus = contractStatusSchema.safeParse(form.get("proximoStatus"));
+  const actor = await currentUserId();
+  if (!actor || !caseId.success || !contractId.success || !proximoStatus.success) return;
+  const db = getDb();
+  const atual = await db.query<{ status: "draft" | "sent" | "signed" | "cancelled" }>(
+    "SELECT status FROM contracts WHERE id = $1",
+    [contractId.data],
+  );
+  if (!atual[0]) return;
+  // A política RLS (contracts_update) já restringe a advogado/admin com acesso ao caso;
+  // assertContractTransition (dentro do serviço) garante que a transição pedida é válida.
+  try {
+    await atualizarStatusContrato(db, contractId.data, atual[0].status, proximoStatus.data);
+  } catch {
+    redirect(`/equipe/${caseId.data}/contrato?erro=contrato_transicao`);
+  }
+  revalidatePath(`/equipe/${caseId.data}/contrato`);
+}
+
+export async function adicionarParcelaAction(form: FormData) {
+  const caseId = z.uuid().safeParse(form.get("caseId"));
+  const contractId = z.uuid().safeParse(form.get("contractId"));
+  const dueDate = z.iso.date().safeParse(form.get("dataVencimento"));
+  const amount = parseMoney(String(form.get("valorParcela") ?? ""));
+  const actor = await currentUserId();
+  if (!actor || !caseId.success) redirect("/equipe");
+  if (!contractId.success || !dueDate.success || !amount.ok) {
+    redirect(`/equipe/${caseId.data}/contrato?erro=parcela_dados`);
+  }
+  await adicionarParcela(getDb(), {
+    contractId: contractId.data,
+    dueDate: dueDate.data,
+    amountCents: amount.cents,
+  });
+  revalidatePath(`/equipe/${caseId.data}/contrato`);
+}
+
+export async function marcarParcelaPagaAction(form: FormData) {
+  const caseId = z.uuid().safeParse(form.get("caseId"));
+  const installmentId = z.uuid().safeParse(form.get("installmentId"));
+  const actor = await currentUserId();
+  if (!actor || !caseId.success || !installmentId.success) return;
+  await marcarParcelaPaga(getDb(), installmentId.data);
+  revalidatePath(`/equipe/${caseId.data}/contrato`);
 }
 
 export async function addCaseNote(form: FormData) {
