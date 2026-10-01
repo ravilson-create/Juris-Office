@@ -24,21 +24,21 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="flex flex-col items-center justify-center gap-6 bg-teal px-6 py-16 text-center sm:px-10 md:min-h-[32rem] md:py-20">
-          <p className="font-sans text-sm font-semibold uppercase tracking-[.08em] text-teal-soft">
+        <div className="flex flex-col items-center justify-center gap-6 bg-teal-strong px-6 py-16 text-center sm:px-10 md:min-h-[32rem] md:py-20">
+          <p className="font-sans text-sm font-semibold uppercase tracking-[.08em] text-white">
             Para advogados
           </p>
-          <h1 className="max-w-md text-4xl text-white sm:text-5xl">
+          <h2 className="max-w-md text-4xl text-white sm:text-5xl">
             Os casos do seu escritório, em um só lugar.
-          </h1>
-          <p className="max-w-sm text-lg text-teal-soft">
+          </h2>
+          <p className="max-w-sm text-lg text-white">
             Acompanhe dossiês, gere petições iniciais pré-preenchidas e organize a fila de
             atendimento do escritório.
           </p>
           <ButtonLink href="/advogado" variant="inverse-teal">
             Área do advogado
           </ButtonLink>
-          <p className="text-sm text-teal-soft">7 dias grátis, sem cartão.</p>
+          <p className="text-sm text-white">7 dias grátis, sem cartão.</p>
         </div>
       </section>
 
