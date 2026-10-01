@@ -21,6 +21,11 @@ const NOMES_MODELO: Record<string, string> = {
   "civel.indenizacao_danos": "Ação de Indenização por Danos Morais e Materiais",
   "civel.despejo_cobranca_alugueis": "Ação de Despejo c/c Cobrança de Aluguéis",
   "civel.obrigacao_fazer_nao_fazer": "Ação de Obrigação de Fazer/Não Fazer",
+  "consumidor.declaratoria_inexistencia_negativacao":
+    "Ação Declaratória de Inexistência de Débito c/c Danos Morais (negativação)",
+  "consumidor.declaratoria_inexistencia_cobranca":
+    "Ação Declaratória de Inexistência de Débito c/c Repetição de Indébito",
+  "consumidor.obrigacao_fazer_produto_servico": "Ação de Obrigação de Fazer c/c Indenização",
 };
 
 export default async function PeticaoPage({ params }: { params: Promise<{ caseId: string }> }) {
