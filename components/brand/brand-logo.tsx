@@ -77,7 +77,7 @@ export function BrandWordmark({
         className={`ml-1.5 inline-block rounded px-1.5 py-0.5 align-middle font-sans font-semibold ${badge} ${
           mono
             ? "border border-current"
-            : "bg-teal-soft text-teal-strong print:border print:border-black print:bg-transparent print:text-black"
+            : "bg-gold-soft text-gold-strong print:border print:border-black print:bg-transparent print:text-black"
         }`}
       >
         IA

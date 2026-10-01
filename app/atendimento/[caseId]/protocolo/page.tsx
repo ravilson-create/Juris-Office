@@ -32,7 +32,7 @@ export default async function ProtocoloPage({ params }: { params: Promise<{ case
       <div className="mx-auto max-w-3xl px-5 py-10">
         <section
           aria-labelledby="protocolo-titulo"
-          className="flex flex-col items-start gap-5 rounded-md border-2 border-teal bg-surface p-6 sm:flex-row sm:p-8"
+          className="flex flex-col items-start gap-5 rounded-md border-2 border-gold bg-surface p-6 sm:flex-row sm:p-8"
         >
           <BrandSymbol height={72} priority className="h-16 w-auto shrink-0 sm:h-[72px]" />
           <div>

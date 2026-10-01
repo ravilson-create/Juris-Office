@@ -33,7 +33,7 @@ export default function ComoFuncionaPage() {
       <ol className="mt-8 flex flex-col gap-6">
         {STEPS.map(([title, text], i) => (
           <li key={title} className="grid grid-cols-[2rem_1fr] gap-3">
-            <span aria-hidden="true" className="font-serif text-2xl text-teal-strong">
+            <span aria-hidden="true" className="font-serif text-2xl text-gold-strong">
               {i + 1}
             </span>
             <div>

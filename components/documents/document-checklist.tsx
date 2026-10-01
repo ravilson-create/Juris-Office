@@ -116,7 +116,7 @@ function ChecklistItem({
 
   return (
     <li
-      className={`rounded-md border bg-surface p-5 ${sent ? "border-teal-strong/50" : "border-line"}`}
+      className={`rounded-md border bg-surface p-5 ${sent ? "border-gold-strong/50" : "border-line"}`}
       aria-busy={pending || undefined}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -124,7 +124,7 @@ function ChecklistItem({
         <span
           className={`rounded px-2 py-0.5 text-xs font-medium ${
             sent
-              ? "bg-teal-soft text-teal-strong"
+              ? "bg-gold-soft text-gold-strong"
               : entry.recommended
                 ? "bg-navy-soft text-navy"
                 : "text-muted"
@@ -176,7 +176,7 @@ function ChecklistItem({
       <div className="mt-4">
         <label
           htmlFor={inputId}
-          className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-md border border-line bg-surface px-4 py-2 font-medium text-navy hover:border-navy has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-teal-strong"
+          className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-md border border-line bg-surface px-4 py-2 font-medium text-navy hover:border-navy has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-gold-strong"
         >
           {pending ? "Registrando…" : sent ? "Adicionar outro arquivo" : "Adicionar arquivo"}
           <span className="sr-only"> em {entry.label}</span>
