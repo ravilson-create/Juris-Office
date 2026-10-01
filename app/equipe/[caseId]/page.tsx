@@ -51,6 +51,9 @@ export default async function CasoEquipe({ params }: { params: Promise<{ caseId:
           <Link href={`/equipe/${caseId}/peticao`} className="underline">
             Petição inicial
           </Link>
+          <Link href={`/equipe/${caseId}/consultas`} className="underline">
+            Consultas externas
+          </Link>
           <PrintButton />
         </div>
       </div>
