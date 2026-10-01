@@ -1,5 +1,6 @@
 import type { AnswerMap } from "@/domain/triage/engine";
 import type { Applicant } from "@/domain/case/schema";
+import { formatCents } from "@/domain/triage/money";
 import { campo, type PetitionSection } from "@/domain/petition/schema";
 
 export function textoAnswer(answers: AnswerMap, key: string): string | undefined {
@@ -10,6 +11,13 @@ export function textoAnswer(answers: AnswerMap, key: string): string | undefined
 export function numeroAnswer(answers: AnswerMap, key: string): number | undefined {
   const v = answers[key];
   return typeof v === "number" ? v : undefined;
+}
+
+/** Perguntas do tipo "currency" guardam centavos (ver domain/triage/money.ts) — nunca exibir o
+ * número cru numa petição. */
+export function valorMonetarioAnswer(answers: AnswerMap, key: string): string | undefined {
+  const v = answers[key];
+  return typeof v === "number" ? formatCents(v) : undefined;
 }
 
 export function booleanAnswer(answers: AnswerMap, key: string): boolean {
@@ -25,8 +33,15 @@ export function booleanAnswer(answers: AnswerMap, key: string): boolean {
 export function secoesCabecalho(params: {
   varaLabel: string;
   applicant: Pick<Applicant, "fullName" | "city" | "uf">;
+  /** Nome/qualificação do réu, quando a triagem coleta um campo claro para isso (ex.: `partes`
+   * em cível). Sem ele, o fecho da qualificação fica genérico ("a presente ação"), como em
+   * família, onde só há texto livre sobre as pessoas envolvidas. */
+  parteRe?: string;
 }): PetitionSection[] {
-  const { varaLabel, applicant } = params;
+  const { varaLabel, applicant, parteRe } = params;
+  const fechoQualificacao = parteRe
+    ? `por seu(sua) advogado(a) que esta subscreve (procuração anexa), vem respeitosamente perante Vossa Excelência propor a presente ação em face de ${campo(parteRe, "qualificação completa do(a) réu(é)")}, pelos fatos e fundamentos a seguir expostos:`
+    : "por seu(sua) advogado(a) que esta subscreve (procuração anexa), vem respeitosamente perante Vossa Excelência propor a presente";
   return [
     {
       chave: "enderecamento",
@@ -36,7 +51,7 @@ export function secoesCabecalho(params: {
     {
       chave: "qualificacao_autor",
       titulo: "Qualificação do(a) Autor(a)",
-      corpo: `${campo(applicant.fullName, "nome completo do(a) autor(a)")}, ${campo(undefined, "nacionalidade")}, ${campo(undefined, "estado civil")}, ${campo(undefined, "profissão")}, portador(a) do CPF nº ${campo(undefined, "CPF do(a) autor(a)")} e do RG nº ${campo(undefined, "RG do(a) autor(a)")}, residente e domiciliado(a) em ${campo(undefined, "endereço completo do(a) autor(a)")}, ${campo(applicant.city, "cidade")}/${campo(applicant.uf, "UF")}, por seu(sua) advogado(a) que esta subscreve (procuração anexa), vem respeitosamente perante Vossa Excelência propor a presente`,
+      corpo: `${campo(applicant.fullName, "nome completo do(a) autor(a)")}, ${campo(undefined, "nacionalidade")}, ${campo(undefined, "estado civil")}, ${campo(undefined, "profissão")}, portador(a) do CPF nº ${campo(undefined, "CPF do(a) autor(a)")} e do RG nº ${campo(undefined, "RG do(a) autor(a)")}, residente e domiciliado(a) em ${campo(undefined, "endereço completo do(a) autor(a)")}, ${campo(applicant.city, "cidade")}/${campo(applicant.uf, "UF")}, ${fechoQualificacao}`,
     },
   ];
 }
