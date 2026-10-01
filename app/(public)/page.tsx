@@ -1,67 +1,51 @@
-import { BrandSymbol } from "@/components/brand/brand-logo";
 import { ButtonLink } from "@/components/ui/button";
 import { APP_NAME } from "@/lib/config";
-
-const PATH = [
-  { title: "Escolha o assunto", text: "Consumidor, trabalho, família, INSS ou questões cíveis." },
-  { title: "Responda perguntas simples", text: "Uma etapa por vez. Você pode voltar e corrigir." },
-  { title: "Conte o que aconteceu", text: "Com suas palavras, e indique os documentos que tiver." },
-  {
-    title: "Gere o dossiê",
-    text: "Um resumo organizado do caso, com protocolo, para você conferir.",
-  },
-];
 
 export default function HomePage() {
   return (
     <>
-      <section className="border-b border-line bg-surface">
-        <div className="mx-auto grid max-w-5xl gap-12 px-5 py-14 md:grid-cols-[1.1fr_1fr] md:py-20">
-          <div className="flex flex-col justify-center gap-6">
-            <BrandSymbol height={128} priority className="h-24 w-auto self-start sm:h-32" />
-            <h1 className="text-4xl text-ink sm:text-5xl">
-              Seu problema jurídico, organizado em um dossiê.
-            </h1>
-            <p className="max-w-prose text-lg text-muted">
-              O {APP_NAME} faz perguntas guiadas e monta um dossiê preliminar com o que você
-              informou. Você não precisa saber termos jurídicos.
-            </p>
-            <div className="flex flex-wrap items-center gap-4">
-              <ButtonLink href="/atendimento">Iniciar atendimento de teste</ButtonLink>
-              <ButtonLink href="/como-funciona" variant="ghost">
-                Como funciona
-              </ButtonLink>
-              <ButtonLink href="/advogado" variant="ghost">
-                Área do advogado
-              </ButtonLink>
-            </div>
-            <p className="text-sm text-muted">
-              Versão de demonstração: use dados fictícios. Leva cerca de 10 minutos, sem cadastro.
-            </p>
-          </div>
-
-          <ol
-            aria-label="Como é o atendimento"
-            className="relative flex flex-col gap-7 border-l-2 border-line pl-8"
-          >
-            {PATH.map((step, i) => (
-              <li key={step.title} className="relative">
-                <span
-                  aria-hidden="true"
-                  className={`absolute -left-[45px] top-0 flex h-7 w-7 items-center justify-center rounded-full font-serif text-sm font-semibold ${
-                    i === PATH.length - 1
-                      ? "bg-teal-strong text-white"
-                      : "border-2 border-navy bg-surface text-navy"
-                  }`}
-                >
-                  {i + 1}
-                </span>
-                <h2 className="font-sans text-base font-semibold">{step.title}</h2>
-                <p className="text-muted">{step.text}</p>
-              </li>
-            ))}
-          </ol>
+      <section className="grid md:grid-cols-2">
+        <div className="flex flex-col items-center justify-center gap-6 bg-navy px-6 py-16 text-center sm:px-10 md:min-h-[32rem] md:py-20">
+          <p className="font-sans text-sm font-semibold uppercase tracking-[.08em] text-navy-soft">
+            Para você
+          </p>
+          <h1 className="max-w-md text-4xl text-white sm:text-5xl">
+            Seu problema jurídico, organizado em um dossiê.
+          </h1>
+          <p className="max-w-sm text-lg text-navy-soft">
+            O {APP_NAME} faz perguntas guiadas e monta um dossiê preliminar com o que você
+            informou. Você não precisa saber termos jurídicos.
+          </p>
+          <ButtonLink href="/atendimento" variant="inverse-navy">
+            Iniciar atendimento de teste
+          </ButtonLink>
+          <p className="text-sm text-navy-soft">
+            Leva cerca de 10 minutos, sem cadastro. Use dados fictícios.
+          </p>
         </div>
+
+        <div className="flex flex-col items-center justify-center gap-6 bg-teal px-6 py-16 text-center sm:px-10 md:min-h-[32rem] md:py-20">
+          <p className="font-sans text-sm font-semibold uppercase tracking-[.08em] text-teal-soft">
+            Para advogados
+          </p>
+          <h1 className="max-w-md text-4xl text-white sm:text-5xl">
+            Os casos do seu escritório, em um só lugar.
+          </h1>
+          <p className="max-w-sm text-lg text-teal-soft">
+            Acompanhe dossiês, gere petições iniciais pré-preenchidas e organize a fila de
+            atendimento do escritório.
+          </p>
+          <ButtonLink href="/advogado" variant="inverse-teal">
+            Área do advogado
+          </ButtonLink>
+          <p className="text-sm text-teal-soft">7 dias grátis, sem cartão.</p>
+        </div>
+      </section>
+
+      <section className="border-b border-line bg-surface py-4 text-center">
+        <ButtonLink href="/como-funciona" variant="ghost">
+          Como funciona
+        </ButtonLink>
       </section>
 
       <section className="mx-auto max-w-5xl px-5 py-12">

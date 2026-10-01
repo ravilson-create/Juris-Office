@@ -28,6 +28,51 @@ export default function AdvogadoPage() {
           Cadastro e acesso profissional aguardam a ativação da autenticação nesta instalação.
         </p>
       )}
+
+      <details className="group mt-10 rounded-md border border-line bg-surface p-5">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold text-ink [&::-webkit-details-marker]:hidden">
+          <span>Precisa de ajuda para começar?</span>
+          <span
+            aria-hidden="true"
+            className="text-teal-strong transition-transform group-open:rotate-180"
+          >
+            ⌄
+          </span>
+        </summary>
+        <div className="mt-4 space-y-4 text-sm text-muted">
+          <div>
+            <p className="font-semibold text-ink">Como funciona o teste grátis?</p>
+            <p className="mt-1">
+              7 dias sem cartão de crédito. A fatura só é gerada perto do fim do período, e você
+              pode cancelar antes disso sem custo.
+            </p>
+          </div>
+          <div>
+            <p className="font-semibold text-ink">Preciso comprovar minha OAB?</p>
+            <p className="mt-1">
+              Sim. Após o cadastro, a verificação da inscrição na OAB é obrigatória antes de
+              acessar os casos — isso garante que apenas advogados vejam os dossiês dos clientes.
+            </p>
+          </div>
+          <div>
+            <p className="font-semibold text-ink">O que acontece com os dados dos clientes?</p>
+            <p className="mt-1">
+              Cada advogado só acessa os casos atribuídos a ele. Petições e dossiês ficam
+              restritos à sua conta e ao escritório.
+            </p>
+          </div>
+          <div>
+            <p className="font-semibold text-ink">Ainda com dúvidas?</p>
+            <p className="mt-1">
+              Escreva para{" "}
+              <a href="mailto:suporte@jurisoffice.com.br" className="text-navy hover:underline">
+                suporte@jurisoffice.com.br
+              </a>
+              .
+            </p>
+          </div>
+        </div>
+      </details>
       <section className="mt-12" aria-labelledby="planos-title">
         <h2 id="planos-title" className="text-2xl">
           Planos profissionais
