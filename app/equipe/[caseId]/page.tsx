@@ -25,6 +25,11 @@ export default async function CasoEquipe({ params }: { params: Promise<{ caseId:
       [actor],
     );
     if (!active.length) redirect("/assinatura");
+    const oab = await getDb().query<{ oab_verificado_em: Date | null }>(
+      "SELECT oab_verificado_em FROM profiles WHERE user_id = $1",
+      [actor],
+    );
+    if (!oab[0]?.oab_verificado_em) redirect("/advogado/pendente");
   }
   // A política RLS é o filtro definitivo: IDs de outro escritório/sem atribuição retornam vazio.
   const submission = await getCaseService().getSubmission(caseId);

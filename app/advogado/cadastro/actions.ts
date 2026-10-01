@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { authEnabled, currentIdentity, currentUserId } from "@/lib/auth/session";
+import { BRAZIL_UFS } from "@/domain/case/schema";
 import { getDb, hasDatabase } from "@/lib/db/connection";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { clientIp } from "@/lib/http/client-ip";
@@ -28,17 +29,28 @@ export async function iniciarTesteGratis(
     .object({
       nome: z.string().trim().min(2).max(120),
       cpfCnpj: z.string().min(1),
+      oabNumero: z
+        .string()
+        .trim()
+        .min(1)
+        .max(20)
+        .regex(/^\d+$/, { error: "Número da OAB deve conter só dígitos." }),
+      oabUf: z.enum(BRAZIL_UFS),
       planoId: z.enum(PLANOS_VALIDOS as [string, ...string[]]),
       aceitouTermos: z.literal("on"),
     })
     .safeParse({
       nome: form.get("nome"),
       cpfCnpj: form.get("cpfCnpj"),
+      oabNumero: form.get("oabNumero"),
+      oabUf: form.get("oabUf"),
       planoId: form.get("planoId"),
       aceitouTermos: form.get("aceitouTermos"),
     });
   if (!input.success) {
-    return { error: "Preencha o nome do escritório, o CPF/CNPJ e aceite os termos." };
+    return {
+      error: "Preencha o nome do escritório, o CPF/CNPJ, a OAB (número e UF) e aceite os termos.",
+    };
   }
   const cpfCnpjDigitos = somenteDigitos(input.data.cpfCnpj);
   if (!cpfCnpjValido(cpfCnpjDigitos)) {
@@ -61,6 +73,9 @@ export async function iniciarTesteGratis(
       cpfCnpjDigitos,
       input.data.planoId,
     ]);
+    // A OAB nunca é aceita como confirmada aqui: fica pendente até um admin do escritório
+    // checar manualmente contra o site oficial (cna.oab.org.br) e confirmar — ver /equipe.
+    await db.query("SELECT set_own_oab($1, $2)", [input.data.oabNumero, input.data.oabUf]);
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
     if (message.includes("já existe cadastro profissional")) {

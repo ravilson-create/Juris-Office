@@ -24,6 +24,11 @@ export default async function EquipePage({
       [actor],
     );
     if (!active.length) redirect("/assinatura");
+    const oab = await db.query<{ oab_verificado_em: Date | null }>(
+      "SELECT oab_verificado_em FROM profiles WHERE user_id = $1",
+      [actor],
+    );
+    if (!oab[0]?.oab_verificado_em) redirect("/advogado/pendente");
   }
   const { busca } = await searchParams;
   const query = (busca ?? "").trim().slice(0, 80);
@@ -45,7 +50,16 @@ export default async function EquipePage({
       ? await db.query<{ user_id: string }>(
           `SELECT p.user_id FROM profiles p JOIN lawyer_subscriptions s ON s.lawyer_id = p.user_id
            WHERE p.role = 'lawyer' AND p.office_id = $1 AND s.status IN ('active', 'trial')
-             AND s.valid_until > now() ORDER BY p.user_id`,
+             AND s.valid_until > now() AND p.oab_verificado_em IS NOT NULL ORDER BY p.user_id`,
+          [profile[0].office_id],
+        )
+      : [];
+  const pendentesOab =
+    profile[0].role === "admin"
+      ? await db.query<{ count: string }>(
+          `SELECT count(*) FROM profiles
+           WHERE role = 'lawyer' AND office_id = $1 AND oab_numero IS NOT NULL
+             AND oab_verificado_em IS NULL`,
           [profile[0].office_id],
         )
       : [];
@@ -55,6 +69,14 @@ export default async function EquipePage({
       <p className="mt-2 text-muted">
         {profile[0].role === "admin" ? "Casos do seu escritório" : "Casos atribuídos a você"}
       </p>
+      {profile[0].role === "admin" && Number(pendentesOab[0]?.count ?? 0) > 0 && (
+        <Link
+          href="/equipe/pendentes"
+          className="mt-4 block rounded-md border border-line bg-surface p-4 underline"
+        >
+          {pendentesOab[0].count} advogado(s) aguardando confirmação da OAB
+        </Link>
+      )}
       <form action="/equipe" className="mt-6 flex gap-2" role="search">
         <label htmlFor="busca" className="sr-only">
           Buscar caso por protocolo ou título

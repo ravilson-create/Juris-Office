@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { subscriptionPlans, formatPlanPrice } from "@/lib/billing/plans";
+import { BRAZIL_UFS } from "@/domain/case/schema";
 import { iniciarTesteGratis, type CadastroState } from "./actions";
 
 export function CadastroForm() {
@@ -25,6 +26,34 @@ export function CadastroForm() {
           placeholder="Somente números"
         />
       </label>
+      <div className="flex gap-3">
+        <label className="flex flex-1 flex-col gap-1">
+          Número da OAB
+          <input
+            className="rounded border p-3"
+            name="oabNumero"
+            inputMode="numeric"
+            required
+            placeholder="Somente números"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          UF
+          <select name="oabUf" required defaultValue="" className="rounded border p-3">
+            <option value="" disabled>
+              —
+            </option>
+            {BRAZIL_UFS.map((uf) => (
+              <option key={uf} value={uf}>
+                {uf}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <p className="-mt-3 text-sm text-muted">
+        A OAB é conferida manualmente contra o cadastro oficial antes de liberar o acesso a casos.
+      </p>
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 font-medium">Plano</legend>
         {subscriptionPlans.map((plan, index) => (
