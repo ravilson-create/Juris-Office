@@ -68,7 +68,7 @@ export default async function MeusAtendimentosPage() {
                   <h2 className="font-sans text-lg font-semibold">{item.areaName}</h2>
                   <span
                     className={`rounded px-2 py-0.5 text-xs font-medium ${
-                      item.finalized ? "bg-teal-soft text-teal-strong" : "bg-navy-soft text-navy"
+                      item.finalized ? "bg-gold-soft text-gold-strong" : "bg-navy-soft text-navy"
                     }`}
                   >
                     {CASE_STATUS_LABEL[item.status]}

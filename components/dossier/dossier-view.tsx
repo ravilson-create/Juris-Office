@@ -99,7 +99,7 @@ export function DossierView({ dossier }: { dossier: Dossier }) {
           {dossier.chronology.length === 0 ? (
             <Empty>Nenhuma data informada.</Empty>
           ) : (
-            <ol className="flex flex-col gap-2 border-l-2 border-teal pl-4 print:border-black">
+            <ol className="flex flex-col gap-2 border-l-2 border-gold pl-4 print:border-black">
               {dossier.chronology.map((e, i) => (
                 <li key={`${e.date}-${i}`} className="grid gap-x-4 sm:grid-cols-[7rem_1fr]">
                   <span className="font-medium tabular-nums">{formatDate(e.date)}</span>
@@ -171,7 +171,7 @@ function Section({ n, title, children }: { n: number; title: string; children: R
         id={`dossie-sec-${n}`}
         className="mb-2 flex break-after-avoid items-baseline gap-2 border-b border-line pb-2 text-lg"
       >
-        <span className="tabular-nums text-teal-strong print:text-black">{n}.</span>
+        <span className="tabular-nums text-gold-strong print:text-black">{n}.</span>
         {title}
       </h2>
       {children}

@@ -5,7 +5,7 @@ import { authEnabled } from "@/lib/auth/session";
 export default function AdvogadoPage() {
   return (
     <main className="mx-auto max-w-5xl px-5 py-12">
-      <p className="font-semibold text-teal-strong">Júris Office para advogados</p>
+      <p className="font-semibold text-gold-strong">Júris Office para advogados</p>
       <h1 className="mt-3 max-w-2xl text-4xl">Seus casos jurídicos em um só lugar</h1>
       <p className="mt-5 max-w-2xl text-lg text-muted">
         Consulte os dossiês dos casos atribuídos a você, organize sua fila e registre notas internas
@@ -34,7 +34,7 @@ export default function AdvogadoPage() {
           <span>Precisa de ajuda para começar?</span>
           <span
             aria-hidden="true"
-            className="text-teal-strong transition-transform group-open:rotate-180"
+            className="text-gold-strong transition-transform group-open:rotate-180"
           >
             ⌄
           </span>

@@ -29,7 +29,7 @@ export function JourneyStepper({ current }: { current: JourneyStep }) {
             >
               <span
                 className={`h-1.5 rounded-full ${
-                  state === "done" ? "bg-navy" : state === "current" ? "bg-teal" : "bg-line"
+                  state === "done" ? "bg-navy" : state === "current" ? "bg-gold" : "bg-line"
                 }`}
               />
               <span className={state === "current" ? "font-semibold" : ""}>

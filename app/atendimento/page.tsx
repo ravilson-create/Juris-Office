@@ -49,7 +49,7 @@ export default async function AtendimentoPage({
                   aria-hidden="true"
                   className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-serif text-sm font-semibold ${
                     i === COMO_PROCEDER.length - 1
-                      ? "bg-teal-strong text-white"
+                      ? "bg-gold-strong text-white"
                       : "border-2 border-navy bg-surface text-navy"
                   }`}
                 >

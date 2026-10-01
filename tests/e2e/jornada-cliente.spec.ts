@@ -4,7 +4,7 @@ test("jornada de Consumidor: área → identificação → triagem → relato �
   page,
 }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("organizado");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("questão jurídica");
   await page.getByRole("main").getByRole("link", { name: "Iniciar atendimento" }).click();
 
   await expect(page).toHaveURL(/\/atendimento$/);

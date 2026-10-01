@@ -2,22 +2,23 @@
 
 /*
  * Júris Office IA — tokens visuais da marca
- * Azul-marinho (primária, textos de destaque) e verde-água (acento do símbolo).
- * O verde-água puro (#13ab9f) tem contraste insuficiente para texto sobre branco;
- * para texto e foco use --color-teal-strong.
+ * Azul-marinho quase preto (institucional — cabeçalho, faixa do advogado, textos de destaque)
+ * e dourado (acento — botão principal, selos, ícones) sobre fundo creme. Dourado claro
+ * (--color-gold) é só para fundo de selo/ícone, nunca para texto — contraste insuficiente sobre
+ * claro ou escuro; para texto e foco use --color-gold-strong.
  */
 @theme {
-  --color-paper: #f6f8fa;
+  --color-paper: #faf8f3;
   --color-surface: #ffffff;
-  --color-ink: #0f1d2e;
-  --color-muted: #4f5d6d;
-  --color-line: #d6dde5;
-  --color-navy: #032f5b;
-  --color-navy-strong: #021f3d;
-  --color-navy-soft: #e5ecf4;
-  --color-teal: #13ab9f;
-  --color-teal-strong: #0b7a70;
-  --color-teal-soft: #e2f5f3;
+  --color-ink: #16213a;
+  --color-muted: #5b5f6e;
+  --color-line: #e3e0d4;
+  --color-navy: #141b33;
+  --color-navy-strong: #0a0e1c;
+  --color-navy-soft: #e7e9ef;
+  --color-gold: #c79a4e;
+  --color-gold-strong: #8a6328;
+  --color-gold-soft: #f6ead0;
   --color-danger: #9e2b1e;
   --color-danger-soft: #fbedea;
 
@@ -48,7 +49,7 @@
     text-wrap: balance;
   }
   :focus-visible {
-    outline: 3px solid var(--color-teal-strong);
+    outline: 3px solid var(--color-gold-strong);
     outline-offset: 2px;
     border-radius: 4px;
   }
