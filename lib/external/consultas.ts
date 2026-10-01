@@ -17,10 +17,11 @@ export type ServicoConsulta = {
   descricao: string;
   /** Por que não há integração automática (API/certificado/contrato) — mostrado na tela. */
   motivoSemIntegracao: string;
-  url: (areaSlug: LegalAreaSlug) => string;
+  /** Sem área escolhida, cai na página inicial de busca — nunca manda dado pessoal. */
+  url: (areaSlug?: LegalAreaSlug) => string;
 };
 
-const TERMO_POR_AREA: Record<LegalAreaSlug, string> = {
+export const TERMO_POR_AREA: Record<LegalAreaSlug, string> = {
   consumidor: "direito do consumidor",
   trabalhista: "direito trabalhista",
   familia: "direito de família",
@@ -35,7 +36,9 @@ export const SERVICOS_JURISPRUDENCIA: ServicoConsulta[] = [
     descricao: "Busca de jurisprudência, legislação e notícias jurídicas.",
     motivoSemIntegracao: "Não publica API aberta para consulta por terceiros.",
     url: (area) =>
-      `https://www.jusbrasil.com.br/jurisprudencia/busca?q=${encodeURIComponent(TERMO_POR_AREA[area])}`,
+      area
+        ? `https://www.jusbrasil.com.br/jurisprudencia/busca?q=${encodeURIComponent(TERMO_POR_AREA[area])}`
+        : "https://www.jusbrasil.com.br/jurisprudencia",
   },
   {
     id: "turivius",
@@ -59,7 +62,9 @@ export const SERVICO_DOU: ServicoConsulta = {
   descricao: "Pesquisa de publicações oficiais pela Imprensa Nacional.",
   motivoSemIntegracao: "Busca pública, mas sem API aberta para consulta automatizada.",
   url: (area) =>
-    `https://www.in.gov.br/consulta/-/buscar/dou?q=${encodeURIComponent(TERMO_POR_AREA[area])}`,
+    area
+      ? `https://www.in.gov.br/consulta/-/buscar/dou?q=${encodeURIComponent(TERMO_POR_AREA[area])}`
+      : "https://www.in.gov.br/consulta/-/buscar/dou",
 };
 
 export type ServicoProcessual = {

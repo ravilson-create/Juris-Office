@@ -1,18 +1,29 @@
-import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
-import { z } from "zod";
+import { redirect } from "next/navigation";
 import { Alert } from "@/components/ui/alert";
 import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
-import { getCaseService } from "@/lib/services";
 import {
   consultarProcessoDatajud,
   datajudConfigurado,
   type ProcessoDatajud,
 } from "@/lib/external/datajud";
-import { SERVICOS_JURISPRUDENCIA, SERVICOS_PROCESSUAIS, SERVICO_DOU } from "@/lib/external/consultas";
+import {
+  SERVICOS_JURISPRUDENCIA,
+  SERVICOS_PROCESSUAIS,
+  SERVICO_DOU,
+  TERMO_POR_AREA,
+} from "@/lib/external/consultas";
+import { legalAreaSlugSchema, type LegalAreaSlug } from "@/domain/legal-area/schema";
 
 export const dynamic = "force-dynamic";
+
+const AREAS: { slug: LegalAreaSlug; nome: string }[] = [
+  { slug: "consumidor", nome: "Consumidor" },
+  { slug: "trabalhista", nome: "Trabalhista" },
+  { slug: "familia", nome: "Família" },
+  { slug: "previdenciario", nome: "Previdenciário" },
+  { slug: "civel", nome: "Cível" },
+];
 
 function formatarDataHora(iso: string | null): string {
   if (!iso) return "—";
@@ -21,23 +32,24 @@ function formatarDataHora(iso: string | null): string {
   return d.toLocaleString("pt-BR", { timeZone: "America/Fortaleza" });
 }
 
-export default async function ConsultasPage({
-  params,
+/**
+ * Tela independente de qualquer atendimento/caso — fica numa aba própria da área
+ * profissional. Nenhum dado de cidadão passa por aqui: o advogado digita o que precisar
+ * pesquisar (número de processo, área jurídica genérica) com suas próprias credenciais.
+ */
+export default async function ConsultasExternasPage({
   searchParams,
 }: {
-  params: Promise<{ caseId: string }>;
-  searchParams: Promise<{ numero?: string; tribunal?: string }>;
+  searchParams: Promise<{ numero?: string; tribunal?: string; area?: string }>;
 }) {
   const actor = await currentUserId();
   if (!actor) redirect("/auth/sign-in");
-  const { caseId } = await params;
-  if (!z.uuid().safeParse(caseId).success) notFound();
 
   const db = getDb();
   const profile = await db.query<{ role: string }>("SELECT role FROM profiles WHERE user_id = $1", [
     actor,
   ]);
-  if (!profile[0] || !["lawyer", "admin"].includes(profile[0].role)) notFound();
+  if (!profile[0] || !["lawyer", "admin"].includes(profile[0].role)) redirect("/atendimento/meus");
   if (profile[0].role === "lawyer") {
     const acesso = await db.query<{ oab_verificado_em: Date | null }>(
       `SELECT p.oab_verificado_em FROM profiles p
@@ -49,11 +61,9 @@ export default async function ConsultasPage({
     if (!acesso[0].oab_verificado_em) redirect("/advogado/pendente");
   }
 
-  // A política RLS é o filtro definitivo: um caseId de outro escritório/sem atribuição não acha nada.
-  const ctx = await getCaseService().getTriageContext(caseId);
-  if (!ctx) notFound();
+  const { numero, tribunal, area: areaRaw } = await searchParams;
+  const area = legalAreaSlugSchema.safeParse(areaRaw).data;
 
-  const { numero, tribunal } = await searchParams;
   let processo: ProcessoDatajud | null = null;
   let erroConsulta: string | null = null;
   if (numero && tribunal) {
@@ -66,14 +76,11 @@ export default async function ConsultasPage({
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-10">
-      <p>
-        <Link href={`/equipe/${caseId}`}>Voltar ao caso</Link>
-      </p>
-      <h1 className="mt-4 text-3xl">Consultas externas</h1>
+      <h1 className="text-3xl">Consultas externas</h1>
       <p className="mt-2 max-w-prose text-muted">
-        {ctx.area.name} — {ctx.legalCase.applicant?.fullName ?? "sem identificação"}. Nenhum dado
-        deste caso é enviado automaticamente aos sites abaixo: você decide o que pesquisar em
-        cada um, com suas próprias credenciais quando for o caso.
+        Fica fora do atendimento de qualquer caso: nenhum dado de cidadão é enviado
+        automaticamente a estes sites. Você decide o que pesquisar em cada um, com suas próprias
+        credenciais quando for o caso.
       </p>
 
       <section className="mt-8" aria-labelledby="processo-title">
@@ -197,8 +204,32 @@ export default async function ConsultasPage({
 
       <section className="mt-10" aria-labelledby="jurisprudencia-title">
         <h2 id="jurisprudencia-title" className="text-xl">
-          Jurisprudência e legislação
+          Jurisprudência, legislação e Diário Oficial
         </h2>
+        <form className="mt-3 flex flex-wrap items-end gap-3">
+          {numero && <input type="hidden" name="numero" value={numero} />}
+          {tribunal && <input type="hidden" name="tribunal" value={tribunal} />}
+          <div>
+            <label htmlFor="area" className="block text-sm font-medium">
+              Área jurídica (opcional, para pré-preencher a busca)
+            </label>
+            <select
+              id="area"
+              name="area"
+              defaultValue={area ?? ""}
+              className="mt-1 w-56 rounded border border-line p-2"
+            >
+              <option value="">Sem área — abre a busca em branco</option>
+              {AREAS.map((a) => (
+                <option key={a.slug} value={a.slug}>
+                  {a.nome} ({TERMO_POR_AREA[a.slug]})
+                </option>
+              ))}
+            </select>
+          </div>
+          <button className="rounded border border-line px-4 py-2">Aplicar</button>
+        </form>
+
         <ul className="mt-4 space-y-3">
           {SERVICOS_JURISPRUDENCIA.map((s) => (
             <li key={s.id} className="rounded-md border border-line p-4">
@@ -206,35 +237,29 @@ export default async function ConsultasPage({
               <p className="mt-1 text-sm text-muted">{s.descricao}</p>
               <p className="mt-1 text-sm text-muted">{s.motivoSemIntegracao}</p>
               <a
-                href={s.url(ctx.area.slug)}
+                href={s.url(area)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-2 inline-block text-sm text-navy hover:underline"
               >
-                Buscar {ctx.area.name.toLowerCase()} no {s.nome} ↗
+                Abrir {s.nome} ↗
               </a>
             </li>
           ))}
+          <li className="rounded-md border border-line p-4">
+            <p className="font-semibold">{SERVICO_DOU.nome}</p>
+            <p className="mt-1 text-sm text-muted">{SERVICO_DOU.descricao}</p>
+            <p className="mt-1 text-sm text-muted">{SERVICO_DOU.motivoSemIntegracao}</p>
+            <a
+              href={SERVICO_DOU.url(area)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-block text-sm text-navy hover:underline"
+            >
+              Abrir {SERVICO_DOU.nome} ↗
+            </a>
+          </li>
         </ul>
-      </section>
-
-      <section className="mt-10" aria-labelledby="dou-title">
-        <h2 id="dou-title" className="text-xl">
-          Diário Oficial
-        </h2>
-        <div className="mt-4 rounded-md border border-line p-4">
-          <p className="font-semibold">{SERVICO_DOU.nome}</p>
-          <p className="mt-1 text-sm text-muted">{SERVICO_DOU.descricao}</p>
-          <p className="mt-1 text-sm text-muted">{SERVICO_DOU.motivoSemIntegracao}</p>
-          <a
-            href={SERVICO_DOU.url(ctx.area.slug)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 inline-block text-sm text-navy hover:underline"
-          >
-            Buscar no e-DOU ↗
-          </a>
-        </div>
       </section>
     </main>
   );

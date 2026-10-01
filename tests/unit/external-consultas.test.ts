@@ -33,6 +33,14 @@ describe("registro de serviços de consulta externa", () => {
     }
   });
 
+  it("sem área escolhida, cai numa URL padrão (sem termo de busca)", () => {
+    for (const servico of SERVICOS_JURISPRUDENCIA) {
+      expect(servico.url()).toMatch(/^https:\/\//);
+    }
+    expect(SERVICO_DOU.url()).toMatch(/^https:\/\//);
+    expect(SERVICO_DOU.url()).not.toContain("?q=");
+  });
+
   it("serviços processuais têm URL fixa (não dependem da área)", () => {
     for (const servico of SERVICOS_PROCESSUAIS) {
       expect(servico.url).toMatch(/^https:\/\//);
