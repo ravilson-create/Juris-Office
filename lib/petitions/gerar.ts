@@ -9,6 +9,11 @@ import {
   type ModeloConsumidorId,
 } from "./consumidor";
 import { decidirModelosFamilia, gerarPeticaoFamilia, type ModeloFamiliaId } from "./familia";
+import {
+  decidirModelosTrabalhista,
+  gerarPeticaoTrabalhista,
+  type ModeloTrabalhistaId,
+} from "./trabalhista";
 
 /**
  * Ponto único de entrada da fase determinística: decide o modelo pela área + triagem e devolve
@@ -23,6 +28,8 @@ export function modelosDisponiveis(area: LegalAreaSlug, answers: AnswerMap): str
       return decidirModelosCivel(answers);
     case "consumidor":
       return decidirModelosConsumidor(answers);
+    case "trabalhista":
+      return decidirModelosTrabalhista(answers);
     default:
       return [];
   }
@@ -48,6 +55,11 @@ export function gerarPeticao(
     const permitidos = decidirModelosConsumidor(answers);
     if (!permitidos.includes(modeloId as ModeloConsumidorId)) return null;
     return gerarPeticaoConsumidor(modeloId as ModeloConsumidorId, applicant, answers);
+  }
+  if (area === "trabalhista") {
+    const permitidos = decidirModelosTrabalhista(answers);
+    if (!permitidos.includes(modeloId as ModeloTrabalhistaId)) return null;
+    return gerarPeticaoTrabalhista(modeloId as ModeloTrabalhistaId, applicant, answers);
   }
   return null;
 }

@@ -26,6 +26,7 @@ const NOMES_MODELO: Record<string, string> = {
   "consumidor.declaratoria_inexistencia_cobranca":
     "Ação Declaratória de Inexistência de Débito c/c Repetição de Indébito",
   "consumidor.obrigacao_fazer_produto_servico": "Ação de Obrigação de Fazer c/c Indenização",
+  "trabalhista.reclamacao_trabalhista": "Reclamação Trabalhista",
 };
 
 export default async function PeticaoPage({ params }: { params: Promise<{ caseId: string }> }) {
