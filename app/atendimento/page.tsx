@@ -8,6 +8,16 @@ import { createCaseAction } from "./actions";
 export const metadata: Metadata = { title: "Escolha a área" };
 export const dynamic = "force-dynamic";
 
+const COMO_PROCEDER = [
+  { title: "Escolha o assunto", text: "Consumidor, trabalho, família, INSS ou questões cíveis." },
+  { title: "Responda perguntas simples", text: "Uma etapa por vez. Você pode voltar e corrigir." },
+  { title: "Conte o que aconteceu", text: "Com suas palavras, e indique os documentos que tiver." },
+  {
+    title: "Gere o dossiê",
+    text: "Um resumo organizado do caso, com protocolo, para você conferir.",
+  },
+];
+
 export default async function AtendimentoPage({
   searchParams,
 }: {
@@ -29,6 +39,30 @@ export default async function AtendimentoPage({
           Escolha a opção mais próxima. Se tiver dúvida, escolha a mais parecida: você pode iniciar
           outro atendimento de teste depois.
         </p>
+
+        <div className="mt-8 rounded-md border border-line bg-surface p-6">
+          <h2 className="text-lg font-semibold text-ink">Como proceder</h2>
+          <ol aria-label="Como é o atendimento" className="mt-4 grid gap-6 sm:grid-cols-2">
+            {COMO_PROCEDER.map((passo, i) => (
+              <li key={passo.title} className="flex gap-3">
+                <span
+                  aria-hidden="true"
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-serif text-sm font-semibold ${
+                    i === COMO_PROCEDER.length - 1
+                      ? "bg-teal-strong text-white"
+                      : "border-2 border-navy bg-surface text-navy"
+                  }`}
+                >
+                  {i + 1}
+                </span>
+                <div>
+                  <p className="font-sans text-sm font-semibold text-ink">{passo.title}</p>
+                  <p className="text-sm text-muted">{passo.text}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
 
         {erro === "area" && (
           <div className="mt-6">
