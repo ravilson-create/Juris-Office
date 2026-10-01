@@ -47,7 +47,12 @@ export default async function CasoEquipe({ params }: { params: Promise<{ caseId:
     <main className="mx-auto max-w-3xl px-5 py-8">
       <div className="mb-6 flex justify-between print:hidden">
         <Link href="/equipe">Voltar</Link>
-        <PrintButton />
+        <div className="flex gap-4">
+          <Link href={`/equipe/${caseId}/peticao`} className="underline">
+            Petição inicial
+          </Link>
+          <PrintButton />
+        </div>
       </div>
       <DossierView dossier={submission.dossier} />
       <section
