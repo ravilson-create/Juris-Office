@@ -10,6 +10,7 @@ import { getCaseService } from "@/lib/services";
 import { CASE_STATUS_LABEL } from "@/domain/case/status";
 import { listarPrazosPorCaso } from "@/lib/services/equipe-prazos";
 import { buscarViabilidade } from "@/lib/services/equipe-contratos";
+import { registrarLeituraCaso } from "@/lib/services/auditoria";
 import {
   addCaseNote,
   concluirPrazoAction,
@@ -67,6 +68,9 @@ export default async function CasoEquipe({
   // A política RLS é o filtro definitivo: IDs de outro escritório/sem atribuição retornam vazio.
   const submission = await getCaseService().getSubmission(caseId);
   if (!submission) notFound();
+  // Cada carregamento desta página é um acesso real a dado sensível do caso — fica registrado
+  // mesmo quando a pessoa só está consultando, não mudando nada (ver lib/services/auditoria.ts).
+  await registrarLeituraCaso(getDb(), { actor, caseId });
   const notes = await getDb().query<{
     id: string;
     body: string;
