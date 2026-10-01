@@ -10,6 +10,11 @@ import {
 } from "./consumidor";
 import { decidirModelosFamilia, gerarPeticaoFamilia, type ModeloFamiliaId } from "./familia";
 import {
+  decidirModelosPrevidenciario,
+  gerarPeticaoPrevidenciario,
+  type ModeloPrevidenciarioId,
+} from "./previdenciario";
+import {
   decidirModelosTrabalhista,
   gerarPeticaoTrabalhista,
   type ModeloTrabalhistaId,
@@ -30,6 +35,8 @@ export function modelosDisponiveis(area: LegalAreaSlug, answers: AnswerMap): str
       return decidirModelosConsumidor(answers);
     case "trabalhista":
       return decidirModelosTrabalhista(answers);
+    case "previdenciario":
+      return decidirModelosPrevidenciario(answers);
     default:
       return [];
   }
@@ -60,6 +67,11 @@ export function gerarPeticao(
     const permitidos = decidirModelosTrabalhista(answers);
     if (!permitidos.includes(modeloId as ModeloTrabalhistaId)) return null;
     return gerarPeticaoTrabalhista(modeloId as ModeloTrabalhistaId, applicant, answers);
+  }
+  if (area === "previdenciario") {
+    const permitidos = decidirModelosPrevidenciario(answers);
+    if (!permitidos.includes(modeloId as ModeloPrevidenciarioId)) return null;
+    return gerarPeticaoPrevidenciario(modeloId as ModeloPrevidenciarioId, applicant, answers);
   }
   return null;
 }

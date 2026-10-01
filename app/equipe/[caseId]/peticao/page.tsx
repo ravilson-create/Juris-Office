@@ -27,6 +27,13 @@ const NOMES_MODELO: Record<string, string> = {
     "Ação Declaratória de Inexistência de Débito c/c Repetição de Indébito",
   "consumidor.obrigacao_fazer_produto_servico": "Ação de Obrigação de Fazer c/c Indenização",
   "trabalhista.reclamacao_trabalhista": "Reclamação Trabalhista",
+  "previdenciario.concessao_aposentadoria": "Ação de Concessão de Aposentadoria",
+  "previdenciario.concessao_incapacidade": "Ação de Concessão de Benefício por Incapacidade",
+  "previdenciario.restabelecimento_incapacidade": "Ação de Restabelecimento de Benefício por Incapacidade",
+  "previdenciario.concessao_pensao_morte": "Ação de Concessão de Pensão por Morte",
+  "previdenciario.concessao_bpc": "Ação de Concessão de BPC/LOAS",
+  "previdenciario.concessao_maternidade": "Ação de Concessão de Salário-Maternidade",
+  "previdenciario.revisao_beneficio": "Ação Revisional de Benefício Previdenciário",
 };
 
 export default async function PeticaoPage({ params }: { params: Promise<{ caseId: string }> }) {
