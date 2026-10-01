@@ -52,6 +52,18 @@ export function isEditableByCitizen(status: CaseStatus): boolean {
   return CITIZEN_EDITABLE.includes(status);
 }
 
+/** Status em que o caso já passou da triagem do cidadão e é trabalho do escritório. */
+export const STATUS_PROFISSIONAL: readonly CaseStatus[] = [
+  "submitted",
+  "under_legal_review",
+  "needs_information",
+  "accepted",
+  "rejected",
+  "in_negotiation",
+  "active",
+  "closed",
+];
+
 export const CASE_STATUS_LABEL: Record<CaseStatus, string> = {
   draft: "Rascunho",
   triage: "Em preenchimento (triagem)",

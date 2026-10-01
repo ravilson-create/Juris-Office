@@ -2,6 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
+import { resumirContagemPorStatus } from "@/domain/case/dashboard";
+import { STATUS_PROFISSIONAL } from "@/domain/case/status";
+import { contarCasosPorStatus, contarCasosSemAdvogado } from "@/lib/services/equipe-dashboard";
 import { assignLawyer } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -39,12 +42,14 @@ export default async function EquipePage({
     title: string | null;
   }>(
     `SELECT id, protocol, status, title FROM legal_cases
-     WHERE status IN ('submitted', 'under_legal_review', 'needs_information', 'accepted',
-                      'rejected', 'in_negotiation', 'active', 'closed')
-       AND ($1 = '' OR protocol ILIKE '%' || $1 || '%' OR title ILIKE '%' || $1 || '%')
+     WHERE status = ANY($1)
+       AND ($2 = '' OR protocol ILIKE '%' || $2 || '%' OR title ILIKE '%' || $2 || '%')
      ORDER BY updated_at DESC LIMIT 100`,
-    [query],
+    [STATUS_PROFISSIONAL, query],
   );
+  const resumo = resumirContagemPorStatus(await contarCasosPorStatus(db));
+  const semAdvogado =
+    profile[0].role === "admin" ? await contarCasosSemAdvogado(db) : 0;
   const lawyers =
     profile[0].role === "admin"
       ? await db.query<{ user_id: string }>(
@@ -74,6 +79,28 @@ export default async function EquipePage({
       <p className="mt-2 text-muted">
         {profile[0].role === "admin" ? "Casos do seu escritório" : "Casos atribuídos a você"}
       </p>
+
+      <div className="mt-6 flex flex-wrap gap-3" aria-label="Resumo por status">
+        <div className="rounded-md border border-line bg-surface px-4 py-3">
+          <p className="text-2xl font-semibold">{resumo.total}</p>
+          <p className="text-sm text-muted">Total</p>
+        </div>
+        {resumo.porStatus
+          .filter((item) => item.total > 0)
+          .map((item) => (
+            <div key={item.status} className="rounded-md border border-line bg-surface px-4 py-3">
+              <p className="text-2xl font-semibold">{item.total}</p>
+              <p className="text-sm text-muted">{item.label}</p>
+            </div>
+          ))}
+      </div>
+
+      {profile[0].role === "admin" && semAdvogado > 0 && (
+        <p className="mt-4 rounded-md border border-line bg-surface p-4">
+          <strong>{semAdvogado}</strong> caso(s) do escritório ainda sem advogado atribuído.
+        </p>
+      )}
+
       {profile[0].role === "admin" && Number(pendentesOab[0]?.count ?? 0) > 0 && (
         <Link
           href="/equipe/pendentes"
