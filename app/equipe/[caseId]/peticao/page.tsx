@@ -145,12 +145,20 @@ export default async function PeticaoPage({ params }: { params: Promise<{ caseId
             <button className="rounded bg-navy px-4 py-2 text-white">Salvar alterações</button>
           </form>
 
-          <a
-            href={`/api/peticoes/${peticaoAtual.id}/docx`}
-            className="mt-4 inline-block rounded border border-line px-4 py-2"
-          >
-            Baixar .docx
-          </a>
+          <div className="mt-4 flex gap-3">
+            <a
+              href={`/api/peticoes/${peticaoAtual.id}/docx`}
+              className="inline-block rounded border border-line px-4 py-2"
+            >
+              Baixar .docx
+            </a>
+            <a
+              href={`/api/peticoes/${peticaoAtual.id}/pdf`}
+              className="inline-block rounded border border-line px-4 py-2"
+            >
+              Baixar PDF
+            </a>
+          </div>
         </section>
       )}
     </main>
