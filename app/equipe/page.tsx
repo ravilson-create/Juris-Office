@@ -84,6 +84,9 @@ export default async function EquipePage({
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h1 className="text-3xl">Área profissional</h1>
         <div className="flex gap-4">
+          <Link href="/mfa/configurar" className="text-sm text-navy hover:underline">
+            Verificação em duas etapas →
+          </Link>
           {profile[0].role === "admin" && (
             <Link href="/equipe/auditoria" className="text-sm text-navy hover:underline">
               Auditoria de acesso →
