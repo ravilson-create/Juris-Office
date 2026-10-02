@@ -4,6 +4,7 @@ import { z } from "zod";
 import { DossierView } from "@/components/dossier/dossier-view";
 import { PrintButton } from "@/components/dossier/print-button";
 import { Alert } from "@/components/ui/alert";
+import { ButtonLink } from "@/components/ui/button";
 import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
 import { getCaseService } from "@/lib/services";
@@ -94,13 +95,13 @@ export default async function CasoEquipe({
     <main className="mx-auto max-w-3xl px-5 py-8">
       <div className="mb-6 flex justify-between print:hidden">
         <Link href="/equipe">Voltar</Link>
-        <div className="flex gap-4">
-          <Link href={`/equipe/${caseId}/peticao`} className="underline">
+        <div className="flex flex-wrap items-center gap-2">
+          <ButtonLink href={`/equipe/${caseId}/peticao`} variant="secondary" className="text-sm">
             Petição inicial
-          </Link>
-          <Link href={`/equipe/${caseId}/contrato`} className="underline">
+          </ButtonLink>
+          <ButtonLink href={`/equipe/${caseId}/contrato`} variant="secondary" className="text-sm">
             Contrato
-          </Link>
+          </ButtonLink>
           <PrintButton />
         </div>
       </div>

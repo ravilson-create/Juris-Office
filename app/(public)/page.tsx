@@ -178,10 +178,9 @@ export default async function HomePage() {
         <div className="max-w-prose rounded-md border border-line bg-surface p-6">
           <h2 className="text-xl">O que esta plataforma faz e o que não faz</h2>
           <p className="mt-3 text-muted">
-            Nesta versão de testes, o {APP_NAME} organiza as informações que você digita e gera um
-            dossiê preliminar para demonstração. Ele <strong>não</strong> encaminha nada a
-            advogados, não recebe arquivos, não emite parecer jurídico, não promete resultado e não
-            substitui a orientação de um profissional habilitado.
+            O {APP_NAME} organiza as informações que você digita e gera um dossiê preliminar para o
+            advogado responsável pelo seu caso. Ele <strong>não</strong> emite parecer jurídico,
+            não promete resultado e não substitui a orientação de um profissional habilitado.
           </p>
         </div>
       </section>

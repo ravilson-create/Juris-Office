@@ -130,14 +130,14 @@ export default async function RevisarPage({ params }: { params: Promise<{ caseId
           <input type="hidden" name="caseId" value={caseId} />
           <h2 className="text-xl">Tudo certo?</h2>
           <p className="max-w-prose text-muted">
-            Ao finalizar, o sistema gera o dossiê e o protocolo deste atendimento de teste, e as
-            informações não podem mais ser alteradas. Nada é encaminhado a um advogado.
+            Ao finalizar, o sistema gera o dossiê e o protocolo deste atendimento, e as informações
+            não podem mais ser alteradas.
           </p>
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
             <ButtonLink href={`${base}/documentos`} variant="secondary">
               Voltar aos documentos
             </ButtonLink>
-            <SubmitButton pendingLabel="Finalizando…">Finalizar atendimento de teste</SubmitButton>
+            <SubmitButton pendingLabel="Finalizando…">Finalizar atendimento</SubmitButton>
           </div>
         </form>
       </div>
@@ -163,7 +163,7 @@ function ReviewSection({
         </h2>
         <Link
           href={editHref}
-          className="text-sm font-medium text-navy underline-offset-4 hover:underline print:hidden"
+          className="rounded border border-line px-3 py-1 text-sm font-medium text-navy hover:border-navy print:hidden"
         >
           Corrigir<span className="sr-only"> {title}</span>
         </Link>

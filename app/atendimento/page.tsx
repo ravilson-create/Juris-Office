@@ -37,7 +37,7 @@ export default async function AtendimentoPage({
         <h1 className="text-3xl">Sobre qual assunto é o seu problema?</h1>
         <p className="mt-2 max-w-prose text-muted">
           Escolha a opção mais próxima. Se tiver dúvida, escolha a mais parecida: você pode iniciar
-          outro atendimento de teste depois.
+          outro atendimento depois.
         </p>
 
         <div className="mt-8 rounded-md border border-line bg-surface p-6">

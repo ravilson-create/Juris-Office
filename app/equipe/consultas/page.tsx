@@ -193,7 +193,7 @@ export default async function ConsultasExternasPage({
                 href={s.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 inline-block text-sm text-navy hover:underline"
+                className="mt-3 inline-block rounded border border-line px-3 py-1.5 text-sm font-medium text-navy hover:border-navy"
               >
                 Abrir {s.nome} ↗
               </a>
@@ -240,7 +240,7 @@ export default async function ConsultasExternasPage({
                 href={s.url(area)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 inline-block text-sm text-navy hover:underline"
+                className="mt-3 inline-block rounded border border-line px-3 py-1.5 text-sm font-medium text-navy hover:border-navy"
               >
                 Abrir {s.nome} ↗
               </a>
@@ -254,7 +254,7 @@ export default async function ConsultasExternasPage({
               href={SERVICO_DOU.url(area)}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 inline-block text-sm text-navy hover:underline"
+              className="mt-3 inline-block rounded border border-line px-3 py-1.5 text-sm font-medium text-navy hover:border-navy"
             >
               Abrir {SERVICO_DOU.nome} ↗
             </a>

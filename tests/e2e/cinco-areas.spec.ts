@@ -135,7 +135,6 @@ for (const plan of AREA_PLANS) {
       page.getByRole("button", { name: "Remover documento-ficticio.pdf" }),
     ).toBeVisible();
     await expect(page.getByText("Registrado (1)")).toBeVisible();
-    await expect(page.getByText(/arquivo não recebido/).first()).toBeVisible();
     await page.getByLabel(/Adicionar arquivo em Outros documentos/).setInputFiles({
       name: "programa.exe",
       mimeType: "application/x-msdownload",
@@ -158,17 +157,16 @@ for (const plan of AREA_PLANS) {
     await expect(preview.getByText(plan.correction.shown).first()).toBeVisible();
 
     // 7. Finalização
-    await page.getByRole("button", { name: "Finalizar atendimento de teste" }).click();
-    await expect(h1(page)).toHaveText("Atendimento de teste finalizado");
+    await page.getByRole("button", { name: "Finalizar atendimento" }).click();
+    await expect(h1(page)).toHaveText("Atendimento finalizado");
     await expect(page.getByTestId("protocolo-final")).toHaveText(protocol);
-    await expect(page.getByText(/Nenhuma informação foi encaminhada/)).toBeVisible();
 
     // 8. Dossiê
     await page.getByRole("link", { name: "Ver o dossiê gerado" }).click();
     const dossier = page.getByRole("article", { name: "Dossiê jurídico preliminar" });
     await expect(dossier.getByRole("heading", { level: 2 })).toHaveCount(11);
     await expect(dossier.getByText(protocol)).toBeVisible();
-    await expect(dossier.getByText("Gerado para demonstração")).toBeVisible();
+    await expect(dossier.getByText("Documento gerado automaticamente")).toBeVisible();
     await expect(dossier.getByText(plan.correction.shown).first()).toBeVisible();
     await expect(dossier.getByText(plan.dossierText).first()).toBeVisible();
 
@@ -176,7 +174,7 @@ for (const plan of AREA_PLANS) {
     const base = new URL(page.url()).pathname.replace(/\/dossie$/, "");
     for (const path of ["identificacao", "triagem", "relato", "documentos", "revisar"]) {
       await page.goto(`${base}/${path}`);
-      await expect(h1(page)).toHaveText("Atendimento de teste finalizado");
+      await expect(h1(page)).toHaveText("Atendimento finalizado");
     }
 
     // 10. Retomada pela lista de atendimentos

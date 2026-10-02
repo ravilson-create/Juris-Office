@@ -24,7 +24,7 @@ export default function ErrorPage({
       </p>
       {error.digest && (
         <p className="mt-3 text-sm text-muted">
-          Se o problema continuar, anote este código para a equipe de testes:{" "}
+          Se o problema continuar, anote este código para o suporte:{" "}
           <span className="font-mono">{error.digest}</span>
         </p>
       )}

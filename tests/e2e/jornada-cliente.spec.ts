@@ -124,9 +124,9 @@ test("jornada de Consumidor: área → identificação → triagem → relato �
   await expect(preview.getByText(/Guardei os protocolos/)).toBeVisible();
 
   // Envio → protocolo
-  await page.getByRole("button", { name: "Finalizar atendimento de teste" }).click();
+  await page.getByRole("button", { name: "Finalizar atendimento" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Atendimento de teste finalizado",
+    "Atendimento finalizado",
   );
   await expect(page.getByTestId("protocolo-final")).toHaveText(protocol!);
 
@@ -146,11 +146,11 @@ test("jornada de Consumidor: área → identificação → triagem → relato �
   const caseUrl = page.url().replace(/\/dossie$/, "");
   await page.goto(`${caseUrl}/triagem`);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Atendimento de teste finalizado",
+    "Atendimento finalizado",
   );
   await page.goto(`${caseUrl}/revisar`);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Atendimento de teste finalizado",
+    "Atendimento finalizado",
   );
 });
 

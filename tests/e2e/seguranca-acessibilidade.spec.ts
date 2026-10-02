@@ -184,9 +184,9 @@ test("sem violações de acessibilidade em toda a jornada", async ({ page }) => 
   await page.getByRole("button", { name: "Continuar para a revisão" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Revise antes de finalizar");
   await expectNoA11yViolations(page, "revisão");
-  await page.getByRole("button", { name: "Finalizar atendimento de teste" }).click();
+  await page.getByRole("button", { name: "Finalizar atendimento" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Atendimento de teste finalizado",
+    "Atendimento finalizado",
   );
   await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
   await expectNoA11yViolations(page, "protocolo");

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ButtonLink } from "@/components/ui/button";
 import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
 import type { CaseStatus } from "@/domain/case/schema";
@@ -83,23 +84,23 @@ export default async function EquipePage({
     <main className="mx-auto max-w-3xl px-5 py-10">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h1 className="text-3xl">Área profissional</h1>
-        <div className="flex gap-4">
-          <Link href="/mfa/configurar" className="text-sm text-navy hover:underline">
-            Verificação em duas etapas →
-          </Link>
+        <div className="flex flex-wrap gap-2">
+          <ButtonLink href="/mfa/configurar" variant="secondary" className="text-sm">
+            Verificação em duas etapas
+          </ButtonLink>
           {profile[0].role === "admin" && (
             <>
-              <Link href="/equipe/time" className="text-sm text-navy hover:underline">
-                Gestão de equipe →
-              </Link>
-              <Link href="/equipe/auditoria" className="text-sm text-navy hover:underline">
-                Auditoria de acesso →
-              </Link>
+              <ButtonLink href="/equipe/time" variant="secondary" className="text-sm">
+                Gestão de equipe
+              </ButtonLink>
+              <ButtonLink href="/equipe/auditoria" variant="secondary" className="text-sm">
+                Auditoria de acesso
+              </ButtonLink>
             </>
           )}
-          <Link href="/equipe/consultas" className="text-sm text-navy hover:underline">
-            Consultas externas →
-          </Link>
+          <ButtonLink href="/equipe/consultas" variant="secondary" className="text-sm">
+            Consultas externas
+          </ButtonLink>
         </div>
       </div>
       <p className="mt-2 text-muted">
@@ -163,9 +164,9 @@ export default async function EquipePage({
       {profile[0].role === "admin" && Number(pendentesOab[0]?.count ?? 0) > 0 && (
         <Link
           href="/equipe/pendentes"
-          className="mt-4 block rounded-md border border-line bg-surface p-4 underline"
+          className="mt-4 block rounded-md border border-line bg-surface p-4 font-medium text-navy hover:border-navy"
         >
-          {pendentesOab[0].count} advogado(s) aguardando confirmação da OAB
+          {pendentesOab[0].count} advogado(s) aguardando confirmação da OAB →
         </Link>
       )}
       <form action="/equipe" className="mt-6 flex flex-wrap gap-2" role="search">
@@ -236,7 +237,7 @@ export default async function EquipePage({
           <Link
             href={linkPagina(query, status, pagina - 1)}
             aria-disabled={pagina <= 1}
-            className={`rounded border px-3 py-2 ${pagina <= 1 ? "pointer-events-none text-muted" : "underline"}`}
+            className={`rounded border px-3 py-2 font-medium ${pagina <= 1 ? "pointer-events-none border-line text-muted" : "border-line text-navy hover:border-navy"}`}
           >
             ← Anterior
           </Link>
@@ -246,7 +247,7 @@ export default async function EquipePage({
           <Link
             href={linkPagina(query, status, pagina + 1)}
             aria-disabled={pagina >= totalPaginas}
-            className={`rounded border px-3 py-2 ${pagina >= totalPaginas ? "pointer-events-none text-muted" : "underline"}`}
+            className={`rounded border px-3 py-2 font-medium ${pagina >= totalPaginas ? "pointer-events-none border-line text-muted" : "border-line text-navy hover:border-navy"}`}
           >
             Próxima →
           </Link>

@@ -40,7 +40,7 @@ export function DraftStatus({ state, onRetry }: { state: DraftState; onRetry: ()
         <button
           type="button"
           onClick={onRetry}
-          className="mt-1 font-medium text-navy underline underline-offset-4"
+          className="mt-1 rounded border border-danger px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger-soft"
         >
           Tentar salvar o rascunho agora
         </button>

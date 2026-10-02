@@ -26,7 +26,7 @@ export function DossierView({ dossier }: { dossier: Dossier }) {
         protocol={dossier.protocol}
         areaName={dossier.areaName}
         date={dossier.createdAt}
-        statusLabel="Gerado para demonstração"
+        statusLabel="Documento gerado automaticamente"
         version={dossier.version}
       />
 

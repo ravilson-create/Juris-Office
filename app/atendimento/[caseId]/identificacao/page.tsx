@@ -25,10 +25,7 @@ export default async function IdentificacaoPage({
       <CaseHeader legalCase={legalCase} area={area} step="Identificação" />
       <div className="mx-auto max-w-3xl px-5 py-10">
         <h1 className="text-3xl">Seus dados de contato</h1>
-        <p className="mt-2 max-w-prose text-muted">
-          Estes dados compõem o dossiê de demonstração. Use dados fictícios: nesta versão de testes
-          ninguém entrará em contato.
-        </p>
+        <p className="mt-2 max-w-prose text-muted">Estes dados compõem o dossiê do seu atendimento.</p>
         <IdentificationForm
           caseId={legalCase.id}
           returnTo={origem === "revisao" ? `/atendimento/${caseId}/revisar` : undefined}

@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
-import { TestEnvironmentBanner } from "@/components/layout/test-environment-banner";
 import { APP_NAME } from "@/lib/config";
 import "./globals.css";
 
@@ -9,7 +8,7 @@ export const metadata: Metadata = {
   robots: process.env.INDEXAR_SITE === "1" ? undefined : { index: false, follow: false },
   title: { default: APP_NAME, template: `%s | ${APP_NAME}` },
   description:
-    "Versão de testes: organize um caso jurídico fictício com perguntas guiadas e gere um dossiê de demonstração.",
+    "Organize seu caso jurídico com perguntas guiadas e gere um dossiê para o advogado responsável.",
   applicationName: APP_NAME,
 };
 
@@ -36,7 +35,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           Pular para o conteúdo
         </a>
         <SiteHeader />
-        <TestEnvironmentBanner />
         <main id="conteudo" className="flex-1">
           {children}
         </main>
