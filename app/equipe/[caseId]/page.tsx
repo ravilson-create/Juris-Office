@@ -11,7 +11,7 @@ import { getDb } from "@/lib/db/connection";
 import { getCaseService } from "@/lib/services";
 import { CASE_STATUS_LABEL, isDeletable } from "@/domain/case/status";
 import { listarPrazosPorCaso } from "@/lib/services/equipe-prazos";
-import { buscarViabilidade } from "@/lib/services/equipe-contratos";
+import { buscarViabilidade, iniciarAnaliseSeNecessario } from "@/lib/services/equipe-contratos";
 import { registrarLeituraCaso } from "@/lib/services/auditoria";
 import { aiEnabled } from "@/lib/ai/client";
 import { buscarResumoIA } from "@/lib/services/resumo-ia";
@@ -82,6 +82,13 @@ export default async function CasoEquipe({
   // Cada carregamento desta página é um acesso real a dado sensível do caso — fica registrado
   // mesmo quando a pessoa só está consultando, não mudando nada (ver lib/services/auditoria.ts).
   await registrarLeituraCaso(getDb(), { actor, caseId });
+  // Primeira vez que um profissional abre um caso recém-finalizado: entra oficialmente em
+  // análise — sem isto, a decisão de viabilidade nunca teria um status de onde partir.
+  submission.legalCase.status = await iniciarAnaliseSeNecessario(
+    getDb(),
+    caseId,
+    submission.legalCase.status,
+  );
   const notes = await getDb().query<{
     id: string;
     body: string;

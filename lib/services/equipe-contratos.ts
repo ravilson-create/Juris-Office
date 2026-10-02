@@ -50,6 +50,26 @@ export async function buscarViabilidade(db: Db, caseId: string): Promise<CaseVia
 }
 
 /**
+ * Primeira vez que um advogado/admin abre um caso recém-finalizado: entra oficialmente em
+ * análise. Sem isto, nada move o caso de "submitted" para "under_legal_review" — e a decisão de
+ * viabilidade só é uma transição válida a partir de "under_legal_review" (ver TRANSITIONS em
+ * domain/case/status.ts) — então a decisão nunca poderia ser registrada. Chamado junto com o
+ * registro de leitura (ver app/equipe/[caseId]/page.tsx e lib/services/auditoria.ts).
+ */
+export async function iniciarAnaliseSeNecessario(
+  db: Db,
+  caseId: string,
+  statusAtual: CaseStatus,
+): Promise<CaseStatus> {
+  if (statusAtual !== "submitted") return statusAtual;
+  await db.query(
+    "UPDATE legal_cases SET status = 'under_legal_review', updated_at = now() WHERE id = $1 AND status = 'submitted'",
+    [caseId],
+  );
+  return "under_legal_review";
+}
+
+/**
  * Registra a decisão de viabilidade e move o status do caso na mesma transação — os dois nunca
  * divergem (ver statusCasoParaDecisao). assertTransition lança se o caso não estiver numa etapa
  * de onde essa decisão é um próximo passo válido (ex.: não dá pra "aceitar" um caso em 'draft').
