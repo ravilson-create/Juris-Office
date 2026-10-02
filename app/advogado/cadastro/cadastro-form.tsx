@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import { subscriptionPlans, formatPlanPrice } from "@/lib/billing/plans";
 import { BRAZIL_UFS } from "@/domain/case/schema";
 import { iniciarTesteGratis, type CadastroState } from "./actions";
@@ -10,6 +11,10 @@ export function CadastroForm() {
     iniciarTesteGratis,
     null,
   );
+  const planoNaUrl = useSearchParams().get("plano");
+  const planoInicial = subscriptionPlans.some((p) => p.id === planoNaUrl)
+    ? planoNaUrl
+    : subscriptionPlans[0].id;
   return (
     <form action={action} className="mt-8 flex flex-col gap-5">
       <label className="flex flex-col gap-1">
@@ -56,9 +61,15 @@ export function CadastroForm() {
       </p>
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 font-medium">Plano</legend>
-        {subscriptionPlans.map((plan, index) => (
+        {subscriptionPlans.map((plan) => (
           <label key={plan.id} className="flex items-center gap-2 rounded border border-line p-3">
-            <input type="radio" name="planoId" value={plan.id} defaultChecked={index === 0} required />
+            <input
+              type="radio"
+              name="planoId"
+              value={plan.id}
+              defaultChecked={plan.id === planoInicial}
+              required
+            />
             {plan.label} — {formatPlanPrice(plan.amountCents)}/{plan.interval}
           </label>
         ))}

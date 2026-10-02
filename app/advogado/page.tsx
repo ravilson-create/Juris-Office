@@ -79,12 +79,17 @@ export default function AdvogadoPage() {
         </h2>
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           {subscriptionPlans.map((plan) => (
-            <div key={plan.id} className="rounded-xl border border-line bg-surface p-6">
+            <Link
+              key={plan.id}
+              href={authEnabled ? `/advogado/cadastro?plano=${plan.id}` : "/advogado"}
+              className="rounded-xl border border-line bg-surface p-6 hover:border-navy"
+            >
               <h3 className="text-xl">{plan.label}</h3>
               <p className="mt-3 text-2xl font-semibold">
                 {formatPlanPrice(plan.amountCents)}/{plan.interval}
               </p>
-            </div>
+              <p className="mt-3 font-medium text-navy">Escolher este plano →</p>
+            </Link>
           ))}
         </div>
         <p className="mt-4 text-sm text-muted">

@@ -25,13 +25,18 @@ export default async function AssinaturaPage() {
           </p>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {subscriptionPlans.map((plan) => (
-              <div key={plan.id} className="rounded-xl border p-5">
+              <Link
+                key={plan.id}
+                href={`/advogado/cadastro?plano=${plan.id}`}
+                className="rounded-xl border p-5 hover:border-navy"
+              >
                 <h2 className="text-xl font-semibold">{plan.label}</h2>
                 <p className="mt-2 text-2xl font-semibold">
                   {formatPlanPrice(plan.amountCents)}{" "}
                   <span className="text-base font-normal">/{plan.interval}</span>
                 </p>
-              </div>
+                <p className="mt-3 font-medium text-navy">Escolher este plano →</p>
+              </Link>
             ))}
           </div>
           <Link
