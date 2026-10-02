@@ -83,9 +83,16 @@ export default async function EquipePage({
     <main className="mx-auto max-w-3xl px-5 py-10">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h1 className="text-3xl">Área profissional</h1>
-        <Link href="/equipe/consultas" className="text-sm text-navy hover:underline">
-          Consultas externas →
-        </Link>
+        <div className="flex gap-4">
+          {profile[0].role === "admin" && (
+            <Link href="/equipe/time" className="text-sm text-navy hover:underline">
+              Gestão de equipe →
+            </Link>
+          )}
+          <Link href="/equipe/consultas" className="text-sm text-navy hover:underline">
+            Consultas externas →
+          </Link>
+        </div>
       </div>
       <p className="mt-2 text-muted">
         {profile[0].role === "admin" ? "Casos do seu escritório" : "Casos atribuídos a você"}
