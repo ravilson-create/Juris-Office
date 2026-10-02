@@ -50,6 +50,9 @@ export interface CaseRepository {
   /** Casos criados pela sessão informada (hash), do mais recente para o mais antigo. */
   listByOwner(ownerSessionHash: string): Promise<LegalCase[]>;
   update(id: string, input: UpdateCaseInput): Promise<LegalCase>;
+  /** Exclui o atendimento (e cascateia triagem, documentos, petições, contrato etc. — ver
+   * migração 0017). Devolve false se o id não existir. */
+  delete(id: string): Promise<boolean>;
   /**
    * Operação atômica: grava o dossiê E marca o caso como finalizado, ou não grava nada.
    * Mock: trecho síncrono no processo único. Banco (F5): transação com bloqueio da linha do

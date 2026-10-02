@@ -133,6 +133,19 @@ export async function atualizarStatusContrato(
   ]);
 }
 
+/** Só rascunho ou cancelado — nunca enviado nem assinado, preservando a evidência do acordo já
+ * formalizado. A RLS (contracts_delete, migração 0017) já garante isso; aqui é defesa em
+ * profundidade. Cascateia as parcelas (contract_installments) automaticamente. */
+export async function excluirContrato(
+  db: Db,
+  contractId: string,
+  statusAtual: ContractStatus,
+): Promise<boolean> {
+  if (statusAtual !== "draft" && statusAtual !== "cancelled") return false;
+  const removed = await db.query("DELETE FROM contracts WHERE id = $1 RETURNING id", [contractId]);
+  return removed.length > 0;
+}
+
 export async function listarParcelas(db: Db, contractId: string): Promise<ParcelaRow[]> {
   return db.query<ParcelaRow>(
     "SELECT * FROM contract_installments WHERE contract_id = $1 ORDER BY due_date ASC",

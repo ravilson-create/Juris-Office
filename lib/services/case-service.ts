@@ -9,7 +9,7 @@ import {
 } from "@/domain/draft";
 import { applicantSchema, type CaseStatus, type LegalCase } from "@/domain/case/schema";
 import { generateProtocol } from "@/domain/case/protocol";
-import { assertTransition, isEditableByCitizen } from "@/domain/case/status";
+import { assertTransition, isDeletable, isEditableByCitizen } from "@/domain/case/status";
 import { legalAreaSlugSchema, type LegalArea } from "@/domain/legal-area/schema";
 import {
   OTHER_DOCUMENTS_CATEGORY,
@@ -482,6 +482,25 @@ export class CaseService {
 
   finishDocuments(caseId: string) {
     return this.lock.run(caseId, () => this.finishDocumentsUnlocked(caseId));
+  }
+
+  /** Exclui o atendimento — só antes de aceito/em andamento (isDeletable); a RLS aplica a mesma
+   * regra do lado do banco (migração 0017), isto é defesa em profundidade. */
+  deleteCase(caseId: string) {
+    return this.lock.run(caseId, () => this.deleteCaseUnlocked(caseId));
+  }
+
+  private async deleteCaseUnlocked(caseId: string): Promise<ServiceResult<null>> {
+    const legalCase = await this.repos.cases.findById(caseId);
+    if (!legalCase) return { ok: false, message: "Atendimento não encontrado." };
+    if (!isDeletable(legalCase.status)) {
+      return {
+        ok: false,
+        message: "Este atendimento já foi aceito ou está em andamento e não pode mais ser excluído.",
+      };
+    }
+    const removed = await this.repos.cases.delete(caseId);
+    return removed ? { ok: true, data: null } : { ok: false, message: "Atendimento não encontrado." };
   }
 
   // ------------------------------------------------------ Rascunhos (Sprint 4.1)

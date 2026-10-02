@@ -120,6 +120,33 @@ describe("triagem de Consumidor", () => {
   });
 });
 
+describe("exclusão de atendimento", () => {
+  it("exclui um atendimento ainda não aceito", async () => {
+    const repos = createTestRepositories();
+    const svc = new CaseService(repos, () => NOW);
+    const c = await svc.createCase("consumidor");
+    const result = await svc.deleteCase(c.id);
+    expect(result).toEqual({ ok: true, data: null });
+    expect(await svc.getOverview(c.id)).toBeNull();
+  });
+
+  it("recusa excluir um atendimento já aceito/em andamento", async () => {
+    const repos = createTestRepositories();
+    const svc = new CaseService(repos, () => NOW);
+    const c = await svc.createCase("consumidor");
+    await repos.cases.update(c.id, { status: "active" });
+    const result = await svc.deleteCase(c.id);
+    expect(result.ok).toBe(false);
+    expect(await svc.getOverview(c.id)).not.toBeNull();
+  });
+
+  it("devolve falha para um id inexistente", async () => {
+    const svc = new CaseService(createTestRepositories(), () => NOW);
+    const result = await svc.deleteCase("00000000-0000-4000-8000-000000000099");
+    expect(result.ok).toBe(false);
+  });
+});
+
 describe("dono do atendimento", () => {
   it("guarda o hash da sessão informado na criação", async () => {
     const service = new CaseService(

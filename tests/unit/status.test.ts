@@ -3,6 +3,7 @@ import {
   assertTransition,
   canTransition,
   InvalidStatusTransitionError,
+  isDeletable,
   isEditableByCitizen,
 } from "@/domain/case/status";
 
@@ -26,5 +27,17 @@ describe("transições de status", () => {
     expect(isEditableByCitizen("triage")).toBe(true);
     expect(isEditableByCitizen("needs_information")).toBe(true);
     expect(isEditableByCitizen("submitted")).toBe(false);
+  });
+
+  it("atendimento só é excluível antes de aceito/em andamento", () => {
+    expect(isDeletable("draft")).toBe(true);
+    expect(isDeletable("submitted")).toBe(true);
+    expect(isDeletable("under_legal_review")).toBe(true);
+    expect(isDeletable("needs_information")).toBe(true);
+    expect(isDeletable("rejected")).toBe(true);
+    expect(isDeletable("accepted")).toBe(false);
+    expect(isDeletable("in_negotiation")).toBe(false);
+    expect(isDeletable("active")).toBe(false);
+    expect(isDeletable("closed")).toBe(false);
   });
 });

@@ -1,20 +1,27 @@
 import type { Metadata } from "next";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { CASE_STATUS_LABEL } from "@/domain/case/status";
+import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
+import { CASE_STATUS_LABEL, isDeletable } from "@/domain/case/status";
 import { formatInstantDateTime } from "@/domain/time";
 import { currentSessionHash } from "@/lib/auth/case-access";
 import { getCaseService } from "@/lib/services";
 import { authEnabled } from "@/lib/auth/session";
 import { signOut } from "@/app/auth/actions";
+import { excluirAtendimentoAction } from "@/app/atendimento/actions";
 
 export const metadata: Metadata = { title: "Meus atendimentos" };
 export const dynamic = "force-dynamic";
 
-export default async function MeusAtendimentosPage() {
+export default async function MeusAtendimentosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ erro?: string }>;
+}) {
   // Sem sessão não há o que listar; a sessão nunca é criada só por visitar esta página.
   const owner = await currentSessionHash();
   const items = owner ? await getCaseService().listMyCases(owner) : [];
+  const { erro } = await searchParams;
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-10">
@@ -23,6 +30,14 @@ export default async function MeusAtendimentosPage() {
         Atendimentos iniciados {authEnabled ? "na sua conta" : "neste navegador"}. Aqui você retoma
         um rascunho ou abre o protocolo e o dossiê de um atendimento finalizado.
       </p>
+
+      {erro === "nao_excluivel" && (
+        <div className="mt-6">
+          <Alert tone="error" title="Não foi possível excluir">
+            Este atendimento já foi aceito ou está em andamento e não pode mais ser excluído.
+          </Alert>
+        </div>
+      )}
 
       {!authEnabled && (
         <div className="mt-6">
@@ -96,6 +111,17 @@ export default async function MeusAtendimentosPage() {
                     >
                       Abrir dossiê
                     </ButtonLink>
+                  )}
+                  {isDeletable(item.status) && (
+                    <form action={excluirAtendimentoAction}>
+                      <input type="hidden" name="caseId" value={item.id} />
+                      <ConfirmSubmitButton
+                        confirmMessage={`Excluir o atendimento ${item.protocol}? Essa ação não pode ser desfeita.`}
+                        className="rounded border border-danger px-3 py-2 text-sm text-danger hover:bg-danger-soft"
+                      >
+                        Excluir
+                      </ConfirmSubmitButton>
+                    </form>
                   )}
                 </div>
               </li>

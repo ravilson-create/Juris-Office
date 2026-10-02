@@ -125,10 +125,48 @@ Mitigações:
 - **Rate limit** de 10 gerações/hora por caso (`checkRateLimit`), para conter custo e abuso.
 - **RLS idêntica** à do resto do caso (`case_ai_summaries`: advogado/admin com acesso ao caso).
 - O resultado é sempre rotulado como gerado por IA, nunca como fato confirmado, e nunca alimenta
-  automaticamente a decisão de viabilidade ou a petição — o advogado decide o que usar.
+  automaticamente a decisão de viabilidade — o advogado decide o que usar.
 - O modelo de fato usado (resolvido pelo Gateway) fica gravado em `case_ai_summaries.modelo`,
   não só a string configurada — rastreabilidade de qual provedor processou cada resumo.
 
 Pendente: revisar com o dono se o provedor por trás do modelo escolhido em `AI_GATEWAY_MODEL`
 precisa constar como operador de dados no contrato com o cliente final, conforme a LGPD, antes
 de habilitar em produção com casos reais.
+
+## F3 (segunda peça) — Correção de petição por IA: envio de dado a terceiro
+
+O botão "Corrigir com IA" (`/equipe/[caseId]/peticao`, por seção) envia à mesma infraestrutura
+(Vercel AI Gateway, `AI_GATEWAY_MODEL`) o texto já gerado de **uma seção** da petição, mais a
+área e o tipo de ação — nunca o dossiê inteiro nem dado do cliente além do que já está escrito
+naquela seção.
+
+Mitigações:
+- **Nunca automático e nunca em lote**: uma seção por vez, só quando o advogado clica.
+- **Sugestão, não substituição**: o texto corrigido aparece como proposta; só entra na petição
+  quando o advogado clica em "Usar esta versão" — o salvamento continua sendo uma ação separada
+  e explícita ("Salvar alterações").
+- **Instrução do modelo proíbe inventar** fato, valor, data, nome, lei ou jurisprudência que não
+  esteja já no texto recebido, e exige copiar qualquer `[PENDENTE: ...]` sem alteração.
+- Seção aceita fica marcada como "revisado por IA" (`case_petitions.secoes_revisadas_ia`),
+  rastreável mesmo que o advogado edite o texto depois de aceitar.
+- Mesma RLS da petição (`case_petitions`: advogado/admin com acesso ao caso).
+
+## Exclusão de atendimento, contrato e petição
+
+Nenhuma das três tabelas tinha política nem GRANT de DELETE antes desta mudança — eram
+operações impossíveis mesmo para quem tinha acesso de leitura/escrita ao caso. Agora:
+
+- **Atendimento**: o cidadão dono (conta ou sessão anônima) e advogado/admin com acesso podem
+  excluir, mas só **antes** de a causa ser aceita ou entrar em negociação/andamento (`isDeletable`
+  em `domain/case/status.ts`, espelhado na RLS da migração 0017). Depois disso normalmente já
+  existe contrato — a exclusão fica bloqueada para preservar essa evidência. Apagar o atendimento
+  cascateia triagem, documentos, rascunhos, petições e contrato; a auditoria (`audit_logs`)
+  sobrevive com `case_id = NULL` (ela não é apagada, só perde a referência ao caso).
+- **Contrato**: só em rascunho ou cancelado — nunca enviado ou assinado, pela mesma razão que a
+  transição de status de um contrato assinado já era bloqueada (preserva o acordo de honorários
+  formalizado com o cliente).
+- **Petição**: sem restrição de status — qualquer versão gerada pode ser excluída
+  independentemente, sem afetar as demais.
+
+Nenhum diálogo de confirmação existia no app antes disso; todo botão de exclusão agora usa
+`components/ui/confirm-submit-button.tsx` (confirmação do navegador antes de enviar o formulário).

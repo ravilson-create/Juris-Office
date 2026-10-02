@@ -64,6 +64,19 @@ export const STATUS_PROFISSIONAL: readonly CaseStatus[] = [
   "closed",
 ];
 
+const BLOQUEADO_PARA_EXCLUSAO: readonly CaseStatus[] = [
+  "accepted",
+  "in_negotiation",
+  "active",
+  "closed",
+];
+
+/** Status em que o atendimento ainda pode ser excluído — antes de aceito/em andamento, quando
+ * normalmente já existe contrato (a RLS aplica a mesma regra, ver migração 0017). */
+export function isDeletable(status: CaseStatus): boolean {
+  return !BLOQUEADO_PARA_EXCLUSAO.includes(status);
+}
+
 /**
  * Valida um status vindo de entrada não confiável (ex.: query string) contra a lista de status
  * que a tela do escritório realmente filtra — nunca aceita um status de cidadão (`draft` etc.)

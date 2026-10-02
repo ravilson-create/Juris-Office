@@ -18,6 +18,17 @@
 - **CSP com nonce por requisição** em `script-src`, substituindo `'unsafe-inline'`.
 - **Atualizado para Next.js 16** (de 15.5.26), React 19.3 e `eslint-config-next` 16 — pré-requisito
   para o SDK oficial da Neon Auth (P2), que só suporta Next.js ≥ 16.
+- **F3 (segunda peça) — correção de petição por IA**: botão "Corrigir com IA" em
+  `/equipe/[caseId]/peticao`, seção por seção — nunca a petição inteira de uma vez. A sugestão
+  aparece como proposta; só entra no texto quando o advogado clica em "Usar esta versão", e a
+  seção aceita fica marcada como "revisado por IA" (`case_petitions.secoes_revisadas_ia`). Mesma
+  infraestrutura do resumo de caso (Vercel AI Gateway); a instrução do modelo proíbe inventar
+  fato, valor, data, lei ou jurisprudência fora do que já está escrito na seção.
+- **Exclusão de atendimento, contrato e petição**: nenhuma das três tabelas tinha política nem
+  GRANT de DELETE antes disso. Atendimento (pelo cidadão dono ou advogado/admin com acesso) e
+  contrato só podem ser excluídos antes de aceitos/assinados — preserva a evidência do acordo já
+  formalizado; petição não tem essa restrição. Primeiro uso de um diálogo de confirmação no app
+  (`components/ui/confirm-submit-button.tsx`) antes de qualquer ação irreversível.
 
 ### Corrigido
 

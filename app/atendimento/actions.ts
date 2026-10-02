@@ -160,6 +160,15 @@ export async function removeDocumentAction(
   return run(caseId, () => getCaseService().removeDocument(caseId, documentId));
 }
 
+/** Só antes de aceito/em andamento (ver isDeletable); a lista já só mostra o botão nesse caso,
+ * então uma falha aqui só acontece se o status mudou entre a tela carregar e o clique. */
+export async function excluirAtendimentoAction(formData: FormData): Promise<void> {
+  const caseId = String(formData.get("caseId") ?? "");
+  if (!(await authorized(caseId))) redirect("/atendimento/meus");
+  const result = await getCaseService().deleteCase(caseId);
+  redirect(result.ok ? "/atendimento/meus" : "/atendimento/meus?erro=nao_excluivel");
+}
+
 /** Para onde levar a pessoa quando uma regra impede a ação. */
 function recoveryPath(caseId: string, error: DomainError): string {
   const base = `/atendimento/${caseId}`;

@@ -5,10 +5,11 @@ import { DossierView } from "@/components/dossier/dossier-view";
 import { PrintButton } from "@/components/dossier/print-button";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
+import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
 import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
 import { getCaseService } from "@/lib/services";
-import { CASE_STATUS_LABEL } from "@/domain/case/status";
+import { CASE_STATUS_LABEL, isDeletable } from "@/domain/case/status";
 import { listarPrazosPorCaso } from "@/lib/services/equipe-prazos";
 import { buscarViabilidade } from "@/lib/services/equipe-contratos";
 import { registrarLeituraCaso } from "@/lib/services/auditoria";
@@ -18,6 +19,7 @@ import {
   addCaseNote,
   concluirPrazoAction,
   criarPrazoAction,
+  excluirCasoAction,
   gerarResumoIAAction,
   registrarViabilidadeAction,
 } from "../actions";
@@ -40,6 +42,7 @@ const MENSAGEM_ERRO: Record<string, string> = {
     "Não é possível registrar essa decisão com o caso no status atual — confira a aba de status.",
   ia_limite: "Muitos resumos gerados para este caso em pouco tempo. Aguarde e tente de novo.",
   ia_falhou: "Não foi possível gerar o resumo agora. Tente novamente em instantes.",
+  nao_excluivel: "Este atendimento já foi aceito ou está em andamento e não pode mais ser excluído.",
 };
 
 export const dynamic = "force-dynamic";
@@ -386,6 +389,30 @@ export default async function CasoEquipe({
         </ul>
         {notes.length === 0 && <p className="mt-5 text-muted">Ainda não há notas neste caso.</p>}
       </section>
+
+      {isDeletable(submission.legalCase.status) && (
+        <section
+          className="mt-10 border-t border-line pt-6 print:hidden"
+          aria-labelledby="excluir-title"
+        >
+          <h2 id="excluir-title" className="text-2xl text-danger">
+            Excluir atendimento
+          </h2>
+          <p className="mt-2 text-sm text-muted">
+            Remove definitivamente o atendimento, a petição e o contrato associados. Só é possível
+            antes de a causa ser aceita.
+          </p>
+          <form action={excluirCasoAction} className="mt-4">
+            <input type="hidden" name="caseId" value={caseId} />
+            <ConfirmSubmitButton
+              confirmMessage={`Excluir definitivamente o atendimento ${submission.legalCase.protocol}? Essa ação não pode ser desfeita.`}
+              className="rounded border border-danger px-4 py-2 text-sm text-danger hover:bg-danger-soft"
+            >
+              Excluir atendimento
+            </ConfirmSubmitButton>
+          </form>
+        </section>
+      )}
     </main>
   );
 }

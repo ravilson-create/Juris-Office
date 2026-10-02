@@ -20,8 +20,10 @@ export default function PrivacidadePage() {
         </p>
         <p>
           Para apoiar o advogado responsável, um resumo do caso pode ser gerado por inteligência
-          artificial a partir do dossiê. Esse processamento é feito por um serviço de terceiros
-          (via Vercel AI Gateway) e o resumo gerado fica salvo junto ao caso.
+          artificial a partir do dossiê, e a redação de uma petição já elaborada pode ser
+          corrigida para o formato oficial, seção por seção. Esses processamentos são feitos por
+          um serviço de terceiros (via Vercel AI Gateway); o resumo e as seções corrigidas e
+          aceitas ficam salvos junto ao caso.
         </p>
       </div>
     </article>

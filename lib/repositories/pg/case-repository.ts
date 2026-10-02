@@ -93,6 +93,11 @@ export class PgCaseRepository implements CaseRepository {
     return toCase(rows[0]);
   }
 
+  async delete(id: string): Promise<boolean> {
+    const removed = await this.db.query("DELETE FROM legal_cases WHERE id = $1 RETURNING id", [id]);
+    return removed.length > 0;
+  }
+
   /**
    * Grava o dossiê e finaliza o caso na MESMA transação, com a linha do caso bloqueada
    * (FOR UPDATE): chamadas simultâneas se enfileiram, e a restrição UNIQUE (case_id, version)
