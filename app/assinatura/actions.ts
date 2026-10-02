@@ -35,7 +35,6 @@ export async function buscarLinkPagamento(): Promise<{ error?: string }> {
   const atual = await buscarPropriaAssinatura(actor);
   if (!atual) return { error: "Nenhuma assinatura encontrada." };
   if (atual.invoice_url) {
-    revalidatePath("/assinatura");
     return {};
   }
   if (!atual.external_ref) {
