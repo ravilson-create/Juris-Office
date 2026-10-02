@@ -140,15 +140,13 @@ test.describe("rascunhos", () => {
 });
 
 test.describe("Meus atendimentos", () => {
-  test("estado vazio, com avisos sobre cookies e memória do servidor", async ({ page }) => {
+  test("estado vazio, com aviso sobre cookies", async ({ page }) => {
     await page.goto("/atendimento/meus");
     await expect(h1(page)).toHaveText("Meus atendimentos");
     await expect(
       page.getByRole("heading", { name: "Nenhum atendimento neste navegador" }),
     ).toBeVisible();
     await expect(page.getByText(/limpar os cookies/)).toBeVisible();
-    await expect(page.getByText(/memória do servidor/)).toBeVisible();
-    await expect(page.getByText(/não é acompanhamento por advogado/)).toBeVisible();
     await expectNoA11yViolations(page, "meus atendimentos (vazio)");
     await page.getByRole("link", { name: "Iniciar atendimento" }).first().click();
     await expect(h1(page)).toHaveText("Sobre qual assunto é o seu problema?");

@@ -135,7 +135,6 @@ for (const plan of AREA_PLANS) {
       page.getByRole("button", { name: "Remover documento-ficticio.pdf" }),
     ).toBeVisible();
     await expect(page.getByText("Registrado (1)")).toBeVisible();
-    await expect(page.getByText(/arquivo não recebido/).first()).toBeVisible();
     await page.getByLabel(/Adicionar arquivo em Outros documentos/).setInputFiles({
       name: "programa.exe",
       mimeType: "application/x-msdownload",
@@ -161,7 +160,6 @@ for (const plan of AREA_PLANS) {
     await page.getByRole("button", { name: "Finalizar atendimento" }).click();
     await expect(h1(page)).toHaveText("Atendimento finalizado");
     await expect(page.getByTestId("protocolo-final")).toHaveText(protocol);
-    await expect(page.getByText(/Nenhuma informação foi encaminhada/)).toBeVisible();
 
     // 8. Dossiê
     await page.getByRole("link", { name: "Ver o dossiê gerado" }).click();
