@@ -51,6 +51,11 @@ jobs:
     env:
       DATABASE_URL: postgresql://juris:juris@localhost:5432/juris_ci
       TEST_DATABASE_URL: postgresql://juris:juris@localhost:5432/juris_ci
+      # O banco deste job é descartável e criado do zero a cada run — a trava de ativação
+      # coordenada da P2 (migrate.mjs, ver docs/P2-AUTENTICACAO.md) é uma proteção para o Neon de
+      # produção com dados reais, não se aplica aqui. Sem isto, migrações ≥ 0003 ficam pendentes
+      # e qualquer teste que use uma coluna/tabela delas via RealPgDb falha com "does not exist".
+      ENABLE_P2_AUTH_MIGRATION: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
