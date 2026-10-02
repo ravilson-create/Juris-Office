@@ -30,6 +30,7 @@ export interface UpdateCaseInput {
   narrative?: string;
   title?: string;
   submittedAt?: string;
+  archivedAt?: string | null;
 }
 
 export interface FinalizeSubmissionInput {

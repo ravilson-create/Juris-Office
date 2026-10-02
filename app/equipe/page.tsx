@@ -22,7 +22,7 @@ export const dynamic = "force-dynamic";
 export default async function EquipePage({
   searchParams,
 }: {
-  searchParams: Promise<{ busca?: string; status?: string; pagina?: string }>;
+  searchParams: Promise<{ busca?: string; status?: string; pagina?: string; arquivados?: string }>;
 }) {
   const actor = await currentUserId();
   if (!actor) redirect("/auth/sign-in");
@@ -44,10 +44,12 @@ export default async function EquipePage({
     );
     if (!oab[0]?.oab_verificado_em) redirect("/advogado/pendente");
   }
-  const { busca, status: statusBruto, pagina: paginaBruta } = await searchParams;
+  const { busca, status: statusBruto, pagina: paginaBruta, arquivados: arquivadosBruto } =
+    await searchParams;
   const query = (busca ?? "").trim().slice(0, 80);
   const status = statusProfissionalValido(statusBruto);
-  const filtro = { status, busca: query };
+  const arquivados = arquivadosBruto === "1";
+  const filtro = { status, busca: query, arquivados };
 
   const totalFiltrado = await contarCasosFila(db, filtro);
   const { pagina, totalPaginas, offset } = calcularPaginacao(
@@ -197,10 +199,14 @@ export default async function EquipePage({
             </option>
           ))}
         </select>
+        <label className="flex items-center gap-1.5 text-sm">
+          <input type="checkbox" name="arquivados" value="1" defaultChecked={arquivados} />
+          Mostrar arquivados
+        </label>
         <button className="rounded bg-navy px-4 text-white">Buscar</button>
       </form>
       <p className="mt-4 text-sm text-muted">
-        {totalFiltrado} caso(s) · página {pagina} de {totalPaginas}
+        {totalFiltrado} caso{arquivados ? " arquivado" : ""}(s) · página {pagina} de {totalPaginas}
       </p>
       <ul className="mt-4 space-y-4">
         {cases.map((item) => (
@@ -235,7 +241,7 @@ export default async function EquipePage({
       {totalPaginas > 1 && (
         <nav className="mt-6 flex items-center justify-between" aria-label="Paginação">
           <Link
-            href={linkPagina(query, status, pagina - 1)}
+            href={linkPagina(query, status, pagina - 1, arquivados)}
             aria-disabled={pagina <= 1}
             className={`rounded border px-3 py-2 font-medium ${pagina <= 1 ? "pointer-events-none border-line text-muted" : "border-line text-navy hover:border-navy"}`}
           >
@@ -245,7 +251,7 @@ export default async function EquipePage({
             Página {pagina} de {totalPaginas}
           </span>
           <Link
-            href={linkPagina(query, status, pagina + 1)}
+            href={linkPagina(query, status, pagina + 1, arquivados)}
             aria-disabled={pagina >= totalPaginas}
             className={`rounded border px-3 py-2 font-medium ${pagina >= totalPaginas ? "pointer-events-none border-line text-muted" : "border-line text-navy hover:border-navy"}`}
           >
@@ -257,11 +263,17 @@ export default async function EquipePage({
   );
 }
 
-function linkPagina(busca: string, status: CaseStatus | null, pagina: number): string {
+function linkPagina(
+  busca: string,
+  status: CaseStatus | null,
+  pagina: number,
+  arquivados: boolean,
+): string {
   const params = new URLSearchParams();
   if (busca) params.set("busca", busca);
   if (status) params.set("status", status);
   if (pagina > 1) params.set("pagina", String(pagina));
+  if (arquivados) params.set("arquivados", "1");
   const query = params.toString();
   return query ? `/equipe?${query}` : "/equipe";
 }

@@ -12,7 +12,7 @@ export async function contarCasosPorStatus(
   db: Db,
 ): Promise<{ status: string; count: string }[]> {
   return db.query<{ status: string; count: string }>(
-    "SELECT status, count(*) FROM legal_cases WHERE status = ANY($1) GROUP BY status",
+    "SELECT status, count(*) FROM legal_cases WHERE status = ANY($1) AND archived_at IS NULL GROUP BY status",
     [STATUS_PROFISSIONAL],
   );
 }
@@ -25,7 +25,7 @@ export async function contarCasosPorStatus(
 export async function contarCasosSemAdvogado(db: Db): Promise<number> {
   const rows = await db.query<{ count: string }>(
     `SELECT count(*) FROM legal_cases c
-     WHERE c.status = ANY($1) AND NOT EXISTS (
+     WHERE c.status = ANY($1) AND c.archived_at IS NULL AND NOT EXISTS (
        SELECT 1 FROM case_assignments a WHERE a.case_id = c.id
      )`,
     [STATUS_PROFISSIONAL],

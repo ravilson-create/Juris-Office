@@ -147,6 +147,45 @@ describe("exclusão de atendimento", () => {
   });
 });
 
+describe("arquivar/desarquivar atendimento", () => {
+  it("arquiva e desarquiva em qualquer status, sem apagar nada", async () => {
+    const repos = createTestRepositories();
+    const svc = new CaseService(repos, () => NOW);
+    const c = await svc.createCase("consumidor");
+    await repos.cases.update(c.id, { status: "active" });
+
+    const arquivado = await svc.archiveCase(c.id);
+    expect(arquivado).toEqual({ ok: true, data: null });
+    const overviewArquivado = await svc.getOverview(c.id);
+    expect(overviewArquivado?.legalCase.archivedAt).toBeTruthy();
+    expect(overviewArquivado?.legalCase.status).toBe("active");
+
+    const desarquivado = await svc.unarchiveCase(c.id);
+    expect(desarquivado).toEqual({ ok: true, data: null });
+    const overviewDesarquivado = await svc.getOverview(c.id);
+    expect(overviewDesarquivado?.legalCase.archivedAt).toBeFalsy();
+  });
+
+  it("devolve falha para um id inexistente", async () => {
+    const svc = new CaseService(createTestRepositories(), () => NOW);
+    expect((await svc.archiveCase("00000000-0000-4000-8000-000000000099")).ok).toBe(false);
+    expect((await svc.unarchiveCase("00000000-0000-4000-8000-000000000099")).ok).toBe(false);
+  });
+
+  it("listMyCases sinaliza quais estão arquivados, sem ocultá-los", async () => {
+    const hash = "b".repeat(64);
+    const svc = new CaseService(createTestRepositories(), () => NOW);
+    const ativo = await svc.createCase("consumidor", hash);
+    const arquivado = await svc.createCase("consumidor", hash);
+    await svc.archiveCase(arquivado.id);
+
+    const items = await svc.listMyCases(hash);
+    const porId = new Map(items.map((i) => [i.id, i]));
+    expect(porId.get(ativo.id)?.archived).toBe(false);
+    expect(porId.get(arquivado.id)?.archived).toBe(true);
+  });
+});
+
 describe("dono do atendimento", () => {
   it("guarda o hash da sessão informado na criação", async () => {
     const service = new CaseService(

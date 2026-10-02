@@ -7,6 +7,8 @@ export type FiltroFila = {
   /** `undefined`/`null` = todos os status profissionais. */
   status?: CaseStatus | null;
   busca: string;
+  /** Padrão: só não arquivados. `true` inverte — mostra só os arquivados. */
+  arquivados?: boolean;
 };
 
 /** Mesma política de RLS de legal_cases decide o que o ator vê — aqui só filtra dentro disso. */
@@ -17,8 +19,9 @@ function statusFiltro(filtro: FiltroFila): CaseStatus[] {
 export async function contarCasosFila(db: Db, filtro: FiltroFila): Promise<number> {
   const rows = await db.query<{ count: string }>(
     `SELECT count(*) FROM legal_cases
-     WHERE status = ANY($1) AND ($2 = '' OR protocol ILIKE '%' || $2 || '%' OR title ILIKE '%' || $2 || '%')`,
-    [statusFiltro(filtro), filtro.busca],
+     WHERE status = ANY($1) AND ($2 = '' OR protocol ILIKE '%' || $2 || '%' OR title ILIKE '%' || $2 || '%')
+       AND (archived_at IS NOT NULL) = $3`,
+    [statusFiltro(filtro), filtro.busca, Boolean(filtro.arquivados)],
   );
   return Number(rows[0]?.count ?? 0);
 }
@@ -32,7 +35,8 @@ export async function listarCasosFila(
   return db.query<{ id: string; protocol: string; status: string; title: string | null }>(
     `SELECT id, protocol, status, title FROM legal_cases
      WHERE status = ANY($1) AND ($2 = '' OR protocol ILIKE '%' || $2 || '%' OR title ILIKE '%' || $2 || '%')
-     ORDER BY updated_at DESC LIMIT $3 OFFSET $4`,
-    [statusFiltro(filtro), filtro.busca, limit, offset],
+       AND (archived_at IS NOT NULL) = $3
+     ORDER BY updated_at DESC LIMIT $4 OFFSET $5`,
+    [statusFiltro(filtro), filtro.busca, Boolean(filtro.arquivados), limit, offset],
   );
 }

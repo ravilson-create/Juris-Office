@@ -10,7 +10,8 @@ const isoOrUndef = (v: unknown) => (v == null ? undefined : iso(v));
 const orUndef = <T>(v: T | null | undefined) => (v == null ? undefined : v);
 
 export const CASE_COLUMNS = `id, protocol, legal_area_id, owner_session_hash, citizen_id, status, title,
-  applicant, narrative, consent_accepted, consent_accepted_at, revision, created_at, updated_at, submitted_at`;
+  applicant, narrative, consent_accepted, consent_accepted_at, revision, created_at, updated_at,
+  submitted_at, archived_at`;
 
 export function toCase(r: Row): LegalCase {
   return {
@@ -29,6 +30,7 @@ export function toCase(r: Row): LegalCase {
     updatedAt: iso(r.updated_at),
     revision: Number(r.revision),
     submittedAt: isoOrUndef(r.submitted_at),
+    archivedAt: isoOrUndef(r.archived_at),
   };
 }
 

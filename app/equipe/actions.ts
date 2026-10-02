@@ -319,3 +319,20 @@ export async function excluirContratoAction(form: FormData) {
   if (!excluido) redirect(`/equipe/${caseId.data}/contrato?erro=contrato_nao_excluivel`);
   revalidatePath(`/equipe/${caseId.data}/contrato`);
 }
+
+/** Em qualquer status — só oculta da fila padrão, nunca apaga nada, e é reversível. */
+export async function arquivarCasoAction(form: FormData) {
+  const caseId = z.uuid().safeParse(form.get("caseId"));
+  const actor = await currentUserId();
+  if (!actor || !caseId.success) redirect("/equipe");
+  await getCaseService().archiveCase(caseId.data);
+  revalidatePath(`/equipe/${caseId.data}`);
+}
+
+export async function desarquivarCasoAction(form: FormData) {
+  const caseId = z.uuid().safeParse(form.get("caseId"));
+  const actor = await currentUserId();
+  if (!actor || !caseId.success) redirect("/equipe");
+  await getCaseService().unarchiveCase(caseId.data);
+  revalidatePath(`/equipe/${caseId.data}`);
+}

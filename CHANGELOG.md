@@ -29,6 +29,11 @@
   contrato só podem ser excluídos antes de aceitos/assinados — preserva a evidência do acordo já
   formalizado; petição não tem essa restrição. Primeiro uso de um diálogo de confirmação no app
   (`components/ui/confirm-submit-button.tsx`) antes de qualquer ação irreversível.
+- **Arquivar atendimento, em qualquer status**: ao contrário da exclusão, sempre reversível e
+  sem restrição — marca `legal_cases.archived_at` (migração 0018), oculta o caso das listas
+  padrão (`/atendimento/meus`, fila da `/equipe`) sem apagar nada. Disponível para o cidadão dono
+  e para advogado/admin com acesso; a fila da área profissional ganhou um filtro "Mostrar
+  arquivados" para encontrá-los de novo.
 
 ### Corrigido
 

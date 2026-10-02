@@ -17,8 +17,10 @@ import { aiEnabled } from "@/lib/ai/client";
 import { buscarResumoIA } from "@/lib/services/resumo-ia";
 import {
   addCaseNote,
+  arquivarCasoAction,
   concluirPrazoAction,
   criarPrazoAction,
+  desarquivarCasoAction,
   excluirCasoAction,
   gerarResumoIAAction,
   registrarViabilidadeAction,
@@ -105,9 +107,31 @@ export default async function CasoEquipe({
           <ButtonLink href={`/equipe/${caseId}/contrato`} variant="secondary" className="text-sm">
             Contrato
           </ButtonLink>
+          <form action={submission.legalCase.archivedAt ? desarquivarCasoAction : arquivarCasoAction}>
+            <input type="hidden" name="caseId" value={caseId} />
+            <button
+              type="submit"
+              className="rounded border border-line px-3 py-2 text-sm font-medium hover:border-navy"
+            >
+              {submission.legalCase.archivedAt ? "Desarquivar" : "Arquivar"}
+            </button>
+          </form>
           <PrintButton />
         </div>
       </div>
+
+      {submission.legalCase.archivedAt && (
+        <div className="mb-4 print:hidden">
+          <Alert title="Atendimento arquivado">
+            Oculto da fila padrão desde{" "}
+            {new Date(submission.legalCase.archivedAt).toLocaleString("pt-BR", {
+              timeZone: "America/Fortaleza",
+            })}
+            . Nenhum dado foi apagado.
+          </Alert>
+        </div>
+      )}
+
       <DossierView dossier={submission.dossier} />
 
       {erro && MENSAGEM_ERRO[erro] && (

@@ -75,6 +75,7 @@ function fieldErrorsFrom(issues: ReadonlyArray<{ path: PropertyKey[]; message: s
 export interface MyCaseItem {
   id: string;
   protocol: string;
+  archived: boolean;
   areaName: string;
   status: CaseStatus;
   updatedAt: string;
@@ -571,6 +572,7 @@ export class CaseService {
       items.push({
         id: c.id,
         protocol: c.protocol,
+        archived: Boolean(c.archivedAt),
         areaName: areas.get(c.legalAreaId) ?? "Área",
         status: c.status,
         updatedAt: c.updatedAt,
@@ -580,5 +582,20 @@ export class CaseService {
       });
     }
     return items;
+  }
+
+  /** Arquiva em qualquer status — oculta das listas padrão, mas não apaga nada. Reversível. */
+  async archiveCase(caseId: string): Promise<ServiceResult<null>> {
+    const legalCase = await this.repos.cases.findById(caseId);
+    if (!legalCase) return { ok: false, message: "Atendimento não encontrado." };
+    await this.repos.cases.update(caseId, { archivedAt: new Date().toISOString() });
+    return { ok: true, data: null };
+  }
+
+  async unarchiveCase(caseId: string): Promise<ServiceResult<null>> {
+    const legalCase = await this.repos.cases.findById(caseId);
+    if (!legalCase) return { ok: false, message: "Atendimento não encontrado." };
+    await this.repos.cases.update(caseId, { archivedAt: null });
+    return { ok: true, data: null };
   }
 }

@@ -20,6 +20,7 @@ const UPDATABLE: Record<keyof UpdateCaseInput, string> = {
   narrative: "narrative",
   title: "title",
   submittedAt: "submitted_at",
+  archivedAt: "archived_at",
 };
 
 export class PgCaseRepository implements CaseRepository {
