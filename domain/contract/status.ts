@@ -1,13 +1,13 @@
 import type { ContractStatus } from "./schema";
 
 /**
- * "signed" ainda não é alcançável por nenhuma transição: o aceite eletrônico com trilha de
- * auditoria (hash, IP, data) é a próxima peça do plano (PR5), e só ela leva um contrato a
- * "signed". Até lá, draft/sent/cancelled é o ciclo completo desta PR.
+ * "signed" só é alcançável a partir de "sent", e só pela trilha de aceite eletrônico
+ * (lib/services/equipe-contratos.ts#assinarContrato) — nunca por uma troca de status direta,
+ * que é o que a RLS de contracts (ver migração 0012) também impede.
  */
 const TRANSITIONS: Record<ContractStatus, readonly ContractStatus[]> = {
   draft: ["sent", "cancelled"],
-  sent: ["cancelled"],
+  sent: ["signed", "cancelled"],
   signed: [],
   cancelled: [],
 };
