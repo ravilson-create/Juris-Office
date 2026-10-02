@@ -86,7 +86,7 @@ export function PainelAssinatura({ assinatura }: { assinatura: Assinatura }) {
 
       {!assinatura.cancelar_em_renovacao && (
         <button
-          className="text-sm text-red-700 underline"
+          className="rounded border border-danger px-4 py-2 text-sm text-danger disabled:opacity-50"
           disabled={pending}
           onClick={() => executar(cancelarAssinatura)}
         >

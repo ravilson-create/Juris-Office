@@ -163,7 +163,7 @@ function ReviewSection({
         </h2>
         <Link
           href={editHref}
-          className="text-sm font-medium text-navy underline-offset-4 hover:underline print:hidden"
+          className="rounded border border-line px-3 py-1 text-sm font-medium text-navy hover:border-navy print:hidden"
         >
           Corrigir<span className="sr-only"> {title}</span>
         </Link>

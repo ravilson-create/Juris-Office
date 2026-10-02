@@ -154,7 +154,7 @@ function ChecklistItem({
                 type="button"
                 onClick={() => onRemove(doc)}
                 disabled={pending}
-                className="shrink-0 rounded px-2 py-1 text-sm font-medium text-danger underline-offset-4 hover:underline disabled:opacity-60"
+                className="shrink-0 rounded border border-danger px-3 py-1 text-sm font-medium text-danger hover:bg-danger-soft disabled:opacity-60"
               >
                 Remover<span className="sr-only"> {doc.originalName}</span>
               </button>

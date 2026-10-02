@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
 import { CASE_STATUS_LABEL } from "@/domain/case/status";
@@ -38,7 +37,7 @@ export default async function MeusAtendimentosPage() {
 
       {authEnabled && (
         <form action={signOut} className="mt-5">
-          <button type="submit" className="text-sm underline">
+          <button type="submit" className="rounded border border-line px-3 py-1.5 text-sm font-medium hover:border-navy">
             Sair da conta
           </button>
         </form>
@@ -93,13 +92,14 @@ export default async function MeusAtendimentosPage() {
                     {item.continueLabel}
                   </ButtonLink>
                   {item.finalized && (
-                    <Link
+                    <ButtonLink
                       href={`/atendimento/${item.id}/dossie`}
-                      className="self-center font-medium text-navy underline-offset-4 hover:underline"
+                      variant="ghost"
+                      className="border border-line"
                       aria-label={`Abrir dossiê — ${item.areaName}, protocolo ${item.protocol}`}
                     >
                       Abrir dossiê
-                    </Link>
+                    </ButtonLink>
                   )}
                 </div>
               </li>
