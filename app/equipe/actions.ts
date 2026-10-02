@@ -17,6 +17,10 @@ import {
   marcarParcelaPaga,
   registrarViabilidade,
 } from "@/lib/services/equipe-contratos";
+import { getCaseService } from "@/lib/services";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { gerarResumoCaso } from "@/lib/ai/resumo-caso";
+import { salvarResumoIA } from "@/lib/services/resumo-ia";
 
 export async function assignLawyer(form: FormData) {
   const caseId = z.uuid().safeParse(form.get("caseId"));
@@ -257,5 +261,34 @@ export async function addCaseNote(form: FormData) {
     "INSERT INTO case_notes(id, case_id, author_id, body) VALUES ($1, $2, $3, $4)",
     [crypto.randomUUID(), caseId.data, actor, body.data],
   );
+  revalidatePath(`/equipe/${caseId.data}`);
+}
+
+// ---------------------------------------------------------------- F3: resumo de caso por IA
+
+/**
+ * Sempre uma ação explícita do advogado — nunca automática — para controlar custo e deixar
+ * claro que é opt-in. O dossiê (não a triagem bruta) é a única fonte enviada à IA: já é
+ * determinístico e fiel ao que o cidadão informou, então o resumo não tem o que inventar.
+ */
+export async function gerarResumoIAAction(form: FormData) {
+  const caseId = z.uuid().safeParse(form.get("caseId"));
+  const actor = await currentUserId();
+  if (!actor || !caseId.success) redirect("/equipe");
+
+  if (!(await checkRateLimit(`resumo-ia:${caseId.data}`, 10, 3600))) {
+    redirect(`/equipe/${caseId.data}?erro=ia_limite`);
+  }
+
+  // A política RLS do próprio getSubmission já restringe a advogado/admin com acesso ao caso.
+  const submission = await getCaseService().getSubmission(caseId.data);
+  if (!submission) redirect("/equipe");
+
+  try {
+    const { resumo, modelo } = await gerarResumoCaso(submission.dossier);
+    await salvarResumoIA(getDb(), { caseId: caseId.data, resumo, modelo, geradoPor: actor });
+  } catch {
+    redirect(`/equipe/${caseId.data}?erro=ia_falhou`);
+  }
   revalidatePath(`/equipe/${caseId.data}`);
 }

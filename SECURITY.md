@@ -108,3 +108,27 @@ build). Não havia nada para corrigir aqui.
 O que falta é ativar o produto **Vercel Observability** (erros e latência agregados) no
 dashboard do projeto — não há chamada de API para isso a partir daqui; é uma decisão/ação do
 dono na Vercel.
+
+## F3 — Resumo de caso por IA: envio de dado a terceiro
+
+O botão "Gerar resumo com IA" (`/equipe/[caseId]`) envia o **dossiê do caso** — fatos, partes,
+cronologia, dados do requerente — ao modelo configurado em `AI_GATEWAY_MODEL`, via Vercel AI
+Gateway (mesmo padrão já usado no Orça Valida — `ai` SDK, sem instanciar SDK de provedor
+específico), para processar e devolver o resumo estruturado. **Confirmado com o dono do produto
+antes de implementar** (sem anonimização prévia): é dado jurídico de terceiros saindo da
+infraestrutura própria, repassado pelo Gateway ao provedor por trás do modelo escolhido.
+
+Mitigações:
+- **Nunca automático**: só roda quando o advogado clica, nunca em lote nem no envio do caso.
+- **Fonte única é o dossiê**, não a triagem bruta nem documentos anexados — já é a mesma
+  organização determinística mostrada ao advogado, nada além disso é exposto.
+- **Rate limit** de 10 gerações/hora por caso (`checkRateLimit`), para conter custo e abuso.
+- **RLS idêntica** à do resto do caso (`case_ai_summaries`: advogado/admin com acesso ao caso).
+- O resultado é sempre rotulado como gerado por IA, nunca como fato confirmado, e nunca alimenta
+  automaticamente a decisão de viabilidade ou a petição — o advogado decide o que usar.
+- O modelo de fato usado (resolvido pelo Gateway) fica gravado em `case_ai_summaries.modelo`,
+  não só a string configurada — rastreabilidade de qual provedor processou cada resumo.
+
+Pendente: revisar com o dono se o provedor por trás do modelo escolhido em `AI_GATEWAY_MODEL`
+precisa constar como operador de dados no contrato com o cliente final, conforme a LGPD, antes
+de habilitar em produção com casos reais.

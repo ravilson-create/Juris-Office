@@ -11,10 +11,13 @@ import { CASE_STATUS_LABEL } from "@/domain/case/status";
 import { listarPrazosPorCaso } from "@/lib/services/equipe-prazos";
 import { buscarViabilidade } from "@/lib/services/equipe-contratos";
 import { registrarLeituraCaso } from "@/lib/services/auditoria";
+import { aiEnabled } from "@/lib/ai/client";
+import { buscarResumoIA } from "@/lib/services/resumo-ia";
 import {
   addCaseNote,
   concluirPrazoAction,
   criarPrazoAction,
+  gerarResumoIAAction,
   registrarViabilidadeAction,
 } from "../actions";
 
@@ -34,6 +37,8 @@ const MENSAGEM_ERRO: Record<string, string> = {
   viabilidade_dados: "Preencha todos os campos da decisão de viabilidade.",
   viabilidade_transicao:
     "Não é possível registrar essa decisão com o caso no status atual — confira a aba de status.",
+  ia_limite: "Muitos resumos gerados para este caso em pouco tempo. Aguarde e tente de novo.",
+  ia_falhou: "Não foi possível gerar o resumo agora. Tente novamente em instantes.",
 };
 
 export const dynamic = "force-dynamic";
@@ -82,6 +87,7 @@ export default async function CasoEquipe({
   );
   const prazos = await listarPrazosPorCaso(getDb(), caseId);
   const viabilidade = await buscarViabilidade(getDb(), caseId);
+  const resumoIA = await buscarResumoIA(getDb(), caseId);
   const { erro } = await searchParams;
   const hojeISO = new Date().toISOString().slice(0, 10);
   return (
@@ -106,6 +112,73 @@ export default async function CasoEquipe({
             {MENSAGEM_ERRO[erro]}
           </Alert>
         </div>
+      )}
+
+      {aiEnabled() && (
+        <section
+          className="mt-10 border-t border-line pt-6 print:hidden"
+          aria-labelledby="resumo-ia-title"
+        >
+          <h2 id="resumo-ia-title" className="text-2xl">
+            Resumo com IA
+          </h2>
+          <p className="mt-2 text-sm text-muted">
+            Gerado a partir do dossiê acima — organiza o que já foi informado, não avalia mérito
+            nem substitui a leitura do dossiê. Confira os fatos no documento original antes de
+            decidir.
+          </p>
+
+          {resumoIA && (
+            <div className="mt-4 space-y-3 rounded-md border border-line bg-surface p-4">
+              <p className="text-xs text-muted">
+                Gerado em{" "}
+                {new Date(resumoIA.gerado_em).toLocaleString("pt-BR", {
+                  timeZone: "America/Fortaleza",
+                })}
+              </p>
+              <p>{resumoIA.sintese}</p>
+              <div>
+                <p className="font-semibold">O que o cidadão pede</p>
+                <p className="text-sm">{resumoIA.pedido_principal}</p>
+              </div>
+              <div>
+                <p className="font-semibold">Pontos-chave</p>
+                <ul className="list-disc pl-5 text-sm">
+                  {resumoIA.pontos_chave.map((p) => (
+                    <li key={p}>{p}</li>
+                  ))}
+                </ul>
+              </div>
+              {resumoIA.documentos_faltantes.length > 0 && (
+                <div>
+                  <p className="font-semibold">Documentos faltantes</p>
+                  <ul className="list-disc pl-5 text-sm">
+                    {resumoIA.documentos_faltantes.map((d) => (
+                      <li key={d}>{d}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {resumoIA.riscos_aparentes.length > 0 && (
+                <div>
+                  <p className="font-semibold">Riscos aparentes</p>
+                  <ul className="list-disc pl-5 text-sm">
+                    {resumoIA.riscos_aparentes.map((r) => (
+                      <li key={r}>{r}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          <form action={gerarResumoIAAction} className="mt-4">
+            <input type="hidden" name="caseId" value={caseId} />
+            <button className="rounded border border-line px-4 py-2 text-sm">
+              {resumoIA ? "Gerar resumo de novo" : "Gerar resumo com IA"}
+            </button>
+          </form>
+        </section>
       )}
 
       <section
