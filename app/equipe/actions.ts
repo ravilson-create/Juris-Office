@@ -285,13 +285,8 @@ export async function gerarResumoIAAction(form: FormData) {
   if (!submission) redirect("/equipe");
 
   try {
-    const resumo = await gerarResumoCaso(submission.dossier);
-    await salvarResumoIA(getDb(), {
-      caseId: caseId.data,
-      resumo,
-      modelo: "claude-sonnet-5-5",
-      geradoPor: actor,
-    });
+    const { resumo, modelo } = await gerarResumoCaso(submission.dossier);
+    await salvarResumoIA(getDb(), { caseId: caseId.data, resumo, modelo, geradoPor: actor });
   } catch {
     redirect(`/equipe/${caseId.data}?erro=ia_falhou`);
   }
