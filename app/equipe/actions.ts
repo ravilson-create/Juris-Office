@@ -210,6 +210,43 @@ export async function marcarParcelaPagaAction(form: FormData) {
   revalidatePath(`/equipe/${caseId.data}/contrato`);
 }
 
+// ---------------------------------------------------------------- Portal do Advogado, PR8
+
+export async function promoverAdminAction(form: FormData) {
+  const lawyerId = z.string().min(1).max(255).safeParse(form.get("userId"));
+  const actor = await currentUserId();
+  if (!actor || !lawyerId.success) return;
+  // A função promote_to_admin (migração 0015) confere: ator é admin, alvo é advogado do mesmo
+  // escritório — nunca confia no formulário.
+  await getDb().query("SELECT promote_to_admin($1)", [lawyerId.data]);
+  revalidatePath("/equipe/time");
+}
+
+export async function rebaixarAdvogadoAction(form: FormData) {
+  const adminId = z.string().min(1).max(255).safeParse(form.get("userId"));
+  const actor = await currentUserId();
+  if (!actor || !adminId.success) redirect("/equipe/time?erro=equipe_ultimo_admin");
+  try {
+    await getDb().query("SELECT demote_to_lawyer($1)", [adminId.data]);
+  } catch {
+    redirect("/equipe/time?erro=equipe_ultimo_admin");
+  }
+  revalidatePath("/equipe/time");
+}
+
+export async function removerDaEquipeAction(form: FormData) {
+  const userId = z.string().min(1).max(255).safeParse(form.get("userId"));
+  const actor = await currentUserId();
+  if (!actor || !userId.success) redirect("/equipe/time?erro=equipe_ultimo_admin");
+  try {
+    await getDb().query("SELECT remove_from_office($1)", [userId.data]);
+  } catch {
+    redirect("/equipe/time?erro=equipe_ultimo_admin");
+  }
+  revalidatePath("/equipe/time");
+  revalidatePath("/equipe");
+}
+
 export async function addCaseNote(form: FormData) {
   const caseId = z.uuid().safeParse(form.get("caseId"));
   const body = z.string().trim().min(1).max(4000).safeParse(form.get("body"));
