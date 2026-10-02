@@ -58,8 +58,8 @@ Ainda **não** implementado (próximas fases): acompanhamento do caso pelo clien
 
 - Marca: **Júris Office** (símbolo "J" em azul-marinho com folhas em verde-água); o app exibe o selo **IA**.
 - Arquivos em `public/brand/`: `juris-office-simbolo.png` (símbolo colorido, fundo transparente),
-  `juris-office-simbolo-mono.png` (silhueta monocromática), `juris-office-icone.png` (ícone do app)
-  e `proposta-logo-original.png` (arte de referência).
+  `juris-office-simbolo-mono.png` (silhueta monocromática) e `proposta-logo-original.png` (arte de
+  referência). O ícone do app (favicon) é `app/icon.png`, pela convenção do Next.js.
 - Componentes em `components/brand/brand-logo.tsx`: `BrandSymbol` (colorido), `BrandSymbolMono`
   (pinta com a cor do texto), `BrandWordmark` e `BrandLogo`.
 - Onde aparece: cabeçalho (logo colorida), página inicial (símbolo grande), rodapé (versão
