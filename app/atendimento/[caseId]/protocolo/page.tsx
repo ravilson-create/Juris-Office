@@ -11,10 +11,8 @@ export const metadata: Metadata = { title: "Protocolo" };
 export const dynamic = "force-dynamic";
 
 const WHAT_HAPPENED = [
-  "O dossiê foi gerado a partir das suas respostas, sem uso de inteligência artificial.",
-  "Nenhuma informação foi encaminhada a um advogado ou escritório, e ninguém entrará em contato.",
-  "Os documentos aparecem só como registro: nenhum arquivo foi recebido.",
-  "Você pode abrir, imprimir ou salvar o dossiê em PDF, e reencontrá-lo em “Meus atendimentos” enquanto o servidor de testes não for reiniciado.",
+  "O dossiê foi gerado a partir das suas respostas.",
+  "Você pode abrir, imprimir ou salvar o dossiê em PDF, e reencontrá-lo em “Meus atendimentos”.",
 ];
 
 export default async function ProtocoloPage({ params }: { params: Promise<{ caseId: string }> }) {
@@ -37,11 +35,11 @@ export default async function ProtocoloPage({ params }: { params: Promise<{ case
           <BrandSymbol height={72} priority className="h-16 w-auto shrink-0 sm:h-[72px]" />
           <div>
             <h1 id="protocolo-titulo" tabIndex={-1} className="text-3xl focus:outline-none">
-              Atendimento de teste finalizado
+              Atendimento finalizado
             </h1>
             <p className="mt-2 text-muted">
-              Dossiê gerado para demonstração. O número abaixo identifica este atendimento de teste;
-              ele não dá acesso ao atendimento em outro navegador.
+              O número abaixo identifica este atendimento; ele não dá acesso ao atendimento em
+              outro navegador.
             </p>
             <p className="mt-5 text-sm text-muted">Número do protocolo</p>
             <p
@@ -73,10 +71,6 @@ export default async function ProtocoloPage({ params }: { params: Promise<{ case
               </li>
             ))}
           </ol>
-          <p className="mt-4 max-w-prose text-sm text-muted">
-            O encaminhamento a advogados, o acompanhamento e o envio real de arquivos ainda não
-            existem nesta versão.
-          </p>
         </section>
 
         <div className="mt-10 flex flex-col gap-3 border-t border-line pt-6 sm:flex-row">

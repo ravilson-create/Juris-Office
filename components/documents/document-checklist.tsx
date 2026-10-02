@@ -93,8 +93,8 @@ function ChecklistItem({
       if (added > 0) {
         onAnnounce(
           added === 1
-            ? `1 documento registrado para simulação em ${entry.label}.`
-            : `${added} documentos registrados para simulação em ${entry.label}.`,
+            ? `1 documento adicionado em ${entry.label}.`
+            : `${added} documentos adicionados em ${entry.label}.`,
         );
         router.refresh();
       }
@@ -145,10 +145,9 @@ function ChecklistItem({
             <li key={doc.id} className="flex items-center justify-between gap-3 px-3 py-2">
               <span className="min-w-0">
                 <span className="block truncate font-medium">{doc.originalName}</span>
-                <span className="text-sm text-muted">
-                  {doc.size !== undefined ? `${formatFileSize(doc.size)} · ` : ""}
-                  Registrado para simulação; arquivo não recebido.
-                </span>
+                {doc.size !== undefined && (
+                  <span className="text-sm text-muted">{formatFileSize(doc.size)}</span>
+                )}
               </span>
               <button
                 type="button"

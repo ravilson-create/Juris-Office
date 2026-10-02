@@ -10,7 +10,7 @@ const STEPS = [
   ],
   [
     "Identificação",
-    "Pedimos nome, e-mail, telefone e cidade para compor o dossiê. Nesta versão de testes, use dados fictícios: ninguém entrará em contato.",
+    "Pedimos nome, e-mail, telefone e cidade para compor o dossiê.",
   ],
   [
     "Perguntas guiadas",
@@ -18,11 +18,11 @@ const STEPS = [
   ],
   [
     "Relato e documentos",
-    "Você conta a história com suas palavras e indica os documentos que tem. Nesta versão, só o nome, o tipo e o tamanho do arquivo são registrados; o arquivo não é recebido.",
+    "Você conta a história com suas palavras e indica os documentos que tem. Por enquanto, só o nome, o tipo e o tamanho do arquivo são registrados; o envio do arquivo ainda não está disponível.",
   ],
   [
     "Revisão e protocolo",
-    "Você confere tudo e finaliza. O sistema gera o dossiê e um número de protocolo para demonstração. Nenhuma informação é encaminhada a um advogado.",
+    "Você confere tudo e finaliza. O sistema gera o dossiê e um número de protocolo, e o caso fica disponível para o advogado responsável.",
   ],
 ];
 
@@ -44,7 +44,7 @@ export default function ComoFuncionaPage() {
         ))}
       </ol>
       <ButtonLink href="/atendimento" className="mt-10">
-        Iniciar atendimento de teste
+        Iniciar atendimento
       </ButtonLink>
     </div>
   );

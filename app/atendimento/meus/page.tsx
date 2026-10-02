@@ -20,17 +20,15 @@ export default async function MeusAtendimentosPage() {
     <div className="mx-auto max-w-3xl px-5 py-10">
       <h1 className="text-3xl">Meus atendimentos</h1>
       <p className="mt-2 max-w-prose text-muted">
-        Atendimentos de teste iniciados {authEnabled ? "na sua conta" : "neste navegador"}. Aqui
-        você retoma um rascunho ou abre o protocolo e o dossiê de um atendimento finalizado. Esta
-        lista não é acompanhamento por advogado: nenhuma informação é encaminhada a um escritório.
+        Atendimentos iniciados {authEnabled ? "na sua conta" : "neste navegador"}. Aqui você retoma
+        um rascunho ou abre o protocolo e o dossiê de um atendimento finalizado.
       </p>
 
       {!authEnabled && (
         <div className="mt-6">
           <Alert title="Onde estes dados ficam">
             A lista depende de um cookie deste navegador: limpar os cookies, usar navegação anônima
-            ou trocar de navegador ou aparelho impede a retomada. Nesta versão de testes os dados
-            ficam só na memória do servidor e são apagados quando ele é reiniciado.
+            ou trocar de navegador ou aparelho impede a retomada.
           </Alert>
         </div>
       )}
@@ -51,11 +49,9 @@ export default async function MeusAtendimentosPage() {
           <h2 id="vazio" className="text-xl">
             Nenhum atendimento {authEnabled ? "na sua conta" : "neste navegador"}
           </h2>
-          <p className="mt-2 text-muted">
-            Quando você iniciar um atendimento de teste, ele aparecerá aqui.
-          </p>
+          <p className="mt-2 text-muted">Quando você iniciar um atendimento, ele aparecerá aqui.</p>
           <div className="mt-4">
-            <ButtonLink href="/atendimento">Iniciar atendimento de teste</ButtonLink>
+            <ButtonLink href="/atendimento">Iniciar atendimento</ButtonLink>
           </div>
         </section>
       ) : (
@@ -107,7 +103,7 @@ export default async function MeusAtendimentosPage() {
           </ul>
           <div className="mt-8">
             <ButtonLink href="/atendimento" variant="secondary">
-              Iniciar novo atendimento de teste
+              Iniciar novo atendimento
             </ButtonLink>
           </div>
         </>

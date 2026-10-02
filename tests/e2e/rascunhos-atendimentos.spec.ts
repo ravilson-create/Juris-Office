@@ -150,7 +150,7 @@ test.describe("Meus atendimentos", () => {
     await expect(page.getByText(/memória do servidor/)).toBeVisible();
     await expect(page.getByText(/não é acompanhamento por advogado/)).toBeVisible();
     await expectNoA11yViolations(page, "meus atendimentos (vazio)");
-    await page.getByRole("link", { name: "Iniciar atendimento de teste" }).first().click();
+    await page.getByRole("link", { name: "Iniciar atendimento" }).first().click();
     await expect(h1(page)).toHaveText("Sobre qual assunto é o seu problema?");
     // Visitar a lista não cria sessão nem atendimento.
     expect((await page.context().cookies()).some((c) => c.name === "jo_sessao")).toBe(false);
