@@ -20,7 +20,12 @@ export default async function DossiePage({ params }: { params: Promise<{ caseId:
         <ButtonLink href={`/atendimento/${caseId}/protocolo`} variant="ghost" className="px-0">
           Voltar ao protocolo
         </ButtonLink>
-        <PrintButton />
+        <div className="flex items-center gap-3">
+          <ButtonLink href={`/atendimento/${caseId}/contrato`} variant="secondary">
+            Contrato
+          </ButtonLink>
+          <PrintButton />
+        </div>
       </div>
       <h1 className="sr-only">Dossiê do protocolo {submission.dossier.protocol}</h1>
       <DossierView dossier={submission.dossier} />

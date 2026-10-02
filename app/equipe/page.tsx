@@ -85,9 +85,14 @@ export default async function EquipePage({
         <h1 className="text-3xl">Área profissional</h1>
         <div className="flex gap-4">
           {profile[0].role === "admin" && (
-            <Link href="/equipe/time" className="text-sm text-navy hover:underline">
-              Gestão de equipe →
-            </Link>
+            <>
+              <Link href="/equipe/time" className="text-sm text-navy hover:underline">
+                Gestão de equipe →
+              </Link>
+              <Link href="/equipe/auditoria" className="text-sm text-navy hover:underline">
+                Auditoria de acesso →
+              </Link>
+            </>
           )}
           <Link href="/equipe/consultas" className="text-sm text-navy hover:underline">
             Consultas externas →

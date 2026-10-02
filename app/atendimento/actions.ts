@@ -2,12 +2,15 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { headers } from "next/headers";
 import type { RawFormValues } from "@/domain/triage/schema";
-import { canAccessCase, currentSessionHash, ensureSessionHash } from "@/lib/auth/case-access";
+import { canAccessCase, currentAnonHash, currentSessionHash, ensureSessionHash } from "@/lib/auth/case-access";
 import { currentUserId } from "@/lib/auth/session";
 import { clientIp } from "@/lib/http/client-ip";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getCaseService } from "@/lib/services";
+import { assinarContrato, buscarContrato } from "@/lib/services/equipe-contratos";
+import { getDb } from "@/lib/db/connection";
 import { DomainError, type ServiceResult } from "@/lib/services/errors";
 
 const LIMITE_EXCEDIDO = "Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente de novo.";
@@ -233,4 +236,47 @@ export async function saveDraftAction(
     }
     return { ok: false, reason: "error", message: toFailure(error).message };
   }
+}
+
+// ---------------------------------------------------------------- Portal do Advogado, PR5
+
+/**
+ * Aceite eletrônico do contrato. Quem assina é sempre quem tem acesso ao caso (conta logada ou
+ * sessão anônima do navegador) — a mesma regra de `canAccessCase` usada no resto da jornada do
+ * cidadão, nunca uma identidade separada. A RLS (migração 0012) é a autorização de fato; aqui só
+ * traduzimos erro em `?erro=` para a página mostrar.
+ */
+export async function assinarContratoAction(formData: FormData): Promise<void> {
+  const caseId = String(formData.get("caseId") ?? "");
+  const contractId = String(formData.get("contractId") ?? "");
+  const destino = `/atendimento/${caseId}/contrato`;
+  if (!(await authorized(caseId))) redirect("/atendimento");
+  if (!idSchema.safeParse(contractId).success) redirect(`${destino}?erro=contrato_invalido`);
+
+  const ip = await clientIp();
+  if (!(await checkRateLimit(`assinar-contrato:${ip}`, 10, 3600))) {
+    redirect(`${destino}?erro=limite`);
+  }
+
+  const db = getDb();
+  const contrato = await buscarContrato(db, contractId);
+  if (!contrato || contrato.case_id !== caseId) redirect(`${destino}?erro=contrato_invalido`);
+
+  const userId = await currentUserId();
+  const anonHash = userId ? null : await currentAnonHash();
+  const userAgent = (await headers()).get("user-agent") ?? "desconhecido";
+
+  try {
+    await assinarContrato(db, {
+      contractId,
+      statusAtual: contrato.status,
+      signedBy: userId,
+      signedByHash: anonHash,
+      ip,
+      userAgent,
+    });
+  } catch {
+    redirect(`${destino}?erro=contrato_transicao`);
+  }
+  redirect(destino);
 }
