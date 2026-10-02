@@ -16,9 +16,9 @@ describe("transições de status do contrato", () => {
     expect(canTransitionContract("draft", "cancelled")).toBe(true);
   });
 
-  it("'signed' ainda não é alcançável por nenhuma transição (fica para a PR5)", () => {
+  it("'signed' só é alcançável a partir de 'sent' (aceite eletrônico, PR5)", () => {
+    expect(canTransitionContract("sent", "signed")).toBe(true);
     expect(canTransitionContract("draft", "signed")).toBe(false);
-    expect(canTransitionContract("sent", "signed")).toBe(false);
     expect(() => assertContractTransition("draft", "signed")).toThrow(
       InvalidContractTransitionError,
     );

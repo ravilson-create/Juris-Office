@@ -87,6 +87,11 @@ export default async function EquipePage({
           <Link href="/mfa/configurar" className="text-sm text-navy hover:underline">
             Verificação em duas etapas →
           </Link>
+          {profile[0].role === "admin" && (
+            <Link href="/equipe/auditoria" className="text-sm text-navy hover:underline">
+              Auditoria de acesso →
+            </Link>
+          )}
           <Link href="/equipe/consultas" className="text-sm text-navy hover:underline">
             Consultas externas →
           </Link>

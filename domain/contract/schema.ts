@@ -33,6 +33,23 @@ export const installmentSchema = z.object({
 });
 export type Installment = z.infer<typeof installmentSchema>;
 
+/**
+ * Trilha de auditoria do aceite eletrônico (Fase F2, PR5). `signedBy`/`signedByHash` espelham o
+ * mesmo modelo dual de dono de caso usado em `owns_case()`: conta logada quando houver, senão o
+ * hash da sessão anônima — exatamente um dos dois é preenchido, nunca os dois nem nenhum.
+ */
+export const contractSignatureSchema = z.object({
+  id: z.uuid(),
+  contractId: z.uuid(),
+  signedBy: z.string().min(1).nullable(),
+  signedByHash: z.string().min(1).nullable(),
+  signedAt: z.iso.datetime(),
+  ip: z.string().min(1),
+  userAgent: z.string().min(1),
+  signatureHash: z.string().min(1),
+});
+export type ContractSignature = z.infer<typeof contractSignatureSchema>;
+
 export const caseViabilitySchema = z.object({
   caseId: z.uuid(),
   feasibilityNote: z.string().trim().min(1),
