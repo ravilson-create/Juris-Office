@@ -9,7 +9,7 @@ import {
 } from "@/domain/draft";
 import { applicantSchema, type CaseStatus, type LegalCase } from "@/domain/case/schema";
 import { generateProtocol } from "@/domain/case/protocol";
-import { assertTransition, isEditableByCitizen } from "@/domain/case/status";
+import { assertTransition, isDeletable, isEditableByCitizen } from "@/domain/case/status";
 import { legalAreaSlugSchema, type LegalArea } from "@/domain/legal-area/schema";
 import {
   OTHER_DOCUMENTS_CATEGORY,
@@ -75,6 +75,7 @@ function fieldErrorsFrom(issues: ReadonlyArray<{ path: PropertyKey[]; message: s
 export interface MyCaseItem {
   id: string;
   protocol: string;
+  archived: boolean;
   areaName: string;
   status: CaseStatus;
   updatedAt: string;
@@ -484,6 +485,25 @@ export class CaseService {
     return this.lock.run(caseId, () => this.finishDocumentsUnlocked(caseId));
   }
 
+  /** Exclui o atendimento — só antes de aceito/em andamento (isDeletable); a RLS aplica a mesma
+   * regra do lado do banco (migração 0017), isto é defesa em profundidade. */
+  deleteCase(caseId: string) {
+    return this.lock.run(caseId, () => this.deleteCaseUnlocked(caseId));
+  }
+
+  private async deleteCaseUnlocked(caseId: string): Promise<ServiceResult<null>> {
+    const legalCase = await this.repos.cases.findById(caseId);
+    if (!legalCase) return { ok: false, message: "Atendimento não encontrado." };
+    if (!isDeletable(legalCase.status)) {
+      return {
+        ok: false,
+        message: "Este atendimento já foi aceito ou está em andamento e não pode mais ser excluído.",
+      };
+    }
+    const removed = await this.repos.cases.delete(caseId);
+    return removed ? { ok: true, data: null } : { ok: false, message: "Atendimento não encontrado." };
+  }
+
   // ------------------------------------------------------ Rascunhos (Sprint 4.1)
 
   async getDraft(caseId: string, scope: DraftScope): Promise<DraftRecord | null> {
@@ -552,6 +572,7 @@ export class CaseService {
       items.push({
         id: c.id,
         protocol: c.protocol,
+        archived: Boolean(c.archivedAt),
         areaName: areas.get(c.legalAreaId) ?? "Área",
         status: c.status,
         updatedAt: c.updatedAt,
@@ -561,5 +582,20 @@ export class CaseService {
       });
     }
     return items;
+  }
+
+  /** Arquiva em qualquer status — oculta das listas padrão, mas não apaga nada. Reversível. */
+  async archiveCase(caseId: string): Promise<ServiceResult<null>> {
+    const legalCase = await this.repos.cases.findById(caseId);
+    if (!legalCase) return { ok: false, message: "Atendimento não encontrado." };
+    await this.repos.cases.update(caseId, { archivedAt: new Date().toISOString() });
+    return { ok: true, data: null };
+  }
+
+  async unarchiveCase(caseId: string): Promise<ServiceResult<null>> {
+    const legalCase = await this.repos.cases.findById(caseId);
+    if (!legalCase) return { ok: false, message: "Atendimento não encontrado." };
+    await this.repos.cases.update(caseId, { archivedAt: null });
+    return { ok: true, data: null };
   }
 }

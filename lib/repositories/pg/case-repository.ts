@@ -20,6 +20,7 @@ const UPDATABLE: Record<keyof UpdateCaseInput, string> = {
   narrative: "narrative",
   title: "title",
   submittedAt: "submitted_at",
+  archivedAt: "archived_at",
 };
 
 export class PgCaseRepository implements CaseRepository {
@@ -91,6 +92,11 @@ export class PgCaseRepository implements CaseRepository {
     );
     if (!rows[0]) throw new NotFoundError("Caso", id);
     return toCase(rows[0]);
+  }
+
+  async delete(id: string): Promise<boolean> {
+    const removed = await this.db.query("DELETE FROM legal_cases WHERE id = $1 RETURNING id", [id]);
+    return removed.length > 0;
   }
 
   /**

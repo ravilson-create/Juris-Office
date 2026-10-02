@@ -57,6 +57,28 @@ export class MockCaseRepository implements CaseRepository {
     return structuredClone(updated);
   }
 
+  async delete(id: string): Promise<boolean> {
+    const existed = this.store.cases.delete(id);
+    if (existed) {
+      // Sem FK/cascade na memória: limpa manualmente o que o Postgres apagaria sozinho
+      // (migração 0017).
+      for (const [key, answer] of this.store.answers) {
+        if (answer.caseId === id) this.store.answers.delete(key);
+      }
+      for (const [key, doc] of this.store.documents) {
+        if (doc.caseId === id) this.store.documents.delete(key);
+      }
+      this.store.dossiers.delete(id);
+      for (const key of this.store.drafts.keys()) {
+        if (key.startsWith(`${id}|`)) this.store.drafts.delete(key);
+      }
+      for (const key of this.store.draftCommits.keys()) {
+        if (key.startsWith(`${id}|`)) this.store.draftCommits.delete(key);
+      }
+    }
+    return existed;
+  }
+
   async listByOwner(ownerSessionHash: string): Promise<LegalCase[]> {
     return [...this.store.cases.values()]
       .filter((c) => c.ownerSessionHash === ownerSessionHash || c.citizenId === ownerSessionHash)

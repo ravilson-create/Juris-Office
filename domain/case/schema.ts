@@ -103,5 +103,8 @@ export const legalCaseSchema = z.object({
    */
   revision: z.number().int().nonnegative(),
   submittedAt: z.iso.datetime().optional(),
+  /** Arquivado oculta o atendimento das listas padrão, em qualquer status — nunca apaga dado
+   * nenhum, e é sempre reversível (ver CaseService.archiveCase/unarchiveCase). */
+  archivedAt: z.iso.datetime().nullable().optional(),
 });
 export type LegalCase = z.infer<typeof legalCaseSchema>;

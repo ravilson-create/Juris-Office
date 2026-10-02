@@ -8,6 +8,7 @@ import { getDb } from "@/lib/db/connection";
 import { getCaseService } from "@/lib/services";
 import { gerarPeticao } from "@/lib/petitions/gerar";
 import { listarPendencias, type PetitionSection } from "@/domain/petition/schema";
+import { gerarCorrecaoSecao } from "@/lib/ai/corrigir-peticao";
 
 export async function gerarPeticaoAction(form: FormData) {
   const caseId = z.uuid().safeParse(form.get("caseId"));
@@ -51,8 +52,8 @@ export async function salvarPeticaoAction(form: FormData) {
   if (!actor || !petitionId.success || !caseId.success || !chaves.success) return;
 
   const db = getDb();
-  const [atual] = await db.query<{ secoes: PetitionSection[] }>(
-    "SELECT secoes FROM case_petitions WHERE id = $1",
+  const [atual] = await db.query<{ secoes: PetitionSection[]; secoes_revisadas_ia: string[] }>(
+    "SELECT secoes, secoes_revisadas_ia FROM case_petitions WHERE id = $1",
     [petitionId.data],
   );
   if (!atual) return;
@@ -63,10 +64,73 @@ export async function salvarPeticaoAction(form: FormData) {
   const secoes: PetitionSection[] = atual.secoes.map((secao) =>
     corposPorChave.has(secao.chave) ? { ...secao, corpo: corposPorChave.get(secao.chave)! } : secao,
   );
+  // Só acrescenta: uma vez aceita a sugestão da IA numa seção, o rótulo "revisado por IA" fica
+  // mesmo que o advogado ajuste o texto depois (ele já viu e escolheu manter a correção).
+  const revisadasIA = new Set(atual.secoes_revisadas_ia);
+  for (const chave of chaves.data) {
+    if (form.get(`revisadoIA:${chave}`) === "1") revisadasIA.add(chave);
+  }
 
   await db.query(
-    "UPDATE case_petitions SET secoes = $2::jsonb, pendencias = $3::jsonb, atualizado_em = now() WHERE id = $1",
-    [petitionId.data, JSON.stringify(secoes), JSON.stringify(listarPendencias(secoes))],
+    `UPDATE case_petitions SET secoes = $2::jsonb, pendencias = $3::jsonb,
+       secoes_revisadas_ia = $4::jsonb, atualizado_em = now() WHERE id = $1`,
+    [
+      petitionId.data,
+      JSON.stringify(secoes),
+      JSON.stringify(listarPendencias(secoes)),
+      JSON.stringify([...revisadasIA]),
+    ],
   );
+  revalidatePath(`/equipe/${caseId.data}/peticao`);
+}
+
+/**
+ * Corrige a redação de UMA seção (nunca a petição inteira de uma vez): o advogado avalia e
+ * aceita ou descarta antes de qualquer coisa ser salva (ver gerarCorrecaoSecao).
+ */
+export async function corrigirSecaoIAAction(
+  petitionId: string,
+  chave: string,
+): Promise<{ sugestao?: string; error?: string }> {
+  const actor = await currentUserId();
+  if (!actor) return { error: "Não autenticado." };
+  if (!z.uuid().safeParse(petitionId).success || !chave) return { error: "Dados inválidos." };
+
+  const db = getDb();
+  const rows = await db.query<{ case_id: string; titulo_modelo: string; secoes: PetitionSection[] }>(
+    "SELECT case_id, titulo_modelo, secoes FROM case_petitions WHERE id = $1",
+    [petitionId],
+  );
+  const row = rows[0];
+  if (!row) return { error: "Petição não encontrada." };
+  const secao = row.secoes.find((s) => s.chave === chave);
+  if (!secao) return { error: "Seção não encontrada." };
+
+  const ctx = await getCaseService().getTriageContext(row.case_id);
+  if (!ctx) return { error: "Caso não encontrado." };
+
+  try {
+    const { corpoCorrigido } = await gerarCorrecaoSecao({
+      areaNome: ctx.area.name,
+      tituloModelo: row.titulo_modelo,
+      tituloSecao: secao.titulo,
+      corpoAtual: secao.corpo,
+    });
+    return { sugestao: corpoCorrigido };
+  } catch {
+    return { error: "Não foi possível corrigir agora. Tente novamente em instantes." };
+  }
+}
+
+/** Exclui esta versão da petição — não afeta outras versões geradas para o mesmo caso. */
+export async function excluirPeticaoAction(form: FormData) {
+  const petitionId = z.uuid().safeParse(form.get("petitionId"));
+  const caseId = z.uuid().safeParse(form.get("caseId"));
+  const actor = await currentUserId();
+  if (!actor || !petitionId.success || !caseId.success) return;
+  await getDb().query("DELETE FROM case_petitions WHERE id = $1 AND case_id = $2", [
+    petitionId.data,
+    caseId.data,
+  ]);
   revalidatePath(`/equipe/${caseId.data}/peticao`);
 }

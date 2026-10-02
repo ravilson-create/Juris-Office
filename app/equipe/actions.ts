@@ -13,7 +13,9 @@ import { parseMoney } from "@/domain/triage/money";
 import {
   adicionarParcela,
   atualizarStatusContrato,
+  buscarContrato,
   criarContrato,
+  excluirContrato,
   marcarParcelaPaga,
   registrarViabilidade,
 } from "@/lib/services/equipe-contratos";
@@ -290,5 +292,47 @@ export async function gerarResumoIAAction(form: FormData) {
   } catch {
     redirect(`/equipe/${caseId.data}?erro=ia_falhou`);
   }
+  revalidatePath(`/equipe/${caseId.data}`);
+}
+
+// ---------------------------------------------------------------- Exclusão de registros
+
+/** Só antes de aceito/em andamento (isDeletable); a RLS (migração 0017) aplica a mesma regra. */
+export async function excluirCasoAction(form: FormData) {
+  const caseId = z.uuid().safeParse(form.get("caseId"));
+  const actor = await currentUserId();
+  if (!actor || !caseId.success) redirect("/equipe");
+  const result = await getCaseService().deleteCase(caseId.data);
+  redirect(result.ok ? "/equipe" : `/equipe/${caseId.data}?erro=nao_excluivel`);
+}
+
+/** Só contrato em rascunho ou cancelado — nunca enviado nem assinado. */
+export async function excluirContratoAction(form: FormData) {
+  const caseId = z.uuid().safeParse(form.get("caseId"));
+  const contractId = z.uuid().safeParse(form.get("contractId"));
+  const actor = await currentUserId();
+  if (!actor || !caseId.success || !contractId.success) return;
+  const db = getDb();
+  const atual = await buscarContrato(db, contractId.data);
+  if (!atual) return;
+  const excluido = await excluirContrato(db, contractId.data, atual.status);
+  if (!excluido) redirect(`/equipe/${caseId.data}/contrato?erro=contrato_nao_excluivel`);
+  revalidatePath(`/equipe/${caseId.data}/contrato`);
+}
+
+/** Em qualquer status — só oculta da fila padrão, nunca apaga nada, e é reversível. */
+export async function arquivarCasoAction(form: FormData) {
+  const caseId = z.uuid().safeParse(form.get("caseId"));
+  const actor = await currentUserId();
+  if (!actor || !caseId.success) redirect("/equipe");
+  await getCaseService().archiveCase(caseId.data);
+  revalidatePath(`/equipe/${caseId.data}`);
+}
+
+export async function desarquivarCasoAction(form: FormData) {
+  const caseId = z.uuid().safeParse(form.get("caseId"));
+  const actor = await currentUserId();
+  if (!actor || !caseId.success) redirect("/equipe");
+  await getCaseService().unarchiveCase(caseId.data);
   revalidatePath(`/equipe/${caseId.data}`);
 }

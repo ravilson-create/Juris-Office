@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { Alert } from "@/components/ui/alert";
+import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
 import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
 import { getCaseService } from "@/lib/services";
@@ -9,6 +10,7 @@ import { formatCents } from "@/domain/triage/money";
 import {
   adicionarParcelaAction,
   criarContratoAction,
+  excluirContratoAction,
   marcarParcelaPagaAction,
   mudarStatusContratoAction,
 } from "../../actions";
@@ -43,6 +45,7 @@ const MENSAGEM_ERRO: Record<string, string> = {
   contrato_percentual: "Percentual de êxito deve estar entre 0 e 100.",
   contrato_transicao: "Essa mudança de status não é permitida a partir do status atual.",
   parcela_dados: "Preencha a data e o valor da parcela corretamente.",
+  contrato_nao_excluivel: "Só é possível excluir um contrato em rascunho ou cancelado.",
 };
 
 function ContratoCard({ contrato, parcelas }: { contrato: ContratoRow; parcelas: ParcelaRow[] }) {
@@ -80,6 +83,19 @@ function ContratoCard({ contrato, parcelas }: { contrato: ContratoRow; parcelas:
           >
             Cancelar
           </button>
+        </form>
+      )}
+
+      {(contrato.status === "draft" || contrato.status === "cancelled") && (
+        <form action={excluirContratoAction} className="mt-3">
+          <input type="hidden" name="caseId" value={contrato.case_id} />
+          <input type="hidden" name="contractId" value={contrato.id} />
+          <ConfirmSubmitButton
+            confirmMessage="Excluir este contrato definitivamente? Essa ação não pode ser desfeita."
+            className="rounded border border-danger px-3 py-2 text-sm text-danger hover:bg-danger-soft"
+          >
+            Excluir contrato
+          </ConfirmSubmitButton>
         </form>
       )}
 

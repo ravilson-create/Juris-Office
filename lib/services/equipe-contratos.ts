@@ -50,6 +50,26 @@ export async function buscarViabilidade(db: Db, caseId: string): Promise<CaseVia
 }
 
 /**
+ * Primeira vez que um advogado/admin abre um caso recém-finalizado: entra oficialmente em
+ * análise. Sem isto, nada move o caso de "submitted" para "under_legal_review" — e a decisão de
+ * viabilidade só é uma transição válida a partir de "under_legal_review" (ver TRANSITIONS em
+ * domain/case/status.ts) — então a decisão nunca poderia ser registrada. Chamado junto com o
+ * registro de leitura (ver app/equipe/[caseId]/page.tsx e lib/services/auditoria.ts).
+ */
+export async function iniciarAnaliseSeNecessario(
+  db: Db,
+  caseId: string,
+  statusAtual: CaseStatus,
+): Promise<CaseStatus> {
+  if (statusAtual !== "submitted") return statusAtual;
+  await db.query(
+    "UPDATE legal_cases SET status = 'under_legal_review', updated_at = now() WHERE id = $1 AND status = 'submitted'",
+    [caseId],
+  );
+  return "under_legal_review";
+}
+
+/**
  * Registra a decisão de viabilidade e move o status do caso na mesma transação — os dois nunca
  * divergem (ver statusCasoParaDecisao). assertTransition lança se o caso não estiver numa etapa
  * de onde essa decisão é um próximo passo válido (ex.: não dá pra "aceitar" um caso em 'draft').
@@ -131,6 +151,19 @@ export async function atualizarStatusContrato(
     contractId,
     proximoStatus,
   ]);
+}
+
+/** Só rascunho ou cancelado — nunca enviado nem assinado, preservando a evidência do acordo já
+ * formalizado. A RLS (contracts_delete, migração 0017) já garante isso; aqui é defesa em
+ * profundidade. Cascateia as parcelas (contract_installments) automaticamente. */
+export async function excluirContrato(
+  db: Db,
+  contractId: string,
+  statusAtual: ContractStatus,
+): Promise<boolean> {
+  if (statusAtual !== "draft" && statusAtual !== "cancelled") return false;
+  const removed = await db.query("DELETE FROM contracts WHERE id = $1 RETURNING id", [contractId]);
+  return removed.length > 0;
 }
 
 export async function listarParcelas(db: Db, contractId: string): Promise<ParcelaRow[]> {

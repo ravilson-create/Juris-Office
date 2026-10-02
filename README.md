@@ -208,7 +208,8 @@ Prioridade: **persistência real e autenticação antes de qualquer dado real, c
    privado de arquivos; auditoria; backups (janela de 6h confirmada, plano atual não permite mais).
 2. **F3 (parte) — Portal do advogado**: recebimento dos dossiês e decisão de viabilidade.
 3. **F2 — Contrato e financeiro**: honorários, procuração, assinatura eletrônica, parcelas.
-4. **F3 — Apoio jurídico com IA**: saída estruturada, sempre revisada pelo advogado.
+4. **F3 — Apoio jurídico com IA**: saída estruturada, sempre revisada pelo advogado. ✅ Resumo de
+   caso (dossiê → IA); ✅ correção de redação da petição, seção por seção, com aprovação.
 5. **F4 — Produção de peças**: templates, editor, exportação PDF/DOCX.
 6. **F6 — Prazos, alertas e operação**: motor de prazos, alertas, carteira, admin, observabilidade.
 

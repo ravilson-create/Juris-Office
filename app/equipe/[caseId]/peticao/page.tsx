@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
+import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
+import { PeticaoSecaoEditor } from "@/components/petitions/peticao-secao-editor";
 import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
 import { getCaseService } from "@/lib/services";
 import { modelosDisponiveis } from "@/lib/petitions/gerar";
 import type { PetitionSection } from "@/domain/petition/schema";
-import { gerarPeticaoAction, salvarPeticaoAction } from "./actions";
+import { excluirPeticaoAction, gerarPeticaoAction, salvarPeticaoAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -36,10 +38,17 @@ const NOMES_MODELO: Record<string, string> = {
   "previdenciario.revisao_beneficio": "Ação Revisional de Benefício Previdenciário",
 };
 
-export default async function PeticaoPage({ params }: { params: Promise<{ caseId: string }> }) {
+export default async function PeticaoPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ caseId: string }>;
+  searchParams: Promise<{ peticaoId?: string }>;
+}) {
   const actor = await currentUserId();
   if (!actor) redirect("/auth/sign-in");
   const { caseId } = await params;
+  const { peticaoId } = await searchParams;
   if (!z.uuid().safeParse(caseId).success) notFound();
 
   const db = getDb();
@@ -68,12 +77,17 @@ export default async function PeticaoPage({ params }: { params: Promise<{ caseId
     titulo_modelo: string;
     secoes: PetitionSection[];
     pendencias: string[];
+    secoes_revisadas_ia: string[];
+    criado_em: Date;
     atualizado_em: Date;
   }>(
-    "SELECT id, modelo_id, titulo_modelo, secoes, pendencias, atualizado_em FROM case_petitions WHERE case_id = $1 ORDER BY criado_em DESC",
+    `SELECT id, modelo_id, titulo_modelo, secoes, pendencias, secoes_revisadas_ia, criado_em, atualizado_em
+     FROM case_petitions WHERE case_id = $1 ORDER BY criado_em DESC`,
     [caseId],
   );
-  const peticaoAtual = existentes[0];
+  const peticaoAtual =
+    (peticaoId && existentes.find((p) => p.id === peticaoId)) || existentes[0];
+  const outrasVersoes = existentes.filter((p) => p.id !== peticaoAtual?.id);
   const modelos = modelosDisponiveis(ctx.area.slug, ctx.validAnswers);
 
   return (
@@ -128,24 +142,19 @@ export default async function PeticaoPage({ params }: { params: Promise<{ caseId
             <input type="hidden" name="petitionId" value={peticaoAtual.id} />
             <input type="hidden" name="caseId" value={caseId} />
             {peticaoAtual.secoes.map((secao) => (
-              <div key={secao.chave}>
-                <input type="hidden" name="chave" value={secao.chave} />
-                <label htmlFor={`corpo-${secao.chave}`} className="block font-semibold">
-                  {secao.titulo}
-                </label>
-                <textarea
-                  id={`corpo-${secao.chave}`}
-                  name={`corpo:${secao.chave}`}
-                  defaultValue={secao.corpo}
-                  rows={Math.min(14, Math.max(3, secao.corpo.split("\n").length + 1))}
-                  className="mt-2 w-full rounded border border-line p-3 font-serif text-sm"
-                />
-              </div>
+              <PeticaoSecaoEditor
+                key={secao.chave}
+                petitionId={peticaoAtual.id}
+                chave={secao.chave}
+                titulo={secao.titulo}
+                corpoInicial={secao.corpo}
+                revisadoIAInicial={peticaoAtual.secoes_revisadas_ia.includes(secao.chave)}
+              />
             ))}
             <button className="rounded bg-navy px-4 py-2 text-white">Salvar alterações</button>
           </form>
 
-          <div className="mt-4 flex gap-3">
+          <div className="mt-4 flex flex-wrap gap-3">
             <a
               href={`/api/peticoes/${peticaoAtual.id}/docx`}
               className="inline-block rounded border border-line px-4 py-2"
@@ -158,7 +167,59 @@ export default async function PeticaoPage({ params }: { params: Promise<{ caseId
             >
               Baixar PDF
             </a>
+            <form action={excluirPeticaoAction}>
+              <input type="hidden" name="caseId" value={caseId} />
+              <input type="hidden" name="petitionId" value={peticaoAtual.id} />
+              <ConfirmSubmitButton
+                confirmMessage="Excluir esta versão da petição? Essa ação não pode ser desfeita."
+                className="rounded border border-danger px-4 py-2 text-danger hover:bg-danger-soft"
+              >
+                Excluir esta versão
+              </ConfirmSubmitButton>
+            </form>
           </div>
+        </section>
+      )}
+
+      {outrasVersoes.length > 0 && (
+        <section className="mt-10 border-t border-line pt-6">
+          <h2 className="text-xl">Outras versões desta petição</h2>
+          <ul className="mt-4 flex flex-col gap-3">
+            {outrasVersoes.map((versao) => (
+              <li
+                key={versao.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-line bg-surface p-4"
+              >
+                <div>
+                  <p className="font-medium">{versao.titulo_modelo}</p>
+                  <p className="text-xs text-muted">
+                    Criada em{" "}
+                    {new Date(versao.criado_em).toLocaleString("pt-BR", {
+                      timeZone: "America/Fortaleza",
+                    })}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Link
+                    href={`/equipe/${caseId}/peticao?peticaoId=${versao.id}`}
+                    className="rounded border border-line px-3 py-1.5 text-sm font-medium hover:border-navy"
+                  >
+                    Abrir esta versão
+                  </Link>
+                  <form action={excluirPeticaoAction}>
+                    <input type="hidden" name="caseId" value={caseId} />
+                    <input type="hidden" name="petitionId" value={versao.id} />
+                    <ConfirmSubmitButton
+                      confirmMessage="Excluir esta versão da petição? Essa ação não pode ser desfeita."
+                      className="rounded border border-danger px-3 py-1.5 text-sm text-danger hover:bg-danger-soft"
+                    >
+                      Excluir
+                    </ConfirmSubmitButton>
+                  </form>
+                </div>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
     </main>
