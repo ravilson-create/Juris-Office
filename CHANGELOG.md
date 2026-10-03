@@ -4,6 +4,14 @@
 
 ### Adicionado
 
+- **Base para o cliente escolher o advogado (PR 1 de 2)**: cadastro do advogado passa a pedir
+  cidade/UF de atuação (distinto da UF da OAB) e ao menos uma área jurídica atendida
+  (`profiles.cidade`/`uf`, nova tabela `lawyer_areas`, migração 0022). Nova função
+  `listar_advogados_disponiveis()` monta um diretório **entre todos os escritórios** — só
+  advogado com OAB confirmada e assinatura ativa, filtrável por área (obrigatório) e UF
+  (opcional), em ordem aleatória para não favorecer sempre o mesmo nome. Ainda não há tela para o
+  cliente usar isso — vem na PR seguinte, que troca a atribuição manual do admin (ou soma a ela)
+  por essa escolha no fim do atendimento.
 - **Aba "Contratos" na área profissional** (`/equipe/contratos`): lista todos os contratos gerados
   a partir dos atendimentos, com protocolo/título do caso, área, tipo e valor do honorário e
   status, sem precisar abrir caso por caso para achar um contrato específico. A política de RLS
