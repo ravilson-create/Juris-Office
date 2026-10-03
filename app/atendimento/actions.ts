@@ -11,7 +11,13 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { getCaseService } from "@/lib/services";
 import { assinarContrato, buscarContrato } from "@/lib/services/equipe-contratos";
 import { escolherAdvogado } from "@/lib/services/advogados-disponiveis";
-import { getDb } from "@/lib/db/connection";
+import {
+  consultarAtendimentoPorProtocolo,
+  type ResultadoConsultaProtocolo,
+} from "@/lib/services/consulta-protocolo";
+import { cpfCnpjValido, somenteDigitos } from "@/lib/billing/validacao";
+import { isValidProtocol } from "@/domain/case/protocol";
+import { getDb, getMaintenanceDb, hasDatabase } from "@/lib/db/connection";
 import { DomainError, type ServiceResult } from "@/lib/services/errors";
 
 const LIMITE_EXCEDIDO = "Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente de novo.";
@@ -328,4 +334,48 @@ export async function assinarContratoAction(formData: FormData): Promise<void> {
     redirect(`${destino}?erro=contrato_transicao`);
   }
   redirect(destino);
+}
+
+// ---------------------------------------------------------------- Consulta por protocolo
+
+export type ConsultaProtocoloState =
+  | { ok: true; resultado: ResultadoConsultaProtocolo }
+  | { ok: false; message: string }
+  | null;
+
+/**
+ * Único jeito de ver o andamento de um atendimento sem ser no navegador/sessão onde ele foi
+ * aberto — por isso exige protocolo E CPF, nunca só o protocolo (ver canAccessCase/owns_case:
+ * conhecer o protocolo nunca bastou aqui, e continua não bastando). Decisão consciente do dono
+ * do produto: a consulta é só leitura, não vincula o atendimento a esta sessão nem permite
+ * continuar um atendimento ainda em preenchimento a partir daqui.
+ */
+export async function consultarAtendimentoAction(
+  _state: ConsultaProtocoloState,
+  form: FormData,
+): Promise<ConsultaProtocoloState> {
+  if (!hasDatabase()) {
+    return { ok: false, message: "Consulta por protocolo indisponível nesta instalação." };
+  }
+  const ip = await clientIp();
+  if (!(await checkRateLimit(`consulta-protocolo:${ip}`, 10, 3600))) {
+    return { ok: false, message: LIMITE_EXCEDIDO };
+  }
+
+  const protocolo = String(form.get("protocolo") ?? "").trim().toUpperCase();
+  const cpfDigitos = somenteDigitos(String(form.get("cpf") ?? ""));
+  if (!isValidProtocol(protocolo) || cpfDigitos.length !== 11 || !cpfCnpjValido(cpfDigitos)) {
+    return { ok: false, message: "Confira o protocolo e o CPF informados." };
+  }
+
+  const db = getMaintenanceDb();
+  try {
+    const resultado = await consultarAtendimentoPorProtocolo(db, protocolo, cpfDigitos);
+    if (!resultado) {
+      return { ok: false, message: "Atendimento não encontrado. Confira o protocolo e o CPF." };
+    }
+    return { ok: true, resultado };
+  } finally {
+    await db.close();
+  }
 }
