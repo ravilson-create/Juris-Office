@@ -38,8 +38,9 @@ export default async function ProtocoloPage({ params }: { params: Promise<{ case
               Atendimento finalizado
             </h1>
             <p className="mt-2 text-muted">
-              O número abaixo identifica este atendimento; ele não dá acesso ao atendimento em
-              outro navegador.
+              Guarde o número abaixo. Sozinho ele não dá acesso ao atendimento em outro
+              navegador — para consultar de outro aparelho depois, use “Meus atendimentos” com o
+              protocolo e o CPF usado na identificação.
             </p>
             <p className="mt-5 text-sm text-muted">Número do protocolo</p>
             <p

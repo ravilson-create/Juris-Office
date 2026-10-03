@@ -4,6 +4,18 @@
 
 ### Adicionado
 
+- **Consulta de atendimento por protocolo + CPF** (`/atendimento/meus`): além da lista de
+  atendimentos deste navegador (mantida como estava), uma seção nova deixa consultar qualquer
+  atendimento de outro aparelho ou navegador informando o protocolo e o CPF usado na
+  identificação. É só consulta — não vincula o caso a esta sessão, nem permite continuar editando
+  um rascunho a partir daí; um rascunho (ainda não finalizado) mostra o andamento sem dossiê, e um
+  atendimento finalizado mostra o dossiê. Protocolo sozinho nunca foi credencial neste app; agora o
+  CPF faz esse papel de segundo fator (`consultarAtendimentoPorProtocolo`,
+  `lib/services/consulta-protocolo.ts`) — a mesma mensagem genérica aparece se o protocolo não
+  existir, se o CPF não bater, ou se o atendimento não tiver CPF cadastrado, para nunca revelar
+  qual dado está errado. Corrige o problema do botão "Meus atendimentos", que antes só listava o
+  atendimento aberto por quem está logado/com aquele navegador, sem dar jeito de consultar pelo
+  protocolo informado em outro lugar.
 - **Cliente pode escolher o advogado no fim do atendimento (PR 2 de 2)**: nova etapa "Advogado",
   oferecida na revisão como opção — nunca obrigatória, para não travar quem usa uma instalação
   sem banco ou uma área sem nenhum advogado cadastrado ainda. Lista os advogados da área do caso
