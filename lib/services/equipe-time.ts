@@ -8,6 +8,9 @@ export type MembroEquipeRow = {
   oab_numero: string | null;
   oab_uf: string | null;
   oab_verificado_em: string | null;
+  /** "autodeclarada" (a própria pessoa confirmou no cadastro, migração 0020) quando igual a
+   * user_id; um admin de verdade quando diferente. Null junto com oab_verificado_em null. */
+  oab_verificado_por: string | null;
   subscription_status: string | null;
 };
 
@@ -15,7 +18,7 @@ export type MembroEquipeRow = {
 export async function listarEquipe(db: Db, officeId: string): Promise<MembroEquipeRow[]> {
   return db.query<MembroEquipeRow>(
     `SELECT p.user_id, p.email, p.role, p.oab_numero, p.oab_uf, p.oab_verificado_em,
-       s.status AS subscription_status
+       p.oab_verificado_por, s.status AS subscription_status
      FROM profiles p
      LEFT JOIN LATERAL (
        SELECT status FROM lawyer_subscriptions

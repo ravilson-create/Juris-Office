@@ -57,7 +57,9 @@ export function CadastroForm() {
         </label>
       </div>
       <p className="-mt-3 text-sm text-muted">
-        A OAB é conferida manualmente contra o cadastro oficial antes de liberar o acesso a casos.
+        A OAB informada já libera o acesso a casos — não há verificação automática possível, então
+        ela entra como autodeclarada. Um administrador do escritório pode conferir contra o
+        cadastro oficial e revogar a qualquer momento se encontrar divergência.
       </p>
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 font-medium">Plano</legend>

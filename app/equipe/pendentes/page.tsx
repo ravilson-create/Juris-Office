@@ -40,7 +40,9 @@ export default async function OabPendentesPage() {
         >
           Cadastro Nacional dos Advogados (OAB)
         </a>{" "}
-        antes de confirmar — só depois disso o advogado passa a ver casos atribuídos.
+        antes de confirmar — só depois disso o advogado passa a ver casos atribuídos. A OAB já sai
+        autodeclarada no cadastro (ver /equipe/time): esta lista só mostra quem está sem OAB
+        confirmada porque um admin revogou uma autodeclaração.
       </p>
       <ul className="mt-6 space-y-4">
         {pendentes.map((p) => (

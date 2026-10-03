@@ -74,8 +74,9 @@ export async function iniciarTesteGratis(
       input.data.planoId,
       identity.email,
     ]);
-    // A OAB nunca é aceita como confirmada aqui: fica pendente até um admin do escritório
-    // checar manualmente contra o site oficial (cna.oab.org.br) e confirmar — ver /equipe.
+    // set_own_oab (migração 0020) já confirma na hora — autodeclarada, nunca checada por um
+    // humano. Um admin do escritório pode revogar depois de olhar o site oficial
+    // (cna.oab.org.br) — ver /equipe/time.
     await db.query("SELECT set_own_oab($1, $2)", [input.data.oabNumero, input.data.oabUf]);
   } catch (error) {
     const message = error instanceof Error ? error.message : "";

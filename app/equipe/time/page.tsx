@@ -3,8 +3,23 @@ import { redirect } from "next/navigation";
 import { Alert } from "@/components/ui/alert";
 import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
-import { listarEquipe } from "@/lib/services/equipe-time";
-import { promoverAdminAction, rebaixarAdvogadoAction, removerDaEquipeAction } from "../actions";
+import { listarEquipe, type MembroEquipeRow } from "@/lib/services/equipe-time";
+import {
+  promoverAdminAction,
+  rebaixarAdvogadoAction,
+  removerDaEquipeAction,
+  revogarOabAction,
+} from "../actions";
+
+/** OAB sai autodeclarada no cadastro (migração 0020) — "oab_verificado_por = user_id" é a própria
+ * pessoa confirmando a si mesma, nunca um humano de verdade checando. */
+function statusOab(m: MembroEquipeRow): string {
+  if (!m.oab_numero) return "Sem OAB cadastrada";
+  const base = `OAB ${m.oab_numero}/${m.oab_uf}`;
+  if (!m.oab_verificado_em) return `${base} — aguardando confirmação`;
+  if (m.oab_verificado_por === m.user_id) return `${base} — autodeclarada (não conferida)`;
+  return `${base} — confirmada por administrador`;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -62,15 +77,19 @@ export default async function GestaoEquipePage({
                   </span>
                 </p>
                 <p className="mt-1 text-sm text-muted">
-                  {membro.oab_numero
-                    ? `OAB ${membro.oab_numero}/${membro.oab_uf} — ${
-                        membro.oab_verificado_em ? "confirmada" : "aguardando confirmação"
-                      }`
-                    : "Sem OAB cadastrada"}
+                  {statusOab(membro)}
                   {membro.subscription_status && ` · Assinatura: ${membro.subscription_status}`}
                 </p>
               </div>
               <div className="flex gap-2">
+                {membro.oab_verificado_em && membro.oab_verificado_por === membro.user_id && (
+                  <form action={revogarOabAction}>
+                    <input type="hidden" name="userId" value={membro.user_id} />
+                    <button className="rounded border border-line px-3 py-2 text-sm">
+                      Revogar OAB
+                    </button>
+                  </form>
+                )}
                 {membro.role === "lawyer" ? (
                   <form action={promoverAdminAction}>
                     <input type="hidden" name="userId" value={membro.user_id} />

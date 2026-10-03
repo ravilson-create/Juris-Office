@@ -60,6 +60,17 @@ export async function verifyLawyerOab(form: FormData) {
   revalidatePath("/equipe");
 }
 
+/** A OAB sai autodeclarada no cadastro (migração 0020) — isto desfaz, para quem desconfiar de um
+ * número até checar manualmente. A função revoke_lawyer_oab confere admin do mesmo escritório. */
+export async function revogarOabAction(form: FormData) {
+  const lawyerId = z.string().min(1).max(255).safeParse(form.get("userId"));
+  const actor = await currentUserId();
+  if (!actor || !lawyerId.success) return;
+  await getDb().query("SELECT revoke_lawyer_oab($1)", [lawyerId.data]);
+  revalidatePath("/equipe/time");
+  revalidatePath("/equipe");
+}
+
 export async function criarPrazoAction(form: FormData) {
   const caseId = z.uuid().safeParse(form.get("caseId"));
   const dataInicio = z.iso.date().safeParse(form.get("dataInicio"));
