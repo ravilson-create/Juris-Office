@@ -359,7 +359,9 @@ export async function gerarResumoIAAction(form: FormData) {
   try {
     const { resumo, modelo } = await gerarResumoCaso(submission.dossier);
     await salvarResumoIA(getDb(), { caseId: caseId.data, resumo, modelo, geradoPor: actor });
-  } catch {
+  } catch (error) {
+    // Nunca expor detalhes internos ao navegador (podem incluir credencial/URL do provedor).
+    console.error("[equipe] falha ao gerar resumo com IA", error);
     redirect(`/equipe/${caseId.data}?erro=ia_falhou`);
   }
   revalidatePath(`/equipe/${caseId.data}`);
