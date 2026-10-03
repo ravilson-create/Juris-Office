@@ -110,6 +110,23 @@ export async function listarContratos(db: Db, caseId: string): Promise<ContratoR
   );
 }
 
+export type ContratoEquipeRow = ContratoRow & {
+  protocol: string;
+  title: string | null;
+  legal_area_id: string;
+};
+
+/** Aba "Contratos" da área profissional: todos os contratos dos casos que o ator enxerga — a
+ * mesma política de RLS de `contracts`/`legal_cases` (can_read_case) decide o que aparece, sem
+ * filtro explícito de escritório ou advogado aqui (mesmo padrão de equipe-fila.ts). */
+export async function listarContratosEquipe(db: Db): Promise<ContratoEquipeRow[]> {
+  return db.query<ContratoEquipeRow>(
+    `SELECT c.*, lc.protocol, lc.title, lc.legal_area_id
+     FROM contracts c JOIN legal_cases lc ON lc.id = c.case_id
+     ORDER BY c.created_at DESC`,
+  );
+}
+
 export async function buscarContrato(db: Db, contractId: string): Promise<ContratoRow | null> {
   const rows = await db.query<ContratoRow>("SELECT * FROM contracts WHERE id = $1", [contractId]);
   return rows[0] ?? null;

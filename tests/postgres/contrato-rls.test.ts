@@ -1,7 +1,12 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import type { Db, Queryable } from "@/lib/db/types";
+
+vi.mock("server-only", () => ({}));
+
+const { listarContratosEquipe } = await import("@/lib/services/equipe-contratos");
 
 async function migrar(db: PGlite) {
   const dir = join(process.cwd(), "db/migrations");
@@ -10,6 +15,20 @@ async function migrar(db: PGlite) {
     .sort()) {
     await db.exec(readFileSync(join(dir, file), "utf8"));
   }
+}
+
+function wrap(db: PGlite): Db {
+  return {
+    query: async <T = Record<string, unknown>>(text: string, params?: unknown[]) =>
+      (await db.query(text, params)).rows as T[],
+    transaction: async <T>(fn: (tx: Queryable) => Promise<T>) =>
+      db.transaction((tx) =>
+        fn({
+          query: async <R = Record<string, unknown>>(text: string, params?: unknown[]) =>
+            (await tx.query(text, params)).rows as R[],
+        }),
+      ),
+  };
 }
 
 describe("P4/PR4: viabilidade, contrato e parcelas — RLS", () => {
@@ -192,6 +211,66 @@ describe("P4/PR4: viabilidade, contrato e parcelas — RLS", () => {
         { id: vencida, status: "overdue" },
         { id: futura, status: "pending" },
       ]);
+    } finally {
+      await db.close();
+    }
+  });
+
+  it("listarContratosEquipe: aba Contratos só traz os do escritório do ator, com protocolo e título do caso", async () => {
+    const db = new PGlite();
+    try {
+      await migrar(db);
+      const office = "00000000-0000-4000-8000-000000000001";
+      const otherOffice = crypto.randomUUID();
+      const caseId = crypto.randomUUID();
+      const caseOutroEscritorio = crypto.randomUUID();
+      const contractId = crypto.randomUUID();
+      const contractOutroEscritorio = crypto.randomUUID();
+
+      await db.query("INSERT INTO offices(id, name) VALUES ($1, 'Outro escritório')", [
+        otherOffice,
+      ]);
+      await db.query(
+        `INSERT INTO legal_cases(id, protocol, title, legal_area_id, citizen_id, office_id,
+         status, submitted_at, created_at, updated_at) VALUES ($1, 'JO-LISTA', 'Caso do escritório',
+         $2, 'citizen', $3, 'in_negotiation', now(), now(), now())`,
+        [caseId, crypto.randomUUID(), office],
+      );
+      await db.query(
+        `INSERT INTO legal_cases(id, protocol, title, legal_area_id, citizen_id, office_id,
+         status, submitted_at, created_at, updated_at) VALUES ($1, 'JO-LISTA-2', 'Caso de outro escritório',
+         $2, 'citizen', $3, 'in_negotiation', now(), now(), now())`,
+        [caseOutroEscritorio, crypto.randomUUID(), otherOffice],
+      );
+      await db.query("INSERT INTO profiles(user_id, role, office_id) VALUES ('admin', 'admin', $1)", [
+        office,
+      ]);
+      await db.query(
+        `INSERT INTO contracts(id, case_id, fee_type, fee_value_cents, created_by)
+         VALUES ($1, $2, 'fixed', 500000, 'admin')`,
+        [contractId, caseId],
+      );
+      await db.query(
+        `INSERT INTO contracts(id, case_id, fee_type, fee_value_cents, created_by)
+         VALUES ($1, $2, 'fixed', 500000, 'admin')`,
+        [contractOutroEscritorio, caseOutroEscritorio],
+      );
+
+      await db.exec(
+        `CREATE ROLE contratos_aba_tester;
+         GRANT SELECT ON contracts, legal_cases TO contratos_aba_tester;
+         SET ROLE contratos_aba_tester`,
+      );
+      await db.query("SELECT set_config('app.user_id', 'admin', false)");
+
+      const contratos = await listarContratosEquipe(wrap(db));
+      expect(contratos).toEqual([
+        expect.objectContaining({
+          id: contractId,
+          protocol: "JO-LISTA",
+          title: "Caso do escritório",
+        }),
+      ]); // nunca o contrato do outro escritório
     } finally {
       await db.close();
     }
