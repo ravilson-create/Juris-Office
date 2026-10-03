@@ -11,12 +11,35 @@ import {
   STATUS_PROFISSIONAL,
   statusProfissionalValido,
 } from "@/domain/case/status";
+import { LEGAL_AREAS } from "@/lib/mocks/legal-areas";
 import { contarCasosPorStatus, contarCasosSemAdvogado } from "@/lib/services/equipe-dashboard";
 import { contarCasosFila, listarCasosFila } from "@/lib/services/equipe-fila";
 import { contarPrazosVencidos, listarPrazosProximos } from "@/lib/services/equipe-prazos";
 import { assignLawyer } from "./actions";
 
 const DIAS_ALERTA_PRAZO = 7;
+
+const NOME_AREA = new Map(LEGAL_AREAS.map((a) => [a.id, a.name]));
+
+/**
+ * Uma cor por "família" de status, não um tom por status — famílias com significado diferente
+ * (aguardando decisão vs. aceito vs. recusado) precisam ser discrimináveis, mas variar a cor
+ * dentro da mesma família (ex.: draft vs. submitted) só acrescentaria ruído.
+ */
+const ESTILO_STATUS: Record<CaseStatus, string> = {
+  draft: "bg-paper text-muted",
+  triage: "bg-paper text-muted",
+  awaiting_documents: "bg-paper text-muted",
+  ready_for_review: "bg-paper text-muted",
+  submitted: "bg-navy-soft text-navy-strong",
+  under_legal_review: "bg-navy-soft text-navy-strong",
+  needs_information: "bg-gold-soft text-gold-strong",
+  accepted: "bg-emerald-50 text-emerald-700",
+  rejected: "bg-danger-soft text-danger",
+  in_negotiation: "bg-violet-50 text-violet-700",
+  active: "bg-emerald-50 text-emerald-700",
+  closed: "bg-paper text-muted",
+};
 
 export const dynamic = "force-dynamic";
 export default async function EquipePage({
@@ -83,7 +106,7 @@ export default async function EquipePage({
         )
       : [];
   return (
-    <main className="mx-auto max-w-3xl px-5 py-10">
+    <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h1 className="text-3xl">Área profissional</h1>
         <div className="flex flex-wrap gap-2">
@@ -109,13 +132,16 @@ export default async function EquipePage({
         {profile[0].role === "admin" ? "Casos do seu escritório" : "Casos atribuídos a você"}
       </p>
 
-      <div className="mt-6 flex flex-wrap gap-3" aria-label="Resumo por status">
+      <div
+        className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
+        aria-label="Resumo por status"
+      >
         <Link
           href="/equipe"
-          className={`rounded-md border px-4 py-3 ${status === null ? "border-navy" : "border-line"} bg-surface`}
+          className={`rounded-lg border bg-surface p-4 transition-colors hover:border-navy ${status === null ? "border-navy ring-1 ring-navy" : "border-line"}`}
         >
-          <p className="text-2xl font-semibold">{resumo.total}</p>
-          <p className="text-sm text-muted">Total</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Total</p>
+          <p className="mt-1 text-2xl font-extrabold text-ink">{resumo.total}</p>
         </Link>
         {resumo.porStatus
           .filter((item) => item.total > 0)
@@ -123,10 +149,12 @@ export default async function EquipePage({
             <Link
               key={item.status}
               href={`/equipe?status=${item.status}`}
-              className={`rounded-md border px-4 py-3 ${status === item.status ? "border-navy" : "border-line"} bg-surface`}
+              className={`rounded-lg border bg-surface p-4 transition-colors hover:border-navy ${status === item.status ? "border-navy ring-1 ring-navy" : "border-line"}`}
             >
-              <p className="text-2xl font-semibold">{item.total}</p>
-              <p className="text-sm text-muted">{item.label}</p>
+              <p className="truncate text-xs font-semibold uppercase tracking-wide text-muted">
+                {item.label}
+              </p>
+              <p className="mt-1 text-2xl font-extrabold text-ink">{item.total}</p>
             </Link>
           ))}
       </div>
@@ -208,35 +236,89 @@ export default async function EquipePage({
       <p className="mt-4 text-sm text-muted">
         {totalFiltrado} caso{arquivados ? " arquivado" : ""}(s) · página {pagina} de {totalPaginas}
       </p>
-      <ul className="mt-4 space-y-4">
-        {cases.map((item) => (
-          <li key={item.id} className="rounded border p-5">
-            <Link className="font-semibold underline" href={`/equipe/${item.id}`}>
-              {item.protocol}
-            </Link>
-            <p className="text-sm">
-              {item.title || "Caso sem título"} ·{" "}
-              {CASE_STATUS_LABEL[item.status as CaseStatus] ?? item.status}
-            </p>
-            {profile[0].role === "admin" && lawyers.length > 0 && (
-              <form action={assignLawyer} className="mt-4 flex gap-2">
-                <input type="hidden" name="caseId" value={item.id} />
-                <label>
-                  Advogado{" "}
-                  <select name="lawyerId" className="rounded border p-2">
-                    {lawyers.map((lawyer) => (
-                      <option value={lawyer.user_id} key={lawyer.user_id}>
-                        {lawyer.user_id}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <button className="rounded bg-navy px-3 text-white">Atribuir</button>
-              </form>
-            )}
-          </li>
-        ))}
-      </ul>
+      {cases.length > 0 && (
+        <div className="mt-4 overflow-x-auto rounded-lg border border-line bg-surface">
+          <table className="w-full min-w-[640px] border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-line bg-paper text-left text-xs font-semibold uppercase tracking-wide text-muted">
+                <th scope="col" className="px-4 py-3">
+                  Protocolo
+                </th>
+                <th scope="col" className="px-4 py-3">
+                  Caso
+                </th>
+                <th scope="col" className="px-4 py-3">
+                  Área
+                </th>
+                <th scope="col" className="px-4 py-3">
+                  Status
+                </th>
+                {profile[0].role === "admin" && lawyers.length > 0 && (
+                  <th scope="col" className="px-4 py-3">
+                    Atribuir
+                  </th>
+                )}
+                <th scope="col" className="px-4 py-3">
+                  <span className="sr-only">Abrir</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {cases.map((item) => (
+                <tr key={item.id} className="border-b border-line last:border-0">
+                  <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-muted">
+                    {item.protocol}
+                  </td>
+                  <td className="px-4 py-3 font-medium text-ink">
+                    {item.title || "Caso sem título"}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-muted">
+                    {NOME_AREA.get(item.legal_area_id) ?? "—"}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3">
+                    <span
+                      className={`rounded px-2 py-1 text-xs font-semibold ${
+                        ESTILO_STATUS[item.status as CaseStatus] ?? "bg-paper text-muted"
+                      }`}
+                    >
+                      {CASE_STATUS_LABEL[item.status as CaseStatus] ?? item.status}
+                    </span>
+                  </td>
+                  {profile[0].role === "admin" && lawyers.length > 0 && (
+                    <td className="px-4 py-3">
+                      <form action={assignLawyer} className="flex gap-2">
+                        <input type="hidden" name="caseId" value={item.id} />
+                        <label className="sr-only" htmlFor={`advogado-${item.id}`}>
+                          Advogado para {item.protocol}
+                        </label>
+                        <select
+                          id={`advogado-${item.id}`}
+                          name="lawyerId"
+                          className="rounded border border-line px-2 py-1 text-xs"
+                        >
+                          {lawyers.map((lawyer) => (
+                            <option value={lawyer.user_id} key={lawyer.user_id}>
+                              {lawyer.user_id}
+                            </option>
+                          ))}
+                        </select>
+                        <button className="whitespace-nowrap rounded bg-navy px-2.5 py-1 text-xs font-semibold text-white">
+                          Atribuir
+                        </button>
+                      </form>
+                    </td>
+                  )}
+                  <td className="whitespace-nowrap px-4 py-3 text-right">
+                    <Link href={`/equipe/${item.id}`} className="font-semibold text-navy hover:underline">
+                      Abrir
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       {cases.length === 0 && <p className="mt-6">Nenhum caso disponível.</p>}
       {totalPaginas > 1 && (
         <nav className="mt-6 flex items-center justify-between" aria-label="Paginação">
