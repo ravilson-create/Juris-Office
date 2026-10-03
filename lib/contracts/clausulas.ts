@@ -1,7 +1,14 @@
-import type { ContractContent, FeeType } from "@/domain/contract/schema";
+import { contractContentSchema, type ContractContent, type FeeType } from "@/domain/contract/schema";
 import { formatCents } from "@/domain/triage/money";
 
 export type ClausulaContrato = { chave: string; titulo: string; corpo: string };
+
+/** Contratos criados antes desta funcionalidade têm `content = {}` (DEFAULT da coluna, migração
+ * 0024) — sem isso, formatCpf etc. quebrariam num campo ausente. Checa antes de tentar gerar o
+ * texto das cláusulas ou renderizar o documento. */
+export function temClausulasCompletas(content: unknown): content is ContractContent {
+  return contractContentSchema.safeParse(content).success;
+}
 
 function formatCpf(digitos: string): string {
   return `${digitos.slice(0, 3)}.${digitos.slice(3, 6)}.${digitos.slice(6, 9)}-${digitos.slice(9)}`;

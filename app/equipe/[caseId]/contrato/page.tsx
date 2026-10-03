@@ -5,6 +5,7 @@ import { Alert } from "@/components/ui/alert";
 import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
 import { PrintButton } from "@/components/dossier/print-button";
 import { ContractDocument } from "@/components/contract/contract-document";
+import { temClausulasCompletas } from "@/lib/contracts/clausulas";
 import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
 import { getCaseService } from "@/lib/services";
@@ -83,10 +84,7 @@ function ContratoCard({
         {contrato.success_percentage && ` · Êxito: ${contrato.success_percentage}%`}
       </p>
 
-      <details className="mt-3" open={contrato.status !== "draft"}>
-        <summary className="cursor-pointer text-sm font-medium text-navy">
-          Ver o contrato completo
-        </summary>
+      {temClausulasCompletas(contrato.content) ? (
         <div className="mt-3">
           <ContractDocument
             content={contrato.content}
@@ -102,7 +100,13 @@ function ContratoCard({
             </div>
           )}
         </div>
-      </details>
+      ) : (
+        <p className="mt-3 text-sm text-muted">
+          Este contrato foi criado antes das cláusulas completas existirem nesta versão — sem
+          qualificação das partes para gerar o texto. Cancele e crie um novo para ter o contrato
+          completo.
+        </p>
+      )}
 
       {contrato.status === "draft" && (
         <form action={assinarEEnviarContratoAction} className="mt-3 rounded border border-line p-3">

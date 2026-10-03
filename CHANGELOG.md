@@ -4,24 +4,29 @@
 
 ### Adicionado
 
-- **Contrato com cláusulas completas, assinado pelos dois lados, e aba de assinaturas do
-  administrador do aplicativo**: o contrato deixa de ser só tipo/valor de honorário e passa a
-  gerar o texto de um contrato de prestação de serviços advocatícios comum — qualificação
-  completa das partes (nome, CPF, OAB, escritório, endereços), objeto, honorários, forma de
-  pagamento, obrigações recíprocas, prazo, rescisão, confidencialidade/LGPD e foro de eleição
-  (`lib/contracts/clausulas.ts`, retrato gravado em `contracts.content` na criação — mudanças
-  futuras no cadastro não alteram um contrato já redigido). O advogado agora também assina: ao
-  enviar o contrato ao cliente (rascunho → enviado), ele confirma e assina como responsável pelo
-  CONTRATADO, com a própria conta autenticada como prova (`assinarContratoAdvogado`, migração
-  0024) — antes essa transição era só uma troca de status, sem nenhum registro de que o advogado
-  responsável a fez. Do lado do cliente, a assinatura deixa de ser um único clique: agora exige
-  redigitar o CPF usado na identificação do atendimento (nunca pré-preenchido), conferido contra o
-  CPF cadastrado no caso antes de gravar a assinatura — um segundo dado de confirmação, além do
-  clique, do IP e do instante, como prova mais real de quem assinou. Por fim, uma aba nova,
-  "Assinaturas (app)", visível só para quem está logado com o e-mail configurado como
-  administrador do aplicativo (`JURIS_ADMIN_EMAIL` — dono da plataforma, não admin de um
-  escritório), lista toda assinatura de todo contrato já efetivado, de todos os escritórios,
-  propositalmente fora do isolamento por escritório que vale para o resto da área profissional.
+- **Contrato com cláusulas completas, assinado pelos dois lados**: o contrato deixa de ser só
+  tipo/valor de honorário e passa a gerar o texto de um contrato de prestação de serviços
+  advocatícios comum — qualificação completa das partes (nome, CPF, OAB, escritório, endereços),
+  objeto, honorários, forma de pagamento, obrigações recíprocas, prazo, rescisão,
+  confidencialidade/LGPD e foro de eleição (`lib/contracts/clausulas.ts`, retrato gravado em
+  `contracts.content` na criação — mudanças futuras no cadastro não alteram um contrato já
+  redigido). O advogado agora também assina: ao enviar o contrato ao cliente (rascunho →
+  enviado), ele confirma e assina como responsável pelo CONTRATADO, com a própria conta
+  autenticada como prova (`assinarContratoAdvogado`, migração 0024) — antes essa transição era só
+  uma troca de status, sem nenhum registro de que o advogado responsável a fez. Do lado do
+  cliente, a assinatura deixa de ser um único clique: agora exige redigitar o CPF usado na
+  identificação do atendimento (nunca pré-preenchido), conferido contra o CPF cadastrado no caso
+  antes de gravar a assinatura — um segundo dado de confirmação, além do clique, do IP e do
+  instante, como prova mais real de quem assinou.
+- **Aba "Assinaturas de advogados" do administrador do aplicativo** (`/equipe/assinaturas`,
+  visível só para quem está logado com o e-mail configurado em `JURIS_ADMIN_EMAIL` — dono da
+  plataforma, não admin de um escritório): lista a mensalidade (Asaas) de cada advogado
+  cadastrado — teste grátis, ativa, em atraso ou cancelada, com e-mail, escritório, plano e link
+  da fatura —, de todos os escritórios da plataforma, propositalmente fora do isolamento por
+  escritório que vale para o resto da área profissional (`listarAssinaturasAdvogados`,
+  `lib/services/equipe-assinaturas.ts`). O status reflete o que o webhook da Asaas
+  (`app/api/webhooks/asaas`) grava a partir dos eventos de pagamento — continua exigindo
+  configurar esse webhook no painel da Asaas para um cadastro novo aparecer como "Ativa" de fato.
 - **Consulta de atendimento por protocolo + CPF** (`/atendimento/meus`): além da lista de
   atendimentos deste navegador (mantida como estava), uma seção nova deixa consultar qualquer
   atendimento de outro aparelho ou navegador informando o protocolo e o CPF usado na
@@ -152,6 +157,13 @@
   Compiler) sinalizou duas referências de `flush` a si mesma antes de `useCallback` terminar de
   declará-la (recursão e reagendamentos de retentativa). Substituído por um loop e por uma ref
   (`flushRef`) sempre atualizada — mesmo comportamento, sem a referência circular.
+- **Contrato: cláusulas completas não apareciam** (`/equipe/[caseId]/contrato`): o documento
+  completo das cláusulas ficava escondido atrás de um `<details>` recolhido por padrão enquanto o
+  contrato estava em rascunho — exatamente a situação logo após criar um contrato novo, quando o
+  advogado mais precisa ver o texto antes de assinar e enviar. Só a linha-resumo (tipo de
+  honorário e percentual) ficava visível. O documento agora aparece sempre, sem recolher. Também
+  passou a tratar com segurança um contrato criado antes desta função existir (campo `content`
+  vazio, `temClausulasCompletas()`) — mostra um aviso em vez de quebrar a página.
 
 ## Sprint 4.1 + persistência em PostgreSQL (Neon) — 2026-09-28
 
