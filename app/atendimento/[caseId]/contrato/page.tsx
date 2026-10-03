@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
 import { PrintButton } from "@/components/dossier/print-button";
 import { ContractDocument } from "@/components/contract/contract-document";
+import { temClausulasCompletas } from "@/lib/contracts/clausulas";
 import { formatCents } from "@/domain/triage/money";
 import { loadCaseOr404 } from "@/lib/services/load-case";
 import { getDb } from "@/lib/db/connection";
@@ -55,16 +56,18 @@ function ContratoCard({
         {contrato.success_percentage && ` · Êxito: ${contrato.success_percentage}%`}
       </p>
 
-      <div className="mt-4">
-        <ContractDocument
-          content={contrato.content}
-          feeType={contrato.fee_type}
-          feeValueCents={Number(contrato.fee_value_cents)}
-          successPercentage={contrato.success_percentage ? Number(contrato.success_percentage) : null}
-          lawyerSignature={lawyerSignedAt ? { signedAt: lawyerSignedAt } : null}
-          clientSignature={clientSignedAt ? { signedAt: clientSignedAt } : null}
-        />
-      </div>
+      {temClausulasCompletas(contrato.content) && (
+        <div className="mt-4">
+          <ContractDocument
+            content={contrato.content}
+            feeType={contrato.fee_type}
+            feeValueCents={Number(contrato.fee_value_cents)}
+            successPercentage={contrato.success_percentage ? Number(contrato.success_percentage) : null}
+            lawyerSignature={lawyerSignedAt ? { signedAt: lawyerSignedAt } : null}
+            clientSignature={clientSignedAt ? { signedAt: clientSignedAt } : null}
+          />
+        </div>
+      )}
 
       {contrato.status === "signed" ? (
         <div className="mt-4 print:hidden">

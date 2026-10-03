@@ -8,13 +8,9 @@ import type { ContractContent } from "@/domain/contract/schema";
 
 vi.mock("server-only", () => ({}));
 
-const {
-  assinarContrato,
-  assinarContratoAdvogado,
-  criarContrato,
-  listarAssinaturasAtivas,
-  listarContratos,
-} = await import("@/lib/services/equipe-contratos");
+const { assinarContrato, assinarContratoAdvogado, criarContrato, listarContratos } = await import(
+  "@/lib/services/equipe-contratos"
+);
 
 async function migrar(db: PGlite) {
   const dir = join(process.cwd(), "db/migrations");
@@ -141,38 +137,25 @@ describe("cláusulas do contrato + assinatura do advogado + aba de assinaturas d
     }
   });
 
-  it("criarContrato grava as cláusulas; assinarContratoAdvogado e assinarContrato movem o status e deixam a trilha; listarAssinaturasAtivas traz as duas, de qualquer escritório", async () => {
+  it("criarContrato grava as cláusulas; assinarContratoAdvogado e assinarContrato movem o status e deixam a trilha de cada papel", async () => {
     const db = await (async () => {
       const p = new PGlite();
       await migrar(p);
       return p;
     })();
     try {
-      const officeA = "00000000-0000-4000-8000-000000000001";
-      const officeB = crypto.randomUUID();
+      const office = "00000000-0000-4000-8000-000000000001";
       const caseA = crypto.randomUUID();
-      const caseB = crypto.randomUUID();
 
-      await db.query("INSERT INTO offices(id, name) VALUES ($1, 'Escritório B')", [officeB]);
       await db.query(
         `INSERT INTO legal_cases(id, protocol, legal_area_id, citizen_id, office_id,
          status, submitted_at, created_at, updated_at) VALUES ($1, 'JO-GLOBAL-A', $2, 'citizen', $3,
          'in_negotiation', now(), now(), now())`,
-        [caseA, crypto.randomUUID(), officeA],
-      );
-      await db.query(
-        `INSERT INTO legal_cases(id, protocol, legal_area_id, citizen_id, office_id,
-         status, submitted_at, created_at, updated_at) VALUES ($1, 'JO-GLOBAL-B', $2, 'citizen_b', $3,
-         'in_negotiation', now(), now(), now())`,
-        [caseB, crypto.randomUUID(), officeB],
+        [caseA, crypto.randomUUID(), office],
       );
       await db.query(
         `INSERT INTO profiles(user_id, role, office_id) VALUES ('lawyer_a', 'lawyer', $1)`,
-        [officeA],
-      );
-      await db.query(
-        `INSERT INTO profiles(user_id, role, office_id) VALUES ('lawyer_b', 'lawyer', $1)`,
-        [officeB],
+        [office],
       );
 
       const db2 = wrap(db);
@@ -207,45 +190,8 @@ describe("cláusulas do contrato + assinatura do advogado + aba de assinaturas d
         ip: "203.0.113.6",
         userAgent: "vitest",
       });
-
-      await criarContrato(db2, {
-        caseId: caseB,
-        feeType: "success",
-        feeValueCents: 0,
-        successPercentage: 20,
-        createdBy: "lawyer_b",
-        content: { ...CONTEUDO, oabUf: "SP", forumUf: "SP" },
-      });
-      const [contratoB] = await listarContratos(db2, caseB);
-      await assinarContratoAdvogado(db2, {
-        contractId: contratoB!.id,
-        statusAtual: "draft",
-        lawyerId: "lawyer_b",
-        ip: "203.0.113.7",
-        userAgent: "vitest",
-      });
-      await assinarContrato(db2, {
-        contractId: contratoB!.id,
-        statusAtual: "sent",
-        signedBy: "citizen_b",
-        signedByHash: null,
-        signerCpf: CONTEUDO.clientCpf,
-        ip: "203.0.113.8",
-        userAgent: "vitest",
-      });
-
-      // listarAssinaturasAtivas simula o db sem RLS (getMaintenanceDb no chamador real): vê os
-      // dois escritórios, as duas assinaturas de cada contrato (advogado + cliente).
-      const assinaturas = await listarAssinaturasAtivas(db2);
-      expect(assinaturas).toHaveLength(4);
-      expect(assinaturas.filter((a) => a.protocol === "JO-GLOBAL-A")).toHaveLength(2);
-      expect(assinaturas.filter((a) => a.protocol === "JO-GLOBAL-B")).toHaveLength(2);
-      expect(
-        assinaturas.find((a) => a.protocol === "JO-GLOBAL-A" && a.signer_role === "lawyer"),
-      ).toBeTruthy();
-      expect(
-        assinaturas.find((a) => a.protocol === "JO-GLOBAL-A" && a.signer_role === "client")?.signer_cpf,
-      ).toBe(CONTEUDO.clientCpf);
+      const [assinado] = await listarContratos(db2, caseA);
+      expect(assinado!.status).toBe("signed");
     } finally {
       await db.close();
     }

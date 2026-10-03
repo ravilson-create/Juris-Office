@@ -16,7 +16,7 @@ const NAV_BASE: ItemNav[] = [
 ];
 
 const NAV_ADMIN: ItemNav[] = [{ href: "/equipe/time", label: "Equipe" }];
-const NAV_APP_OWNER: ItemNav[] = [{ href: "/equipe/assinaturas", label: "Assinaturas (app)" }];
+const NAV_APP_OWNER: ItemNav[] = [{ href: "/equipe/assinaturas", label: "Assinaturas de advogados" }];
 
 function iniciais(email: string): string {
   const nome = email.split("@")[0] ?? email;

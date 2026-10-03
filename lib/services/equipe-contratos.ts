@@ -21,24 +21,6 @@ export type ContratoRow = {
   updated_at: string;
 };
 
-/** Linha da aba "Assinaturas" do administrador do aplicativo — toda a plataforma, não só o
- * escritório do ator (ver listarAssinaturasAtivas). */
-export type AssinaturaAtivaRow = {
-  id: string;
-  contract_id: string;
-  signer_role: "lawyer" | "client";
-  signed_by: string | null;
-  signed_by_hash: string | null;
-  signer_cpf: string | null;
-  signed_at: string;
-  case_id: string;
-  protocol: string;
-  title: string | null;
-  office_name: string | null;
-  fee_type: FeeType;
-  fee_value_cents: string;
-};
-
 export type ParcelaRow = {
   id: string;
   contract_id: string;
@@ -336,26 +318,6 @@ export async function assinarContratoAdvogado(
       params.contractId,
     ]);
   });
-}
-
-/**
- * Aba "Assinaturas" do administrador do aplicativo (lib/auth/bootstrap-admin.ts#isAppOwner) —
- * todos os escritórios da plataforma, não só o do ator, por isso recebe um `db` sem RLS
- * (getMaintenanceDb() no chamador) em vez do `db` comum das outras funções deste arquivo.
- */
-export async function listarAssinaturasAtivas(db: Db): Promise<AssinaturaAtivaRow[]> {
-  return db.query<AssinaturaAtivaRow>(
-    `SELECT cs.id, cs.contract_id, cs.signer_role, cs.signed_by, cs.signed_by_hash, cs.signer_cpf,
-            cs.signed_at, c.case_id, c.fee_type, c.fee_value_cents, lc.protocol, lc.title,
-            o.name AS office_name
-     FROM contract_signatures cs
-     JOIN contracts c ON c.id = cs.contract_id
-     JOIN legal_cases lc ON lc.id = c.case_id
-     LEFT JOIN profiles p ON p.user_id = c.created_by
-     LEFT JOIN offices o ON o.id = p.office_id
-     WHERE c.status = 'signed'
-     ORDER BY cs.signed_at DESC`,
-  );
 }
 
 /** Job de manutenção (cron), mesmo padrão de escalonarPrazosVencidos: roda fora da RLS. */
