@@ -16,6 +16,7 @@ const NAV_BASE: ItemNav[] = [
 ];
 
 const NAV_ADMIN: ItemNav[] = [{ href: "/equipe/time", label: "Equipe" }];
+const NAV_APP_OWNER: ItemNav[] = [{ href: "/equipe/assinaturas", label: "Assinaturas (app)" }];
 
 function iniciais(email: string): string {
   const nome = email.split("@")[0] ?? email;
@@ -35,15 +36,23 @@ export function EquipeShell({
   email,
   role,
   officeName,
+  isAppOwner = false,
   children,
 }: {
   email: string;
   role: "lawyer" | "admin";
   officeName: string;
+  /** Administrador do aplicativo (dono da plataforma) — item de navegação à parte do admin de
+   * escritório, só para quem bate o e-mail configurado (ver lib/auth/bootstrap-admin.ts). */
+  isAppOwner?: boolean;
   children: ReactNode;
 }) {
   const pathname = usePathname();
-  const nav = role === "admin" ? [...NAV_BASE, ...NAV_ADMIN] : NAV_BASE;
+  const nav = [
+    ...NAV_BASE,
+    ...(role === "admin" ? NAV_ADMIN : []),
+    ...(isAppOwner ? NAV_APP_OWNER : []),
+  ];
 
   return (
     <div className="flex min-h-dvh w-full">

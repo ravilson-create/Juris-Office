@@ -4,6 +4,24 @@
 
 ### Adicionado
 
+- **Contrato com cláusulas completas, assinado pelos dois lados, e aba de assinaturas do
+  administrador do aplicativo**: o contrato deixa de ser só tipo/valor de honorário e passa a
+  gerar o texto de um contrato de prestação de serviços advocatícios comum — qualificação
+  completa das partes (nome, CPF, OAB, escritório, endereços), objeto, honorários, forma de
+  pagamento, obrigações recíprocas, prazo, rescisão, confidencialidade/LGPD e foro de eleição
+  (`lib/contracts/clausulas.ts`, retrato gravado em `contracts.content` na criação — mudanças
+  futuras no cadastro não alteram um contrato já redigido). O advogado agora também assina: ao
+  enviar o contrato ao cliente (rascunho → enviado), ele confirma e assina como responsável pelo
+  CONTRATADO, com a própria conta autenticada como prova (`assinarContratoAdvogado`, migração
+  0024) — antes essa transição era só uma troca de status, sem nenhum registro de que o advogado
+  responsável a fez. Do lado do cliente, a assinatura deixa de ser um único clique: agora exige
+  redigitar o CPF usado na identificação do atendimento (nunca pré-preenchido), conferido contra o
+  CPF cadastrado no caso antes de gravar a assinatura — um segundo dado de confirmação, além do
+  clique, do IP e do instante, como prova mais real de quem assinou. Por fim, uma aba nova,
+  "Assinaturas (app)", visível só para quem está logado com o e-mail configurado como
+  administrador do aplicativo (`JURIS_ADMIN_EMAIL` — dono da plataforma, não admin de um
+  escritório), lista toda assinatura de todo contrato já efetivado, de todos os escritórios,
+  propositalmente fora do isolamento por escritório que vale para o resto da área profissional.
 - **Cliente pode escolher o advogado no fim do atendimento (PR 2 de 2)**: nova etapa "Advogado",
   oferecida na revisão como opção — nunca obrigatória, para não travar quem usa uma instalação
   sem banco ou uma área sem nenhum advogado cadastrado ainda. Lista os advogados da área do caso

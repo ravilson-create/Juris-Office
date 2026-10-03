@@ -3,17 +3,26 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { randomUUID } from "node:crypto";
+import { headers } from "next/headers";
 import { z } from "zod";
 import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
+import { clientIp } from "@/lib/http/client-ip";
 import { cpfCnpjValido, somenteDigitos } from "@/lib/billing/validacao";
 import { calcularDataFinal, deadlineCountingRuleSchema } from "@/domain/deadline/schema";
 import { concluirPrazo, criarPrazo } from "@/lib/services/equipe-prazos";
 import type { CaseStatus } from "@/domain/case/schema";
-import { feeTypeSchema, contractStatusSchema } from "@/domain/contract/schema";
+import { BRAZIL_UFS } from "@/domain/case/schema";
+import {
+  contractContentSchema,
+  feeTypeSchema,
+  contractStatusSchema,
+  type ContractContent,
+} from "@/domain/contract/schema";
 import { parseMoney } from "@/domain/triage/money";
 import {
   adicionarParcela,
+  assinarContratoAdvogado,
   atualizarStatusContrato,
   buscarContrato,
   criarContrato,
@@ -170,22 +179,92 @@ export async function criarContratoAction(form: FormData) {
     }
     successPercentage = pct;
   }
-  await criarContrato(getDb(), {
+
+  // Qualificação completa para as cláusulas do contrato (lib/contracts/clausulas.ts). Só o que
+  // não existe em nenhum cadastro hoje vem do formulário (nome/CPF pessoal do advogado,
+  // endereços, objeto, foro) — OAB, escritório e dados do cliente vêm do banco, nunca do
+  // formulário, para um advogado não poder qualificar outra OAB ou outro cliente.
+  const lawyerCpfDigitos = somenteDigitos(String(form.get("advogadoCpf") ?? ""));
+  const camposFormulario = z
+    .object({
+      lawyerFullName: z.string().trim().min(3).max(160),
+      officeAddress: z.string().trim().min(5).max(300),
+      clientAddress: z.string().trim().min(5).max(300),
+      object: z.string().trim().min(10).max(2000),
+      forumCity: z.string().trim().min(2).max(80),
+      forumUf: z.enum(BRAZIL_UFS),
+    })
+    .safeParse({
+      lawyerFullName: form.get("advogadoNome"),
+      officeAddress: form.get("enderecoEscritorio"),
+      clientAddress: form.get("enderecoCliente"),
+      object: form.get("objetoContrato"),
+      forumCity: form.get("foroCidade"),
+      forumUf: form.get("foroUf"),
+    });
+  if (!camposFormulario.success || !cpfCnpjValido(lawyerCpfDigitos)) {
+    redirect(`/equipe/${caseId.data}/contrato?erro=contrato_qualificacao`);
+  }
+
+  const db = getDb();
+  const perfilRows = await db.query<{
+    oab_numero: string | null;
+    oab_uf: string | null;
+    office_id: string | null;
+  }>("SELECT oab_numero, oab_uf, office_id FROM profiles WHERE user_id = $1", [actor]);
+  const perfil = perfilRows[0];
+  if (!perfil?.oab_numero || !perfil.oab_uf || !perfil.office_id) {
+    redirect(`/equipe/${caseId.data}/contrato?erro=contrato_qualificacao`);
+  }
+  const escritorioRows = await db.query<{ name: string; cpf_cnpj: string | null }>(
+    "SELECT name, cpf_cnpj FROM offices WHERE id = $1",
+    [perfil.office_id],
+  );
+  const ctx = await getCaseService().getTriageContext(caseId.data);
+  if (!ctx?.legalCase.applicant) redirect(`/equipe/${caseId.data}/contrato?erro=contrato_qualificacao`);
+
+  const conteudo: ContractContent = {
+    lawyerFullName: camposFormulario.data.lawyerFullName,
+    lawyerCpf: lawyerCpfDigitos,
+    oabNumero: perfil.oab_numero,
+    oabUf: perfil.oab_uf as ContractContent["oabUf"],
+    officeName: escritorioRows[0]?.name ?? "",
+    officeCpfCnpj: escritorioRows[0]?.cpf_cnpj ?? "",
+    officeAddress: camposFormulario.data.officeAddress,
+    clientFullName: ctx.legalCase.applicant.fullName,
+    clientCpf: ctx.legalCase.applicant.cpf,
+    clientAddress: camposFormulario.data.clientAddress,
+    object: camposFormulario.data.object,
+    forumCity: camposFormulario.data.forumCity,
+    forumUf: camposFormulario.data.forumUf,
+  };
+  const conteudoValidado = contractContentSchema.safeParse(conteudo);
+  if (!conteudoValidado.success) {
+    redirect(`/equipe/${caseId.data}/contrato?erro=contrato_qualificacao`);
+  }
+
+  await criarContrato(db, {
     caseId: caseId.data,
     feeType: feeType.data,
     feeValueCents: feeValue.cents,
     successPercentage,
     createdBy: actor,
+    content: conteudoValidado.data,
   });
   revalidatePath(`/equipe/${caseId.data}/contrato`);
 }
 
+/** Só 'cancelled' passa por aqui agora — ir para 'sent' exige a assinatura do advogado
+ * (assinarEEnviarContratoAction), nunca mais uma troca de status direta. */
 export async function mudarStatusContratoAction(form: FormData) {
   const caseId = z.uuid().safeParse(form.get("caseId"));
   const contractId = z.uuid().safeParse(form.get("contractId"));
   const proximoStatus = contractStatusSchema.safeParse(form.get("proximoStatus"));
   const actor = await currentUserId();
   if (!actor || !caseId.success || !contractId.success || !proximoStatus.success) return;
+  if (proximoStatus.data === "sent") {
+    redirect(`/equipe/${caseId.data}/contrato?erro=contrato_assinatura_necessaria`);
+  }
   const db = getDb();
   const atual = await db.query<{ status: "draft" | "sent" | "signed" | "cancelled" }>(
     "SELECT status FROM contracts WHERE id = $1",
@@ -196,6 +275,39 @@ export async function mudarStatusContratoAction(form: FormData) {
   // assertContractTransition (dentro do serviço) garante que a transição pedida é válida.
   try {
     await atualizarStatusContrato(db, contractId.data, atual[0].status, proximoStatus.data);
+  } catch {
+    redirect(`/equipe/${caseId.data}/contrato?erro=contrato_transicao`);
+  }
+  revalidatePath(`/equipe/${caseId.data}/contrato`);
+}
+
+/** O advogado assina como responsável (CONTRATADO) ao enviar o contrato ao cliente — a conta
+ * autenticada já é a prova de quem assinou (ver assinarContratoAdvogado). */
+export async function assinarEEnviarContratoAction(form: FormData) {
+  const caseId = z.uuid().safeParse(form.get("caseId"));
+  const contractId = z.uuid().safeParse(form.get("contractId"));
+  const confirmou = form.get("confirmaAssinatura") === "on";
+  const actor = await currentUserId();
+  if (!actor || !caseId.success || !contractId.success) return;
+  if (!confirmou) redirect(`/equipe/${caseId.data}/contrato?erro=contrato_confirmacao`);
+
+  const ip = await clientIp();
+  if (!(await checkRateLimit(`assinar-contrato-advogado:${ip}`, 20, 3600))) {
+    redirect(`/equipe/${caseId.data}/contrato?erro=limite`);
+  }
+
+  const db = getDb();
+  const contrato = await buscarContrato(db, contractId.data);
+  if (!contrato || contrato.case_id !== caseId.data) return;
+  const userAgent = (await headers()).get("user-agent") ?? "desconhecido";
+  try {
+    await assinarContratoAdvogado(db, {
+      contractId: contractId.data,
+      statusAtual: contrato.status,
+      lawyerId: actor,
+      ip,
+      userAgent,
+    });
   } catch {
     redirect(`/equipe/${caseId.data}/contrato?erro=contrato_transicao`);
   }
