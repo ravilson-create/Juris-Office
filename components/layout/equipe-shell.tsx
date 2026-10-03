@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { signOut } from "@/app/auth/actions";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { APP_NAME } from "@/lib/config";
 
 type ItemNav = { href: string; label: string };
@@ -49,11 +50,8 @@ export function EquipeShell({
   return (
     <div className="flex min-h-dvh w-full">
       <aside className="flex w-60 shrink-0 flex-col gap-6 border-r border-line bg-surface p-4 print:hidden">
-        <Link href="/equipe" className="flex items-center gap-2.5 px-1.5 no-underline">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-navy text-base font-extrabold text-white">
-            J
-          </span>
-          <span className="text-[17px] font-extrabold text-ink">{APP_NAME.replace(" IA", "")}</span>
+        <Link href="/equipe" className="px-1.5 no-underline" aria-label={`${APP_NAME} — Fila`}>
+          <BrandLogo size="sm" />
         </Link>
         <nav aria-label="Área profissional" className="flex flex-col gap-0.5">
           {nav.map((item) => {
