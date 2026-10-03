@@ -10,14 +10,11 @@ import { APP_NAME } from "@/lib/config";
 type ItemNav = { href: string; label: string };
 
 const NAV_BASE: ItemNav[] = [
-  { href: "/equipe", label: "Fila" },
+  { href: "/equipe", label: "Atendimento" },
   { href: "/equipe/consultas", label: "Consultas externas" },
 ];
 
-const NAV_ADMIN: ItemNav[] = [
-  { href: "/equipe/time", label: "Equipe" },
-  { href: "/equipe/auditoria", label: "Auditoria" },
-];
+const NAV_ADMIN: ItemNav[] = [{ href: "/equipe/time", label: "Equipe" }];
 
 function iniciais(email: string): string {
   const nome = email.split("@")[0] ?? email;

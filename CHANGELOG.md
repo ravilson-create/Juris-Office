@@ -63,6 +63,20 @@
   e para advogado/admin com acesso; a fila da área profissional ganhou um filtro "Mostrar
   arquivados" para encontrá-los de novo.
 
+### Alterado
+
+- **Área profissional (`/equipe`), simplificada**: a aba lateral "Fila" passou a se chamar
+  "Atendimento" (o título da página continua "Área profissional", que fica acima dela). Removida
+  a aba/página "Auditoria" — cada processo já guarda seu próprio registro de ação (assinatura de
+  contrato, assinatura de petição), então uma trilha consolidada à parte deixou de ser necessária;
+  a função que só ela usava (`listarAuditoria`) foi removida junto, mas `registrarLeituraCaso`
+  continua (a trilha por processo, embutida na página do caso). Os botões "Verificação em duas
+  etapas" e "Gestão de equipe" saíram do topo da fila — o segundo já estava na barra lateral
+  ("Equipe"); "Consultas externas" também saiu do topo e passou a só existir na lateral, onde já
+  estava. O painel de números abaixo do título mostra agora só quatro cartões, sempre com a
+  contagem (mesmo zero): Total, Em análise, Aguardando informações e Causa aceita — as demais
+  famílias de status continuam filtráveis pela busca, só não têm mais cartão dedicado.
+
 ### Corrigido
 
 - **Páginas públicas (`/`, "como funciona", privacidade) ficariam com todo script bloqueado** ao
