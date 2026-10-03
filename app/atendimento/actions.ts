@@ -308,6 +308,14 @@ export async function assinarContratoAction(formData: FormData): Promise<void> {
   if (!(await authorized(caseId))) redirect("/atendimento");
   if (!idSchema.safeParse(contractId).success) redirect(`${destino}?erro=contrato_invalido`);
 
+  // Segundo dado de confirmação além do clique: o CPF é redigitado aqui, nunca pré-preenchido
+  // pela tela, e conferido abaixo contra o CPF do interessado neste caso.
+  const concordou = formData.get("concordouTermos") === "on";
+  const cpfDigitado = somenteDigitos(String(formData.get("cpfConfirmacao") ?? ""));
+  if (!concordou || cpfDigitado.length !== 11) {
+    redirect(`${destino}?erro=contrato_confirmacao`);
+  }
+
   const ip = await clientIp();
   if (!(await checkRateLimit(`assinar-contrato:${ip}`, 10, 3600))) {
     redirect(`${destino}?erro=limite`);
@@ -316,6 +324,11 @@ export async function assinarContratoAction(formData: FormData): Promise<void> {
   const db = getDb();
   const contrato = await buscarContrato(db, contractId);
   if (!contrato || contrato.case_id !== caseId) redirect(`${destino}?erro=contrato_invalido`);
+
+  const overview = await getCaseService().getOverview(caseId);
+  if (overview?.legalCase.applicant?.cpf !== cpfDigitado) {
+    redirect(`${destino}?erro=contrato_cpf`);
+  }
 
   const userId = await currentUserId();
   const anonHash = userId ? null : await currentAnonHash();
@@ -327,6 +340,7 @@ export async function assinarContratoAction(formData: FormData): Promise<void> {
       statusAtual: contrato.status,
       signedBy: userId,
       signedByHash: anonHash,
+      signerCpf: cpfDigitado,
       ip,
       userAgent,
     });

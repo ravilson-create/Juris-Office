@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { EquipeShell } from "@/components/layout/equipe-shell";
 import { currentIdentity } from "@/lib/auth/session";
+import { isAppOwner } from "@/lib/auth/bootstrap-admin";
 import { aceitarConvitePendente } from "@/lib/auth/aceitar-convite";
 import { getDb, hasDatabase } from "@/lib/db/connection";
 import { mfaVerificadoNesteNavegador } from "@/lib/auth/mfa-cookie";
@@ -51,6 +52,7 @@ export default async function EquipeLayout({ children }: { children: ReactNode }
       email={identity.email}
       role={profile.role as "lawyer" | "admin"}
       officeName={profile.office_name ?? ""}
+      isAppOwner={isAppOwner(identity)}
     >
       {children}
     </EquipeShell>

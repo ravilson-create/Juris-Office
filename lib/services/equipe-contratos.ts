@@ -3,7 +3,7 @@ import { createHash, randomUUID } from "node:crypto";
 import type { Db } from "@/lib/db/types";
 import type { CaseStatus } from "@/domain/case/schema";
 import { assertTransition } from "@/domain/case/status";
-import type { CaseViability, FeeType } from "@/domain/contract/schema";
+import type { CaseViability, ContractContent, FeeType } from "@/domain/contract/schema";
 import { statusCasoParaDecisao } from "@/domain/contract/schema";
 import { assertContractTransition } from "@/domain/contract/status";
 import type { ContractStatus } from "@/domain/contract/schema";
@@ -15,9 +15,28 @@ export type ContratoRow = {
   fee_value_cents: string;
   success_percentage: string | null;
   status: ContractStatus;
+  content: ContractContent;
   signed_at: string | null;
   created_at: string;
   updated_at: string;
+};
+
+/** Linha da aba "Assinaturas" do administrador do aplicativo — toda a plataforma, não só o
+ * escritório do ator (ver listarAssinaturasAtivas). */
+export type AssinaturaAtivaRow = {
+  id: string;
+  contract_id: string;
+  signer_role: "lawyer" | "client";
+  signed_by: string | null;
+  signed_by_hash: string | null;
+  signer_cpf: string | null;
+  signed_at: string;
+  case_id: string;
+  protocol: string;
+  title: string | null;
+  office_name: string | null;
+  fee_type: FeeType;
+  fee_value_cents: string;
 };
 
 export type ParcelaRow = {
@@ -140,11 +159,12 @@ export async function criarContrato(
     feeValueCents: number;
     successPercentage: number | null;
     createdBy: string;
+    content: ContractContent;
   },
 ): Promise<void> {
   await db.query(
-    `INSERT INTO contracts(id, case_id, fee_type, fee_value_cents, success_percentage, created_by)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
+    `INSERT INTO contracts(id, case_id, fee_type, fee_value_cents, success_percentage, created_by, content)
+     VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)`,
     [
       randomUUID(),
       params.caseId,
@@ -152,6 +172,7 @@ export async function criarContrato(
       params.feeValueCents,
       params.successPercentage,
       params.createdBy,
+      JSON.stringify(params.content),
     ],
   );
 }
@@ -181,6 +202,20 @@ export async function excluirContrato(
   if (statusAtual !== "draft" && statusAtual !== "cancelled") return false;
   const removed = await db.query("DELETE FROM contracts WHERE id = $1 RETURNING id", [contractId]);
   return removed.length > 0;
+}
+
+export type AssinaturaContrato = { signer_role: "lawyer" | "client"; signed_at: string };
+
+/** Status de assinatura de cada parte (ContractDocument) — no máximo uma linha por papel, já que
+ * um contrato só é assinado uma vez por cada lado (ver signatures_insert/signatures_insert_lawyer). */
+export async function listarAssinaturasPorContrato(
+  db: Db,
+  contractId: string,
+): Promise<AssinaturaContrato[]> {
+  return db.query<AssinaturaContrato>(
+    "SELECT signer_role, signed_at FROM contract_signatures WHERE contract_id = $1",
+    [contractId],
+  );
 }
 
 export async function listarParcelas(db: Db, contractId: string): Promise<ParcelaRow[]> {
@@ -216,6 +251,13 @@ export async function marcarParcelaPaga(db: Db, installmentId: string): Promise<
  * O hash cobre contrato + quem assinou + IP + o instante exato, para que a trilha prove o que foi
  * assinado e quando sem depender só do relógio do servidor no momento da leitura.
  */
+/**
+ * Assinatura do cliente (CONTRATANTE). `signerCpf` é o CPF redigitado no momento da assinatura —
+ * nunca pré-preenchido pela tela — e já conferido pelo chamador contra o CPF do interessado no
+ * caso antes de chegar aqui; essa função só grava o que foi conferido, não refaz a conferência.
+ * Entrar na conta nunca é exigido para assinar (signedByHash cobre a sessão anônima), mas o CPF
+ * substitui o clique único como segundo dado de prova de quem assinou.
+ */
 export async function assinarContrato(
   db: Db,
   params: {
@@ -223,6 +265,7 @@ export async function assinarContrato(
     statusAtual: ContractStatus;
     signedBy: string | null;
     signedByHash: string | null;
+    signerCpf: string;
     ip: string;
     userAgent: string;
   },
@@ -234,6 +277,7 @@ export async function assinarContrato(
       [
         params.contractId,
         params.signedBy ?? params.signedByHash ?? "",
+        params.signerCpf,
         params.ip,
         assinadoEm,
       ].join("|"),
@@ -244,13 +288,14 @@ export async function assinarContrato(
     // ainda está 'sent'. Gravando-a antes de mudar o status, a própria RLS garante que nunca
     // existe um contrato 'signed' sem uma assinatura correspondente.
     await tx.query(
-      `INSERT INTO contract_signatures(id, contract_id, signed_by, signed_by_hash, signed_at, ip, user_agent, signature_hash)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      `INSERT INTO contract_signatures(id, contract_id, signer_role, signed_by, signed_by_hash, signer_cpf, signed_at, ip, user_agent, signature_hash)
+       VALUES ($1, $2, 'client', $3, $4, $5, $6, $7, $8, $9)`,
       [
         randomUUID(),
         params.contractId,
         params.signedBy,
         params.signedByHash,
+        params.signerCpf,
         assinadoEm,
         params.ip,
         params.userAgent,
@@ -262,6 +307,55 @@ export async function assinarContrato(
       [params.contractId, assinadoEm, signatureHash],
     );
   });
+}
+
+/**
+ * Assinatura do advogado (CONTRATADO), ao enviar o contrato ao cliente (draft -> sent) — antes
+ * essa transição era uma troca de status direta, sem nenhum rastro de que o próprio advogado
+ * responsável assinou. A prova aqui é a própria conta autenticada (login), por isso sem CPF
+ * redigitado (diferente da assinatura do cliente, que pode nunca ter entrado numa conta).
+ */
+export async function assinarContratoAdvogado(
+  db: Db,
+  params: { contractId: string; statusAtual: ContractStatus; lawyerId: string; ip: string; userAgent: string },
+): Promise<void> {
+  assertContractTransition(params.statusAtual, "sent");
+  const assinadoEm = new Date().toISOString();
+  const signatureHash = createHash("sha256")
+    .update(["lawyer", params.contractId, params.lawyerId, params.ip, assinadoEm].join("|"))
+    .digest("hex");
+  await db.transaction(async (tx) => {
+    // Mesma ordem da assinatura do cliente: grava a trilha enquanto o contrato ainda está 'draft'
+    // (signatures_insert_lawyer, migração 0024), só então muda o status para 'sent'.
+    await tx.query(
+      `INSERT INTO contract_signatures(id, contract_id, signer_role, signed_by, signed_at, ip, user_agent, signature_hash)
+       VALUES ($1, $2, 'lawyer', $3, $4, $5, $6, $7)`,
+      [randomUUID(), params.contractId, params.lawyerId, assinadoEm, params.ip, params.userAgent, signatureHash],
+    );
+    await tx.query("UPDATE contracts SET status = 'sent', updated_at = now() WHERE id = $1", [
+      params.contractId,
+    ]);
+  });
+}
+
+/**
+ * Aba "Assinaturas" do administrador do aplicativo (lib/auth/bootstrap-admin.ts#isAppOwner) —
+ * todos os escritórios da plataforma, não só o do ator, por isso recebe um `db` sem RLS
+ * (getMaintenanceDb() no chamador) em vez do `db` comum das outras funções deste arquivo.
+ */
+export async function listarAssinaturasAtivas(db: Db): Promise<AssinaturaAtivaRow[]> {
+  return db.query<AssinaturaAtivaRow>(
+    `SELECT cs.id, cs.contract_id, cs.signer_role, cs.signed_by, cs.signed_by_hash, cs.signer_cpf,
+            cs.signed_at, c.case_id, c.fee_type, c.fee_value_cents, lc.protocol, lc.title,
+            o.name AS office_name
+     FROM contract_signatures cs
+     JOIN contracts c ON c.id = cs.contract_id
+     JOIN legal_cases lc ON lc.id = c.case_id
+     LEFT JOIN profiles p ON p.user_id = c.created_by
+     LEFT JOIN offices o ON o.id = p.office_id
+     WHERE c.status = 'signed'
+     ORDER BY cs.signed_at DESC`,
+  );
 }
 
 /** Job de manutenção (cron), mesmo padrão de escalonarPrazosVencidos: roda fora da RLS. */

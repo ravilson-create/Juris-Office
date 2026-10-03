@@ -2,6 +2,19 @@ import "server-only";
 import { getMaintenanceDb } from "@/lib/db/connection";
 import type { currentIdentity } from "./session";
 
+/**
+ * "Administrador do aplicativo" — dono da plataforma, distinto do admin de um escritório
+ * (profiles.role = 'admin', mas escopado por office_id via RLS). É a mesma conta de
+ * JURIS_ADMIN_EMAIL que bootstrapAdmin promove a 'admin' no primeiro login; usado para liberar
+ * visões que deliberadamente ignoram o isolamento por escritório (ex.: /equipe/assinaturas).
+ */
+export function isAppOwner(
+  identity: { email: string; emailVerified: boolean } | null | undefined,
+): boolean {
+  const expected = process.env.JURIS_ADMIN_EMAIL?.trim().toLowerCase();
+  return Boolean(expected && identity?.emailVerified && identity.email.toLowerCase() === expected);
+}
+
 /** Primeira administração: somente a conta com e-mail verificado configurado no servidor. */
 export async function bootstrapAdmin(
   identity: NonNullable<Awaited<ReturnType<typeof currentIdentity>>>,
