@@ -2,7 +2,7 @@ import type { LegalAreaSlug } from "@/domain/legal-area/schema";
 
 /**
  * Registro dos sistemas de consulta externa citados no roteiro do produto
- * (PJe, Escritório Digital, e-DOU, Jusbrasil, Turivius, Jusfy).
+ * (PJe, Escritório Digital, e-DOU, Jusbrasil).
  *
  * Nenhum deles oferece hoje uma API pública aberta para um sistema terceiro consultar em nome do
  * advogado sem contrato comercial ou certificado digital — a única exceção é a API Pública do
@@ -39,20 +39,6 @@ export const SERVICOS_JURISPRUDENCIA: ServicoConsulta[] = [
       area
         ? `https://www.jusbrasil.com.br/jurisprudencia/busca?q=${encodeURIComponent(TERMO_POR_AREA[area])}`
         : "https://www.jusbrasil.com.br/jurisprudencia",
-  },
-  {
-    id: "turivius",
-    nome: "Turivius",
-    descricao: "Plataforma de inteligência jurisprudencial e monitoramento de teses.",
-    motivoSemIntegracao: "Acesso é por contrato comercial, sem API pública.",
-    url: () => "https://www.turivius.com",
-  },
-  {
-    id: "jusfy",
-    nome: "Jusfy",
-    descricao: "Ferramentas de IA para pesquisa jurídica e redação de peças.",
-    motivoSemIntegracao: "Acesso é por contrato comercial, sem API pública.",
-    url: () => "https://jusfy.com.br",
   },
 ];
 

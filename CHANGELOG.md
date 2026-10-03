@@ -4,6 +4,10 @@
 
 ### Adicionado
 
+- **Aba "Contratos" na área profissional** (`/equipe/contratos`): lista todos os contratos gerados
+  a partir dos atendimentos, com protocolo/título do caso, área, tipo e valor do honorário e
+  status, sem precisar abrir caso por caso para achar um contrato específico. A política de RLS
+  de `contracts`/`legal_cases` (já existente) decide o que cada ator enxerga.
 - **Convite de equipe por e-mail** (`/equipe/time`): o advogado que cadastra o escritório agora
   monta o time convidando até 5 pessoas por e-mail, optando entre "advogado" (exige CPF e OAB) e
   "administrativo" (só CPF). O convite fica pendente até a pessoa convidada logar com esse
@@ -76,6 +80,8 @@
   estava. O painel de números abaixo do título mostra agora só quatro cartões, sempre com a
   contagem (mesmo zero): Total, Em análise, Aguardando informações e Causa aceita — as demais
   famílias de status continuam filtráveis pela busca, só não têm mais cartão dedicado.
+- **Consultas externas, sem Turivius e Jusfy**: os dois exigiam contrato comercial próprio (sem
+  API pública) e foram retirados da lista de jurisprudência; Jusbrasil continua.
 
 ### Corrigido
 

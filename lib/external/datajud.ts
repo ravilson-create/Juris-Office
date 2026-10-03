@@ -4,7 +4,7 @@ import { normalizarNumeroProcesso } from "./numero-processo";
 /**
  * Cliente da API Pública do DataJud (CNJ) — único serviço desta lista com acesso
  * programático aberto e documentado para terceiros (ver https://datajud-wiki.cnj.jus.br).
- * Os demais (PJe, Escritório Digital, Jusbrasil, Turivius, Jusfy) exigem certificado digital,
+ * Os demais (PJe, Escritório Digital, Jusbrasil) exigem certificado digital,
  * login da parte ou contrato comercial: ficam só como link, em lib/external/consultas.ts.
  *
  * Cada tribunal tem seu próprio índice, no padrão "api_publica_<sigla em minúsculas>"
