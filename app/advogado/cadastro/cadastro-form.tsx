@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import { subscriptionPlans, formatPlanPrice } from "@/lib/billing/plans";
 import { BRAZIL_UFS } from "@/domain/case/schema";
+import { LEGAL_AREAS } from "@/lib/mocks/legal-areas";
 import { iniciarTesteGratis, type CadastroState } from "./actions";
 
 export function CadastroForm() {
@@ -61,6 +62,38 @@ export function CadastroForm() {
         ela entra como autodeclarada. Um administrador do escritório pode conferir contra o
         cadastro oficial e revogar a qualquer momento se encontrar divergência.
       </p>
+      <div className="flex gap-3">
+        <label className="flex flex-1 flex-col gap-1">
+          Cidade onde atua
+          <input className="rounded border p-3" name="cidade" required minLength={2} maxLength={80} />
+        </label>
+        <label className="flex flex-col gap-1">
+          UF
+          <select name="uf" required defaultValue="" className="rounded border p-3">
+            <option value="" disabled>
+              —
+            </option>
+            {BRAZIL_UFS.map((uf) => (
+              <option key={uf} value={uf}>
+                {uf}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-1 font-medium">Áreas de atuação</legend>
+        <p className="-mt-1 mb-1 text-sm text-muted">
+          Vai decidir em quais buscas você aparece quando o cliente escolher advogado no fim do
+          atendimento.
+        </p>
+        {LEGAL_AREAS.map((area) => (
+          <label key={area.id} className="flex items-center gap-2 rounded border border-line p-3">
+            <input type="checkbox" name="areas" value={area.id} />
+            {area.name}
+          </label>
+        ))}
+      </fieldset>
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 font-medium">Plano</legend>
         {subscriptionPlans.map((plan) => (

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { authEnabled, currentIdentity } from "@/lib/auth/session";
 import { BRAZIL_UFS } from "@/domain/case/schema";
+import { LEGAL_AREAS } from "@/lib/mocks/legal-areas";
 import { getDb, hasDatabase } from "@/lib/db/connection";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { clientIp } from "@/lib/http/client-ip";
@@ -15,6 +16,7 @@ import { criarClienteAsaas, criarAssinaturaAsaas } from "@/lib/billing/asaas";
 export type CadastroState = { error?: string } | null;
 
 const PLANOS_VALIDOS = subscriptionPlans.map((p) => p.id);
+const AREA_IDS_VALIDOS = LEGAL_AREAS.map((a) => a.id);
 const ciclo = (planoId: string) => (planoId === "yearly" ? "YEARLY" : "MONTHLY");
 
 export async function iniciarTesteGratis(
@@ -36,6 +38,9 @@ export async function iniciarTesteGratis(
         .max(20)
         .regex(/^\d+$/, { error: "Número da OAB deve conter só dígitos." }),
       oabUf: z.enum(BRAZIL_UFS),
+      cidade: z.string().trim().min(2).max(80),
+      uf: z.enum(BRAZIL_UFS),
+      areas: z.array(z.enum(AREA_IDS_VALIDOS as [string, ...string[]])).min(1),
       planoId: z.enum(PLANOS_VALIDOS as [string, ...string[]]),
       aceitouTermos: z.literal("on"),
     })
@@ -44,12 +49,17 @@ export async function iniciarTesteGratis(
       cpfCnpj: form.get("cpfCnpj"),
       oabNumero: form.get("oabNumero"),
       oabUf: form.get("oabUf"),
+      cidade: form.get("cidade"),
+      uf: form.get("uf"),
+      areas: form.getAll("areas"),
       planoId: form.get("planoId"),
       aceitouTermos: form.get("aceitouTermos"),
     });
   if (!input.success) {
     return {
-      error: "Preencha o nome do escritório, o CPF/CNPJ, a OAB (número e UF) e aceite os termos.",
+      error:
+        "Preencha o nome do escritório, o CPF/CNPJ, a OAB (número e UF), a cidade/UF de atuação, " +
+        "ao menos uma área de atuação e aceite os termos.",
     };
   }
   const cpfCnpjDigitos = somenteDigitos(input.data.cpfCnpj);
@@ -67,12 +77,15 @@ export async function iniciarTesteGratis(
   const officeId = randomUUID();
   const db = getDb();
   try {
-    await db.query("SELECT start_lawyer_trial($1, $2, $3, $4, $5)", [
+    await db.query("SELECT start_lawyer_trial($1, $2, $3, $4, $5, $6, $7, $8)", [
       officeId,
       input.data.nome.trim(),
       cpfCnpjDigitos,
       input.data.planoId,
       identity.email,
+      input.data.cidade,
+      input.data.uf,
+      input.data.areas,
     ]);
     // set_own_oab (migração 0020) já confirma na hora — autodeclarada, nunca checada por um
     // humano. Um admin do escritório pode revogar depois de olhar o site oficial
