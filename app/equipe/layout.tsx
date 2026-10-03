@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
-import { currentUserId } from "@/lib/auth/session";
+import { EquipeShell } from "@/components/layout/equipe-shell";
+import { currentIdentity } from "@/lib/auth/session";
 import { getDb, hasDatabase } from "@/lib/db/connection";
 import { mfaVerificadoNesteNavegador } from "@/lib/auth/mfa-cookie";
 import { buscarMfa } from "@/lib/services/mfa";
@@ -10,22 +11,37 @@ import { buscarMfa } from "@/lib/services/mfa";
  * continua com sua própria checagem de papel/assinatura/OAB (são requisitos diferentes, com
  * destinos de redirecionamento diferentes), mas o segundo fator — quando a pessoa o ativou — é
  * checado uma vez só, aqui, antes de qualquer uma delas renderizar.
+ *
+ * A casca visual (EquipeShell, barra lateral + topo) só aparece para quem já é advogado/admin —
+ * uma conta ainda sem papel atribuído continua vendo a página crua, que decide seu próprio
+ * redirecionamento (ex.: de volta para "/atendimento/meus").
  */
 export default async function EquipeLayout({ children }: { children: ReactNode }) {
-  const actor = await currentUserId();
-  if (!actor) redirect("/auth/sign-in");
-  if (hasDatabase()) {
-    const db = getDb();
-    const profile = await db.query<{ role: string }>(
-      "SELECT role FROM profiles WHERE user_id = $1",
-      [actor],
-    );
-    if (profile[0] && ["lawyer", "admin"].includes(profile[0].role)) {
-      const mfa = await buscarMfa(db, actor);
-      if (mfa?.enabled_at && !(await mfaVerificadoNesteNavegador(actor))) {
-        redirect("/mfa/verificar");
-      }
-    }
+  const identity = await currentIdentity();
+  if (!identity) redirect("/auth/sign-in");
+  if (!hasDatabase()) return <>{children}</>;
+
+  const db = getDb();
+  const rows = await db.query<{ role: string; office_name: string | null }>(
+    `SELECT p.role, o.name AS office_name FROM profiles p
+     LEFT JOIN offices o ON o.id = p.office_id WHERE p.user_id = $1`,
+    [identity.id],
+  );
+  const profile = rows[0];
+  if (!profile || !["lawyer", "admin"].includes(profile.role)) return <>{children}</>;
+
+  const mfa = await buscarMfa(db, identity.id);
+  if (mfa?.enabled_at && !(await mfaVerificadoNesteNavegador(identity.id))) {
+    redirect("/mfa/verificar");
   }
-  return <>{children}</>;
+
+  return (
+    <EquipeShell
+      email={identity.email}
+      role={profile.role as "lawyer" | "admin"}
+      officeName={profile.office_name ?? ""}
+    >
+      {children}
+    </EquipeShell>
+  );
 }
