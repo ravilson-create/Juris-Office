@@ -4,7 +4,7 @@ import type { Db } from "@/lib/db/types";
 export type MembroEquipeRow = {
   user_id: string;
   email: string | null;
-  role: "lawyer" | "admin";
+  role: "lawyer" | "admin" | "staff";
   oab_numero: string | null;
   oab_uf: string | null;
   oab_verificado_em: string | null;
@@ -12,6 +12,15 @@ export type MembroEquipeRow = {
    * user_id; um admin de verdade quando diferente. Null junto com oab_verificado_em null. */
   oab_verificado_por: string | null;
   subscription_status: string | null;
+};
+
+export type ConviteEquipeRow = {
+  id: string;
+  email: string;
+  role: "lawyer" | "staff";
+  oab_numero: string | null;
+  oab_uf: string | null;
+  created_at: string;
 };
 
 /** A RLS (admin_office_profiles) já restringe ao escritório do ator. */
@@ -24,8 +33,17 @@ export async function listarEquipe(db: Db, officeId: string): Promise<MembroEqui
        SELECT status FROM lawyer_subscriptions
        WHERE lawyer_id = p.user_id ORDER BY valid_until DESC LIMIT 1
      ) s ON true
-     WHERE p.office_id = $1 AND p.role IN ('lawyer', 'admin')
+     WHERE p.office_id = $1 AND p.role IN ('lawyer', 'admin', 'staff')
      ORDER BY p.role DESC, p.user_id`,
+    [officeId],
+  );
+}
+
+/** A RLS (office_invites_admin) já restringe ao escritório do ator. */
+export async function listarConvitesPendentes(db: Db, officeId: string): Promise<ConviteEquipeRow[]> {
+  return db.query<ConviteEquipeRow>(
+    `SELECT id, email, role, oab_numero, oab_uf, created_at FROM office_invites
+     WHERE office_id = $1 AND accepted_at IS NULL ORDER BY created_at DESC`,
     [officeId],
   );
 }

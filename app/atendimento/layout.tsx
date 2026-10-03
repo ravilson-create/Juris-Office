@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { BfcacheGuard } from "@/components/case/bfcache-guard";
 import { authEnabled, currentIdentity } from "@/lib/auth/session";
 import { bootstrapAdmin } from "@/lib/auth/bootstrap-admin";
+import { aceitarConvitePendente } from "@/lib/auth/aceitar-convite";
 import { getDb } from "@/lib/db/connection";
 
 // Reforço do cabeçalho X-Robots-Tag: páginas de atendimento nunca devem ser indexadas.
@@ -21,6 +22,7 @@ export default async function AtendimentoLayout({ children }: { children: ReactN
         [identity.id, identity.email],
       );
       await bootstrapAdmin(identity);
+      await aceitarConvitePendente(identity);
     }
   }
   return (

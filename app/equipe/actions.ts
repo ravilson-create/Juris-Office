@@ -2,9 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
+import { cpfCnpjValido, somenteDigitos } from "@/lib/billing/validacao";
 import { calcularDataFinal, deadlineCountingRuleSchema } from "@/domain/deadline/schema";
 import { concluirPrazo, criarPrazo } from "@/lib/services/equipe-prazos";
 import type { CaseStatus } from "@/domain/case/schema";
@@ -262,6 +264,63 @@ export async function removerDaEquipeAction(form: FormData) {
   }
   revalidatePath("/equipe/time");
   revalidatePath("/equipe");
+}
+
+const conviteSchema = z.object({
+  email: z.email().trim().toLowerCase(),
+  role: z.enum(["lawyer", "staff"]),
+  cpf: z
+    .string()
+    .transform(somenteDigitos)
+    .refine((v) => v.length === 11 && cpfCnpjValido(v), "CPF inválido"),
+  oabNumero: z.string().trim().max(20).optional(),
+  oabUf: z.string().trim().length(2).optional(),
+});
+
+/**
+ * O advogado que administra o escritório monta a equipe convidando por e-mail: "advogado" exige
+ * CPF e OAB (o número é só o que o admin digitou — oab_verificado_por grava quem convidou, nunca
+ * a própria pessoa, já que não foi autodeclaração); "administrativo" só exige CPF. O limite de 5,
+ * o papel de admin do ator e a regra de OAB por papel são conferidos de novo dentro de
+ * convidar_membro_equipe — o formulário nunca é a autorização de fato.
+ */
+export async function convidarMembroAction(form: FormData) {
+  const actor = await currentUserId();
+  if (!actor) redirect("/auth/sign-in");
+  const parsed = conviteSchema.safeParse({
+    email: form.get("email"),
+    role: form.get("role"),
+    cpf: form.get("cpf"),
+    oabNumero: form.get("oabNumero") || undefined,
+    oabUf: form.get("oabUf") || undefined,
+  });
+  if (!parsed.success) redirect("/equipe/time?erro=convite_dados");
+  const { email, role, cpf, oabNumero, oabUf } = parsed.data;
+  if (role === "lawyer" && (!oabNumero || !oabUf)) {
+    redirect("/equipe/time?erro=convite_oab_obrigatoria");
+  }
+  try {
+    await getDb().query("SELECT convidar_membro_equipe($1, $2, $3, $4, $5, $6)", [
+      randomUUID(),
+      email,
+      role,
+      cpf,
+      role === "lawyer" ? oabNumero : null,
+      role === "lawyer" ? oabUf?.toUpperCase() : null,
+    ]);
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : "";
+    redirect(`/equipe/time?erro=${msg.includes("5 funcionários") ? "convite_limite" : "convite_falhou"}`);
+  }
+  revalidatePath("/equipe/time");
+}
+
+export async function cancelarConviteAction(form: FormData) {
+  const inviteId = z.uuid().safeParse(form.get("inviteId"));
+  const actor = await currentUserId();
+  if (!actor || !inviteId.success) return;
+  await getDb().query("SELECT cancelar_convite_equipe($1)", [inviteId.data]);
+  revalidatePath("/equipe/time");
 }
 
 export async function addCaseNote(form: FormData) {
