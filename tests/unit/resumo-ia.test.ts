@@ -34,6 +34,7 @@ const DOSSIE_FALSO: Dossier = {
   areaName: "Cível",
   applicant: {
     fullName: "Fulano de Tal",
+    cpf: "11144477735",
     email: "fulano@example.com",
     phone: "11999999999",
     city: "São Paulo",

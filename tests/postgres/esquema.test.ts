@@ -152,6 +152,7 @@ describe("garantias sob concorrência (PostgreSQL)", () => {
     expect(revision).toBe(0);
     await service.saveApplicant(c.id, {
       fullName: "Maria da Silva",
+      cpf: "11144477735",
       email: "m@example.com",
       phone: "11912345678",
       city: "Campinas",

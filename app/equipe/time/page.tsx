@@ -56,7 +56,7 @@ export default async function GestaoEquipePage({
             >
               <div>
                 <p className="font-semibold">
-                  {membro.user_id}{" "}
+                  {membro.email ?? membro.user_id}{" "}
                   <span className="rounded bg-navy-soft px-2 py-0.5 text-xs text-navy-strong">
                     {membro.role === "admin" ? "Administrador" : "Advogado"}
                   </span>

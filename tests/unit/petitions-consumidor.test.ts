@@ -4,6 +4,7 @@ import { decidirModelosConsumidor, gerarPeticaoConsumidor } from "@/lib/petition
 
 const applicant: Applicant = {
   fullName: "Ana Costa",
+  cpf: "11144477735",
   email: "ana@example.com",
   phone: "98991234567",
   city: "São Luís",

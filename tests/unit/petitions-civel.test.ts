@@ -4,6 +4,7 @@ import { decidirModelosCivel, gerarPeticaoCivel } from "@/lib/petitions/civel";
 
 const applicant: Applicant = {
   fullName: "João Pereira",
+  cpf: "11144477735",
   email: "joao@example.com",
   phone: "98991234567",
   city: "São Luís",

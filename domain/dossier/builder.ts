@@ -131,6 +131,7 @@ export function buildDossier(input: DossierInput): Dossier {
     areaName: area.name,
     applicant: {
       fullName: legalCase.applicant.fullName,
+      cpf: legalCase.applicant.cpf,
       email: legalCase.applicant.email,
       phone: legalCase.applicant.phone,
       city: legalCase.applicant.city,

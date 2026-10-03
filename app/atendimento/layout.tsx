@@ -16,8 +16,9 @@ export default async function AtendimentoLayout({ children }: { children: ReactN
     const identity = await currentIdentity();
     if (identity) {
       await getDb().query(
-        "INSERT INTO profiles(user_id, role) VALUES ($1, 'citizen') ON CONFLICT (user_id) DO NOTHING",
-        [identity.id],
+        `INSERT INTO profiles(user_id, role, email) VALUES ($1, 'citizen', $2)
+         ON CONFLICT (user_id) DO UPDATE SET email = EXCLUDED.email`,
+        [identity.id, identity.email],
       );
       await bootstrapAdmin(identity);
     }

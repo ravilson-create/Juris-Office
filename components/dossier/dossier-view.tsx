@@ -13,6 +13,10 @@ function formatPhone(digits: string) {
     : `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
 }
 
+function formatCpf(digits: string) {
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+}
+
 /** Documento do dossiê: as 11 seções do plano, na ordem, prontas para tela e impressão. */
 export function DossierView({ dossier }: { dossier: Dossier }) {
   const a = dossier.applicant;
@@ -34,6 +38,7 @@ export function DossierView({ dossier }: { dossier: Dossier }) {
         <Section n={1} title="Identificação do interessado">
           <dl className="divide-y divide-line">
             <Row term="Nome" value={a.fullName} />
+            <Row term="CPF" value={formatCpf(a.cpf)} />
             <Row term="E-mail" value={a.email} />
             <Row term="Telefone" value={formatPhone(a.phone)} />
             <Row term="Cidade" value={`${a.city} / ${a.uf}`} />

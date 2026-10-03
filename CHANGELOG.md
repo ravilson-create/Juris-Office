@@ -4,6 +4,14 @@
 
 ### Adicionado
 
+- **CPF no atendimento**: o cidadão agora informa o CPF na identificação, validado pelo dígito
+  verificador oficial (algoritmo da Receita Federal) — CPF com dígito errado ou sequência
+  repetida (`00000000000`) não passa. Aparece na revisão e no dossiê final, ao lado dos demais
+  dados do interessado.
+- **E-mail no cadastro da equipe** (`/equipe/time`): cada membro aparecia só pelo identificador
+  opaco da Neon Auth (um UUID). Agora `profiles.email` é gravado no momento do cadastro
+  (cidadão, advogado) e atualizado de forma best-effort a cada visita a `/atendimento` ou
+  `/equipe` — sem precisar de permissão administrativa na Neon Auth.
 - **Limite de requisições** (P1 do plano mestre): criação de atendimento (30/hora por IP),
   salvamento de rascunho (300/hora por sessão) e inclusão de documento (60/hora por sessão),
   contados em `rate_limit_hits` no banco. Sem banco (memória/dev), nunca limita.

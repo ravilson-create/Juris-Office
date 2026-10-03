@@ -2,6 +2,7 @@ import type { CaseService } from "@/lib/services/case-service";
 
 export const APPLICANT = {
   fullName: "Maria da Silva",
+  cpf: "11144477735",
   email: "maria@example.com",
   phone: "11912345678",
   city: "Campinas",

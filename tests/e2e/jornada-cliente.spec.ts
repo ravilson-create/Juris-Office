@@ -21,6 +21,7 @@ test("jornada de Consumidor: área → identificação → triagem → relato �
   await expect(page.getByLabel("Nome completo")).toHaveAttribute("aria-invalid", "true");
 
   await page.getByLabel("Nome completo").fill("Maria de Teste");
+  await page.getByLabel("CPF").fill("11144477735");
   await page.getByLabel("E-mail").fill("maria@example.com");
   await page.getByLabel("Telefone com DDD").fill("(11) 91234-5678");
   await page.getByRole("textbox", { name: "Cidade", exact: true }).fill("Campinas");
@@ -163,6 +164,7 @@ test("a triagem muda conforme a área escolhida (Família)", async ({ page }) =>
   await page.goto("/atendimento");
   await page.getByRole("button", { name: "Escolher Família" }).click();
   await page.getByLabel("Nome completo").fill("Ana de Teste");
+  await page.getByLabel("CPF").fill("11144477735");
   await page.getByLabel("E-mail").fill("ana@example.com");
   await page.getByLabel("Telefone com DDD").fill("21987654321");
   await page.getByRole("textbox", { name: "Cidade", exact: true }).fill("Niterói");

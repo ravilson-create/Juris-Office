@@ -5,6 +5,7 @@ import { createTestRepositories } from "./test-repositories";
 const NOW = new Date("2026-09-27T15:00:00Z");
 const applicant = {
   fullName: "Maria da Silva",
+  cpf: "11144477735",
   email: "maria@example.com",
   phone: "11912345678",
   city: "Campinas",

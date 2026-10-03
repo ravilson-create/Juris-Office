@@ -15,6 +15,7 @@ export const dossierSchema = z.object({
   areaName: z.string(),
   applicant: z.object({
     fullName: z.string(),
+    cpf: z.string(),
     email: z.string(),
     phone: z.string(),
     city: z.string(),

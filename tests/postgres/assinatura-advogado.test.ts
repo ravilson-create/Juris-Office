@@ -20,19 +20,24 @@ describe("P3: cadastro de assinatura do advogado (trial + Asaas)", () => {
     try {
       const officeId = crypto.randomUUID();
       await db.query("SELECT set_config('app.user_id', 'advogado-1', false)");
-      await db.query("SELECT start_lawyer_trial($1, $2, $3, $4)", [
+      await db.query("SELECT start_lawyer_trial($1, $2, $3, $4, $5)", [
         officeId,
         "Escritório Teste",
         "52998224725",
         "monthly",
+        "advogado-1@example.com",
       ]);
 
       const [perfil] = (
-        await db.query<{ role: string; office_id: string }>(
-          "SELECT role, office_id FROM profiles WHERE user_id = 'advogado-1'",
+        await db.query<{ role: string; office_id: string; email: string }>(
+          "SELECT role, office_id, email FROM profiles WHERE user_id = 'advogado-1'",
         )
       ).rows;
-      expect(perfil).toEqual({ role: "lawyer", office_id: officeId });
+      expect(perfil).toEqual({
+        role: "lawyer",
+        office_id: officeId,
+        email: "advogado-1@example.com",
+      });
 
       const [assinatura] = (
         await db.query<{ status: string; plano_id: string }>(
@@ -56,18 +61,20 @@ describe("P3: cadastro de assinatura do advogado (trial + Asaas)", () => {
     const db = await migrarBancoNovo();
     try {
       await db.query("SELECT set_config('app.user_id', 'advogado-2', false)");
-      await db.query("SELECT start_lawyer_trial($1, $2, $3, $4)", [
+      await db.query("SELECT start_lawyer_trial($1, $2, $3, $4, $5)", [
         crypto.randomUUID(),
         "Primeiro Escritório",
         "52998224725",
         "monthly",
+        "advogado-2@example.com",
       ]);
       await expect(
-        db.query("SELECT start_lawyer_trial($1, $2, $3, $4)", [
+        db.query("SELECT start_lawyer_trial($1, $2, $3, $4, $5)", [
           crypto.randomUUID(),
           "Segundo Escritório",
           "11144477735",
           "yearly",
+          "advogado-2@example.com",
         ]),
       ).rejects.toThrow(/já existe cadastro profissional/);
     } finally {
@@ -79,11 +86,12 @@ describe("P3: cadastro de assinatura do advogado (trial + Asaas)", () => {
     const db = await migrarBancoNovo();
     try {
       await db.query("SELECT set_config('app.user_id', 'advogado-3', false)");
-      await db.query("SELECT start_lawyer_trial($1, $2, $3, $4)", [
+      await db.query("SELECT start_lawyer_trial($1, $2, $3, $4, $5)", [
         crypto.randomUUID(),
         "Escritório Teste",
         "52998224725",
         "monthly",
+        "advogado-3@example.com",
       ]);
       await db.query("SELECT cancel_own_subscription()");
 
@@ -109,11 +117,12 @@ describe("P3: cadastro de assinatura do advogado (trial + Asaas)", () => {
     const db = await migrarBancoNovo();
     try {
       await db.query("SELECT set_config('app.user_id', 'advogado-4', false)");
-      await db.query("SELECT start_lawyer_trial($1, $2, $3, $4)", [
+      await db.query("SELECT start_lawyer_trial($1, $2, $3, $4, $5)", [
         crypto.randomUUID(),
         "Escritório Teste",
         "52998224725",
         "monthly",
+        "advogado-4@example.com",
       ]);
       await db.query("SELECT cancel_own_subscription()");
       await db.query("SELECT set_own_subscription_plan('yearly')");
@@ -134,11 +143,12 @@ describe("P3: cadastro de assinatura do advogado (trial + Asaas)", () => {
     try {
       await db.query("SELECT set_config('app.user_id', '', false)");
       await expect(
-        db.query("SELECT start_lawyer_trial($1, $2, $3, $4)", [
+        db.query("SELECT start_lawyer_trial($1, $2, $3, $4, $5)", [
           crypto.randomUUID(),
           "Escritório Teste",
           "52998224725",
           "monthly",
+          "sem-login@example.com",
         ]),
       ).rejects.toThrow(/login necessário/);
     } finally {

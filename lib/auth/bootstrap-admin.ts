@@ -13,8 +13,9 @@ export async function bootstrapAdmin(
     await db.transaction(async (tx) => {
       await tx.query("SELECT pg_advisory_xact_lock(727302)");
       await tx.query(
-        "INSERT INTO profiles(user_id, role) VALUES ($1, 'citizen') ON CONFLICT DO NOTHING",
-        [identity.id],
+        `INSERT INTO profiles(user_id, role, email) VALUES ($1, 'citizen', $2)
+         ON CONFLICT (user_id) DO UPDATE SET email = EXCLUDED.email`,
+        [identity.id, identity.email],
       );
       await tx.query(
         `UPDATE profiles SET role = 'admin', office_id = '00000000-0000-4000-8000-000000000001'

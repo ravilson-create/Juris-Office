@@ -30,6 +30,14 @@ export default async function EquipeLayout({ children }: { children: ReactNode }
   const profile = rows[0];
   if (!profile || !["lawyer", "admin"].includes(profile.role)) return <>{children}</>;
 
+  // Backfill best-effort: cobre perfis gravados antes da coluna existir e o caso raro de a
+  // pessoa trocar de e-mail na própria conta Neon Auth. Sem isso em todo visita, só quem passa
+  // por /atendimento (bootstrap-admin.ts) teria o e-mail preenchido.
+  await db.query("UPDATE profiles SET email = $2 WHERE user_id = $1 AND email IS DISTINCT FROM $2", [
+    identity.id,
+    identity.email,
+  ]);
+
   const mfa = await buscarMfa(db, identity.id);
   if (mfa?.enabled_at && !(await mfaVerificadoNesteNavegador(identity.id))) {
     redirect("/mfa/verificar");

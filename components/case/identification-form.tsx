@@ -24,6 +24,7 @@ type FormValues = Omit<ApplicantInput, "uf" | "consentAccepted"> & {
 
 const LABELS: Record<keyof FormValues, string> = {
   fullName: "Nome completo",
+  cpf: "CPF",
   email: "E-mail",
   phone: "Telefone com DDD",
   city: "Cidade",
@@ -83,7 +84,7 @@ export function IdentificationForm({
     props: {
       type?: string;
       autoComplete?: string;
-      inputMode?: "email" | "tel" | "text";
+      inputMode?: "email" | "tel" | "text" | "numeric";
       help?: string;
     },
   ) => {
@@ -127,6 +128,7 @@ export function IdentificationForm({
       )}
       <ErrorSummary errors={errors} formError={formError} />
       {text("fullName", { autoComplete: "name" })}
+      {text("cpf", { inputMode: "numeric", autoComplete: "off", help: "Somente números." })}
       {text("email", { type: "email", autoComplete: "email", inputMode: "email" })}
       {text("phone", {
         type: "tel",
