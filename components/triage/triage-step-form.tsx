@@ -93,6 +93,13 @@ export function TriageStepForm({
   const visibleQuestions = questions.filter((q) => !hidden.has(q.key));
   const isLast = stepIndex === totalSteps - 1;
 
+  // Um rascunho salvo com sucesso prova que a sessão voltou a ser reconhecida — o aviso de erro
+  // do envio oficial anterior (ex.: falha passageira de rede/cookie) ficaria preso na tela para
+  // sempre sem isso, mesmo já não refletindo mais o estado atual.
+  useEffect(() => {
+    if (draft.state.kind === "saved") setFormError(null);
+  }, [draft.state]);
+
   const onSubmit = async (values: RawFormValues) => {
     setFormError(null);
     const payload = Object.fromEntries(Object.entries(values).filter(([k]) => !hidden.has(k)));

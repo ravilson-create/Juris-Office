@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { saveNarrativeAction } from "@/app/atendimento/actions";
 import { DraftStatus } from "@/components/draft/draft-status";
@@ -58,6 +58,13 @@ export function NarrativeForm({
   const error = errors.narrative?.message;
   const ids = fieldIds("narrative");
   const counterId = "f-narrative-contador";
+
+  // Um rascunho salvo com sucesso prova que a sessão voltou a ser reconhecida — o aviso de erro
+  // do envio oficial anterior (ex.: falha passageira de rede/cookie) ficaria preso na tela para
+  // sempre sem isso, mesmo já não refletindo mais o estado atual.
+  useEffect(() => {
+    if (draft.state.kind === "saved") setFormError(null);
+  }, [draft.state]);
 
   const onSubmit = async (values: NarrativeInput) => {
     setFormError(null);
