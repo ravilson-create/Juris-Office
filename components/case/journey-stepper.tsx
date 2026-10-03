@@ -5,6 +5,7 @@ export const JOURNEY_STEPS = [
   "Relato",
   "Documentos",
   "Revisão",
+  "Advogado",
   "Protocolo",
 ] as const;
 export type JourneyStep = (typeof JOURNEY_STEPS)[number];

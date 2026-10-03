@@ -25,3 +25,22 @@ export async function listarAdvogadosDisponiveis(
     uf ?? null,
   ]);
 }
+
+export type AdvogadoEscolhidoRow = { lawyer_id: string; escritorio: string };
+
+/** Null quando o cliente ainda não escolheu ninguém (ou escolheu "pular" — ver migração 0023). */
+export async function buscarAdvogadoEscolhido(
+  db: Db,
+  caseId: string,
+): Promise<AdvogadoEscolhidoRow | null> {
+  const rows = await db.query<AdvogadoEscolhidoRow>(
+    "SELECT * FROM advogado_escolhido_atendimento($1)",
+    [caseId],
+  );
+  return rows[0] ?? null;
+}
+
+/** Revalida tudo de novo dentro da função SQL — nunca confia na lista que o navegador mostrou. */
+export async function escolherAdvogado(db: Db, caseId: string, lawyerId: string): Promise<void> {
+  await db.query("SELECT escolher_advogado_atendimento($1, $2)", [caseId, lawyerId]);
+}
