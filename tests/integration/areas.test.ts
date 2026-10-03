@@ -4,6 +4,7 @@ import { createTestRepositories } from "./test-repositories";
 
 const applicant = {
   fullName: "João de Teste",
+  cpf: "11144477735",
   email: "joao@example.com",
   phone: "21987654321",
   city: "Niterói",

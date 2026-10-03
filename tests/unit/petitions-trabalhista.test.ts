@@ -4,6 +4,7 @@ import { decidirModelosTrabalhista, gerarPeticaoTrabalhista } from "@/lib/petiti
 
 const applicant: Applicant = {
   fullName: "Carlos Souza",
+  cpf: "11144477735",
   email: "carlos@example.com",
   phone: "98991234567",
   city: "São Luís",

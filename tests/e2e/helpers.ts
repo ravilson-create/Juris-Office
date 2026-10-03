@@ -36,6 +36,7 @@ export async function startConsumidor(page: Page) {
 
 export async function fillIdentification(page: Page) {
   await page.getByLabel("Nome completo").fill("Pessoa de Teste Fictícia");
+  await page.getByLabel("CPF").fill("11144477735");
   await page.getByLabel("E-mail").fill("teste@example.com");
   await page.getByLabel("Telefone com DDD").fill("11912345678");
   await page.getByRole("textbox", { name: "Cidade", exact: true }).fill("Campinas");

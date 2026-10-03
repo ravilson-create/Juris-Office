@@ -12,6 +12,7 @@ const NOW = new Date("2026-09-27T15:00:00Z");
 const area = (slug: string) => LEGAL_AREAS.find((a) => a.slug === slug)!;
 const applicant: Applicant = {
   fullName: "Maria da Silva",
+  cpf: "11144477735",
   email: "maria@example.com",
   phone: "11912345678",
   city: "Campinas",

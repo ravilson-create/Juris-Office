@@ -3,6 +3,7 @@ import type { Db } from "@/lib/db/types";
 
 export type MembroEquipeRow = {
   user_id: string;
+  email: string | null;
   role: "lawyer" | "admin";
   oab_numero: string | null;
   oab_uf: string | null;
@@ -13,7 +14,7 @@ export type MembroEquipeRow = {
 /** A RLS (admin_office_profiles) já restringe ao escritório do ator. */
 export async function listarEquipe(db: Db, officeId: string): Promise<MembroEquipeRow[]> {
   return db.query<MembroEquipeRow>(
-    `SELECT p.user_id, p.role, p.oab_numero, p.oab_uf, p.oab_verificado_em,
+    `SELECT p.user_id, p.email, p.role, p.oab_numero, p.oab_uf, p.oab_verificado_em,
        s.status AS subscription_status
      FROM profiles p
      LEFT JOIN LATERAL (

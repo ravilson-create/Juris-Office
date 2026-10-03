@@ -63,6 +63,7 @@ export default async function RevisarPage({ params }: { params: Promise<{ caseId
             <ReviewSection title="Seus dados" editHref={`${base}/identificacao?${FROM_REVIEW}`}>
               <dl className="divide-y divide-line">
                 <Row term="Nome" value={applicant.fullName} />
+                <Row term="CPF" value={formatCpf(applicant.cpf)} />
                 <Row term="E-mail" value={applicant.email} />
                 <Row term="Telefone" value={formatPhone(applicant.phone)} />
                 <Row term="Cidade" value={`${applicant.city} / ${applicant.uf}`} />
@@ -186,4 +187,8 @@ function formatPhone(digits: string) {
   return digits.length === 11
     ? `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
     : `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+}
+
+function formatCpf(digits: string) {
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
 }

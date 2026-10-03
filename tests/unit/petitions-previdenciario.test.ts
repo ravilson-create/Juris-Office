@@ -7,6 +7,7 @@ import {
 
 const applicant: Applicant = {
   fullName: "Francisca Lima",
+  cpf: "11144477735",
   email: "francisca@example.com",
   phone: "98991234567",
   city: "São Luís",

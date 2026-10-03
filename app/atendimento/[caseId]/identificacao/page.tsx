@@ -33,6 +33,7 @@ export default async function IdentificacaoPage({
           restoredDraft={Boolean(draft)}
           defaultValues={{
             fullName: a?.fullName ?? "",
+            cpf: a?.cpf ?? "",
             email: a?.email ?? "",
             phone: a?.phone ?? "",
             city: a?.city ?? "",

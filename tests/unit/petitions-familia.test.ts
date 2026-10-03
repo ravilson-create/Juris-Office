@@ -4,6 +4,7 @@ import { decidirModelosFamilia, gerarPeticaoFamilia } from "@/lib/petitions/fami
 
 const applicant: Applicant = {
   fullName: "Maria da Silva",
+  cpf: "11144477735",
   email: "maria@example.com",
   phone: "98991234567",
   city: "São Luís",

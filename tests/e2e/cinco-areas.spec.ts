@@ -32,6 +32,7 @@ async function identify(page: Page) {
   await page.getByRole("button", { name: "Salvar e continuar" }).click();
   await expect(page.getByRole("alert").first()).toBeVisible(); // campos obrigatórios
   await page.getByLabel("Nome completo").fill("Pessoa de Teste Fictícia");
+  await page.getByLabel("CPF").fill("11144477735");
   await page.getByLabel("E-mail").fill("teste@example.com");
   await page.getByLabel("Telefone com DDD").fill("11912345678");
   await page.getByRole("textbox", { name: "Cidade", exact: true }).fill("Campinas");

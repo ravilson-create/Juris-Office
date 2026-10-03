@@ -20,6 +20,7 @@ async function expectNoA11yViolations(page: Page, name: string) {
 
 async function identify(page: Page) {
   await page.getByLabel("Nome completo").fill("Maria de Teste");
+  await page.getByLabel("CPF").fill("11144477735");
   await page.getByLabel("E-mail").fill("maria@example.com");
   await page.getByLabel("Telefone com DDD").fill("11912345678");
   await page.getByRole("textbox", { name: "Cidade", exact: true }).fill("Campinas");
@@ -100,6 +101,7 @@ test("queda de conexão mostra aviso e preserva o que foi digitado", async ({ pa
     route.request().method() === "POST" ? route.abort("internetdisconnected") : route.continue(),
   );
   await page.getByLabel("Nome completo").fill("Maria de Teste");
+  await page.getByLabel("CPF").fill("11144477735");
   await page.getByLabel("E-mail").fill("maria@example.com");
   await page.getByLabel("Telefone com DDD").fill("11912345678");
   await page.getByRole("textbox", { name: "Cidade", exact: true }).fill("Campinas");

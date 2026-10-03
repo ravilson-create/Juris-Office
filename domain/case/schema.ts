@@ -46,6 +46,24 @@ export const BRAZIL_UFS = [
   "TO",
 ] as const;
 
+/**
+ * Dígito verificador de CPF (algoritmo da Receita Federal) — mesmo cálculo de
+ * lib/billing/validacao.ts, duplicado aqui de propósito: o domínio do atendimento não deve
+ * depender do módulo de cobrança do cadastro de advogado.
+ */
+function cpfValido(digitos: string): boolean {
+  if (digitos.length !== 11 || /^(\d)\1{10}$/.test(digitos)) return false;
+  const calcularDigito = (base: string) => {
+    let soma = 0;
+    for (let i = 0; i < base.length; i++) soma += Number(base[i]) * (base.length + 1 - i);
+    const resto = (soma * 10) % 11;
+    return resto === 10 ? 0 : resto;
+  };
+  if (calcularDigito(digitos.slice(0, 9)) !== Number(digitos[9])) return false;
+  if (calcularDigito(digitos.slice(0, 10)) !== Number(digitos[10])) return false;
+  return true;
+}
+
 /** Dados mínimos do interessado (minimização de dados — LGPD). */
 export const applicantSchema = z.object({
   fullName: z
@@ -54,6 +72,11 @@ export const applicantSchema = z.object({
     .min(3, { error: "Informe seu nome completo." })
     .max(120, { error: "Use no máximo 120 caracteres." })
     .refine((v) => v.split(/\s+/).length >= 2, { error: "Informe nome e sobrenome." }),
+  cpf: z
+    .string()
+    .trim()
+    .transform((v) => v.replace(/\D/g, ""))
+    .refine((v) => cpfValido(v), { error: "Informe um CPF válido." }),
   email: z
     .string()
     .trim()
