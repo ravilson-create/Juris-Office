@@ -11,6 +11,8 @@ import { CASE_STATUS_LABEL } from "@/domain/case/status";
 import { formatFileSize } from "@/domain/document/rules";
 import { OTHER_DOCUMENTS_CATEGORY, OTHER_DOCUMENTS_LABEL } from "@/domain/document/schema";
 import { firstIncompleteStep, formatAnswer, isVisible } from "@/domain/triage/engine";
+import { getDb, hasDatabase } from "@/lib/db/connection";
+import { buscarAdvogadoEscolhido } from "@/lib/services/advogados-disponiveis";
 import { loadCaseOr404, redirectIfLocked } from "@/lib/services/load-case";
 
 export const metadata: Metadata = { title: "Revisão" };
@@ -30,6 +32,7 @@ export default async function RevisarPage({ params }: { params: Promise<{ caseId
   if (pending < ctx.steps.length) redirect(`${base}/triagem?etapa=${pending + 1}`);
   if (!legalCase.narrative) redirect(`${base}/relato`);
   if (legalCase.status === "awaiting_documents") redirect(`${base}/documentos`);
+  const advogadoEscolhido = hasDatabase() ? await buscarAdvogadoEscolhido(getDb(), caseId) : null;
 
   const applicant = legalCase.applicant;
   const labelOf = (category: string) =>
@@ -123,6 +126,22 @@ export default async function RevisarPage({ params }: { params: Promise<{ caseId
             </ReviewSection>
           </div>
         </article>
+
+        {hasDatabase() && (
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-3 rounded-md border border-line bg-surface p-5 sm:p-6">
+            <div>
+              <h2 className="text-xl">Advogado</h2>
+              <p className="mt-1 max-w-prose text-muted">
+                {advogadoEscolhido
+                  ? `Escolhido: ${advogadoEscolhido.escritorio}.`
+                  : "Opcional: você pode escolher quem vai cuidar do seu caso, por especialidade e localização."}
+              </p>
+            </div>
+            <ButtonLink href={`${base}/advogado`} variant="secondary">
+              {advogadoEscolhido ? "Trocar" : "Escolher advogado"}
+            </ButtonLink>
+          </div>
+        )}
 
         <form
           action={submitCaseAction}

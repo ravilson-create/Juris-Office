@@ -4,6 +4,16 @@
 
 ### Adicionado
 
+- **Cliente pode escolher o advogado no fim do atendimento (PR 2 de 2)**: nova etapa "Advogado",
+  oferecida na revisão como opção — nunca obrigatória, para não travar quem usa uma instalação
+  sem banco ou uma área sem nenhum advogado cadastrado ainda. Lista os advogados da área do caso
+  (`listar_advogados_disponiveis`, PR 1), com filtro opcional por UF; escolher e confirmar já
+  finaliza o atendimento no mesmo clique. A escolha revalida tudo de novo contra o banco
+  (`escolher_advogado_atendimento`, migração 0023) — área, OAB confirmada, assinatura ativa —
+  nunca confia na lista que o navegador mostrou, e passa a gravar `legal_cases.office_id` com o
+  escritório do advogado escolhido, em vez do escritório único fixo de sempre. Funciona para quem
+  nunca fez login (dono pelo hash da sessão anônima, não por conta). O botão "Atribuir" que o
+  admin já tem na fila continua existindo, para reatribuir depois se precisar.
 - **Base para o cliente escolher o advogado (PR 1 de 2)**: cadastro do advogado passa a pedir
   cidade/UF de atuação (distinto da UF da OAB) e ao menos uma área jurídica atendida
   (`profiles.cidade`/`uf`, nova tabela `lawyer_areas`, migração 0022). Nova função

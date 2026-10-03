@@ -10,6 +10,7 @@ import { clientIp } from "@/lib/http/client-ip";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getCaseService } from "@/lib/services";
 import { assinarContrato, buscarContrato } from "@/lib/services/equipe-contratos";
+import { escolherAdvogado } from "@/lib/services/advogados-disponiveis";
 import { getDb } from "@/lib/db/connection";
 import { DomainError, type ServiceResult } from "@/lib/services/errors";
 
@@ -226,6 +227,30 @@ export async function submitCaseAction(formData: FormData): Promise<void> {
     // A página de destino sabe levar a pessoa à etapa pendente.
     if (!(error instanceof DomainError)) throw error;
     target = recoveryPath(caseId, error);
+  }
+  redirect(target);
+}
+
+/**
+ * Escolha opcional de advogado, oferecida na revisão (ver app/atendimento/[caseId]/advogado) —
+ * sempre finaliza o atendimento junto, no mesmo clique: quem chegou até aqui já revisou tudo.
+ * escolherAdvogado() confere tudo de novo contra o banco (área, OAB, assinatura) antes de gravar.
+ */
+export async function escolherAdvogadoEFinalizarAction(formData: FormData): Promise<void> {
+  const caseId = String(formData.get("caseId") ?? "");
+  const lawyerId = z.string().min(1).max(255).safeParse(formData.get("lawyerId"));
+  if (!(await authorized(caseId)) || !lawyerId.success) redirect("/atendimento");
+  let target = `/atendimento/${caseId}/protocolo`;
+  try {
+    await escolherAdvogado(getDb(), caseId, lawyerId.data);
+    await getCaseService().submitCase(caseId);
+  } catch (error) {
+    if (error instanceof DomainError) {
+      target = recoveryPath(caseId, error);
+    } else {
+      console.error("[atendimento] erro ao escolher advogado", error);
+      target = `/atendimento/${caseId}/advogado?erro=advogado_indisponivel`;
+    }
   }
   redirect(target);
 }
