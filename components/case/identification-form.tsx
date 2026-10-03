@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, type FieldErrors } from "react-hook-form";
 import { saveApplicantAction } from "@/app/atendimento/actions";
 import {
@@ -65,6 +65,13 @@ export function IdentificationForm({
     baseTime: draftBaseTime,
     values: watch(),
   });
+
+  // Um rascunho salvo com sucesso prova que a sessão voltou a ser reconhecida — o aviso de erro
+  // do envio oficial anterior (ex.: falha passageira de rede/cookie) ficaria preso na tela para
+  // sempre sem isso, mesmo já não refletindo mais o estado atual.
+  useEffect(() => {
+    if (draft.state.kind === "saved") setFormError(null);
+  }, [draft.state]);
 
   const onSubmit = async (values: Applicant) => {
     setFormError(null);
