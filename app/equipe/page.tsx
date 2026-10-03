@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ButtonLink } from "@/components/ui/button";
 import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
 import type { CaseStatus } from "@/domain/case/schema";
@@ -20,6 +19,11 @@ import { assignLawyer } from "./actions";
 const DIAS_ALERTA_PRAZO = 7;
 
 const NOME_AREA = new Map(LEGAL_AREAS.map((a) => [a.id, a.name]));
+
+/** Painel do topo mostra só estas três, sempre com a contagem (mesmo zero) — as demais famílias
+ * de status (rascunho/triagem, recusado, em negociação, em andamento, encerrado) continuam
+ * filtráveis pelo seletor de busca abaixo, só não ganham um cartão dedicado. */
+const STATUS_DASHBOARD: readonly CaseStatus[] = ["under_legal_review", "needs_information", "accepted"];
 
 /**
  * Uma cor por "família" de status, não um tom por status — famílias com significado diferente
@@ -107,27 +111,7 @@ export default async function EquipePage({
       : [];
   return (
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="text-3xl">Área profissional</h1>
-        <div className="flex flex-wrap gap-2">
-          <ButtonLink href="/mfa/configurar" variant="secondary" className="text-sm">
-            Verificação em duas etapas
-          </ButtonLink>
-          {profile[0].role === "admin" && (
-            <>
-              <ButtonLink href="/equipe/time" variant="secondary" className="text-sm">
-                Gestão de equipe
-              </ButtonLink>
-              <ButtonLink href="/equipe/auditoria" variant="secondary" className="text-sm">
-                Auditoria de acesso
-              </ButtonLink>
-            </>
-          )}
-          <ButtonLink href="/equipe/consultas" variant="secondary" className="text-sm">
-            Consultas externas
-          </ButtonLink>
-        </div>
-      </div>
+      <h1 className="text-3xl">Área profissional</h1>
       <p className="mt-2 text-muted">
         {profile[0].role === "admin" ? "Casos do seu escritório" : "Casos atribuídos a você"}
       </p>
@@ -144,7 +128,7 @@ export default async function EquipePage({
           <p className="mt-1 text-2xl font-extrabold text-ink">{resumo.total}</p>
         </Link>
         {resumo.porStatus
-          .filter((item) => item.total > 0)
+          .filter((item) => STATUS_DASHBOARD.includes(item.status))
           .map((item) => (
             <Link
               key={item.status}
