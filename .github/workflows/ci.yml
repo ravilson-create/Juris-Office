@@ -19,7 +19,11 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run build
-      - run: npm audit --audit-level=high
+      # Só dependências de produção: braces/micromatch/fast-glob (via eslint-config-next) têm
+      # uma CVE alta sem correção disponível (GHSA-vfj7-8cjw-p6xm, nenhuma versão publicada ainda
+      # resolve) — mas são ferramenta de lint, nunca entram no código servido ao navegador. Sem
+      # --omit=dev, qualquer PR fica vermelha por uma vulnerabilidade inalcançável em produção.
+      - run: npm audit --omit=dev --audit-level=high
 
   test-memoria-pglite:
     runs-on: ubuntu-latest
