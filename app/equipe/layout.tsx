@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { EquipeShell } from "@/components/layout/equipe-shell";
 import { currentIdentity } from "@/lib/auth/session";
+import { aceitarConvitePendente } from "@/lib/auth/aceitar-convite";
 import { getDb, hasDatabase } from "@/lib/db/connection";
 import { mfaVerificadoNesteNavegador } from "@/lib/auth/mfa-cookie";
 import { buscarMfa } from "@/lib/services/mfa";
@@ -22,6 +23,16 @@ export default async function EquipeLayout({ children }: { children: ReactNode }
   if (!hasDatabase()) return <>{children}</>;
 
   const db = getDb();
+  // Garante uma linha em profiles antes de tentar aceitar um convite pendente — quem chega direto
+  // em /equipe por um link de convite pode nunca ter passado por /atendimento (onde esse insert
+  // já acontecia), e aceitar_convite_equipe() só atualiza uma linha existente, nunca cria uma.
+  await db.query(
+    `INSERT INTO profiles(user_id, role, email) VALUES ($1, 'citizen', $2)
+     ON CONFLICT (user_id) DO UPDATE SET email = EXCLUDED.email`,
+    [identity.id, identity.email],
+  );
+  await aceitarConvitePendente(identity);
+
   const rows = await db.query<{ role: string; office_name: string | null }>(
     `SELECT p.role, o.name AS office_name FROM profiles p
      LEFT JOIN offices o ON o.id = p.office_id WHERE p.user_id = $1`,
@@ -29,14 +40,6 @@ export default async function EquipeLayout({ children }: { children: ReactNode }
   );
   const profile = rows[0];
   if (!profile || !["lawyer", "admin"].includes(profile.role)) return <>{children}</>;
-
-  // Backfill best-effort: cobre perfis gravados antes da coluna existir e o caso raro de a
-  // pessoa trocar de e-mail na própria conta Neon Auth. Sem isso em todo visita, só quem passa
-  // por /atendimento (bootstrap-admin.ts) teria o e-mail preenchido.
-  await db.query("UPDATE profiles SET email = $2 WHERE user_id = $1 AND email IS DISTINCT FROM $2", [
-    identity.id,
-    identity.email,
-  ]);
 
   const mfa = await buscarMfa(db, identity.id);
   if (mfa?.enabled_at && !(await mfaVerificadoNesteNavegador(identity.id))) {

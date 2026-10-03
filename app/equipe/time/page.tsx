@@ -1,15 +1,23 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Alert } from "@/components/ui/alert";
+import { ConviteForm } from "@/components/equipe/convite-form";
 import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
-import { listarEquipe, type MembroEquipeRow } from "@/lib/services/equipe-time";
+import { listarConvitesPendentes, listarEquipe, type MembroEquipeRow } from "@/lib/services/equipe-time";
 import {
+  cancelarConviteAction,
   promoverAdminAction,
   rebaixarAdvogadoAction,
   removerDaEquipeAction,
   revogarOabAction,
 } from "../actions";
+
+const ROTULO_PAPEL: Record<MembroEquipeRow["role"], string> = {
+  admin: "Administrador",
+  lawyer: "Advogado",
+  staff: "Administrativo",
+};
 
 /** OAB sai autodeclarada no cadastro (migração 0020) — "oab_verificado_por = user_id" é a própria
  * pessoa confirmando a si mesma, nunca um humano de verdade checando. */
@@ -25,6 +33,10 @@ export const dynamic = "force-dynamic";
 
 const MENSAGEM_ERRO: Record<string, string> = {
   equipe_ultimo_admin: "O escritório precisa manter ao menos um administrador.",
+  convite_dados: "Revise os dados do convite — e-mail e CPF precisam ser válidos.",
+  convite_oab_obrigatoria: "Convite de advogado exige número e UF da OAB.",
+  convite_limite: "O escritório já tem 5 funcionários (contando convites pendentes).",
+  convite_falhou: "Não foi possível enviar o convite.",
 };
 
 export default async function GestaoEquipePage({
@@ -43,7 +55,12 @@ export default async function GestaoEquipePage({
 
   const { erro } = await searchParams;
   const equipe = await listarEquipe(db, profile[0].office_id);
+  const convites = await listarConvitesPendentes(db, profile[0].office_id);
   const totalAdmins = equipe.filter((m) => m.role === "admin").length;
+  // Mesma conta de convidar_membro_equipe: o admin dono não ocupa uma das 5 vagas, só
+  // advogados/administrativos já na equipe mais convites ainda pendentes.
+  const vagasOcupadas =
+    equipe.filter((m) => m.role === "lawyer" || m.role === "staff").length + convites.length;
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-10">
@@ -73,7 +90,7 @@ export default async function GestaoEquipePage({
                 <p className="font-semibold">
                   {membro.email ?? membro.user_id}{" "}
                   <span className="rounded bg-navy-soft px-2 py-0.5 text-xs text-navy-strong">
-                    {membro.role === "admin" ? "Administrador" : "Advogado"}
+                    {ROTULO_PAPEL[membro.role]}
                   </span>
                 </p>
                 <p className="mt-1 text-sm text-muted">
@@ -90,14 +107,15 @@ export default async function GestaoEquipePage({
                     </button>
                   </form>
                 )}
-                {membro.role === "lawyer" ? (
+                {membro.role === "lawyer" && (
                   <form action={promoverAdminAction}>
                     <input type="hidden" name="userId" value={membro.user_id} />
                     <button className="rounded border border-line px-3 py-2 text-sm">
                       Promover a admin
                     </button>
                   </form>
-                ) : (
+                )}
+                {membro.role === "admin" && (
                   <form action={rebaixarAdvogadoAction}>
                     <input type="hidden" name="userId" value={membro.user_id} />
                     <button
@@ -125,6 +143,54 @@ export default async function GestaoEquipePage({
         })}
       </ul>
       {equipe.length === 0 && <p className="mt-6 text-muted">Nenhum membro de equipe ainda.</p>}
+
+      {convites.length > 0 && (
+        <>
+          <h2 className="mt-10 text-xl">Convites pendentes</h2>
+          <ul className="mt-4 space-y-3">
+            {convites.map((convite) => (
+              <li
+                key={convite.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded border border-line p-4"
+              >
+                <div>
+                  <p className="font-semibold">
+                    {convite.email}{" "}
+                    <span className="rounded bg-navy-soft px-2 py-0.5 text-xs text-navy-strong">
+                      {convite.role === "lawyer" ? "Advogado" : "Administrativo"}
+                    </span>
+                  </p>
+                  {convite.role === "lawyer" && (
+                    <p className="mt-1 text-sm text-muted">
+                      OAB {convite.oab_numero}/{convite.oab_uf}
+                    </p>
+                  )}
+                </div>
+                <form action={cancelarConviteAction}>
+                  <input type="hidden" name="inviteId" value={convite.id} />
+                  <button className="rounded border border-danger px-3 py-2 text-sm text-danger">
+                    Cancelar convite
+                  </button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      <h2 className="mt-10 text-xl">Convidar membro</h2>
+      <p className="mt-2 text-muted">
+        {vagasOcupadas} de 5 vagas usadas (equipe atual + convites pendentes). A pessoa convidada
+        entra assim que logar com esse e-mail.
+      </p>
+      {vagasOcupadas >= 5 ? (
+        <p className="mt-4 text-sm text-muted">
+          O escritório já tem 5 funcionários — remova alguém ou cancele um convite para liberar
+          uma vaga.
+        </p>
+      ) : (
+        <ConviteForm />
+      )}
     </main>
   );
 }

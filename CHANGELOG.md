@@ -4,6 +4,18 @@
 
 ### Adicionado
 
+- **Convite de equipe por e-mail** (`/equipe/time`): o advogado que cadastra o escritório agora
+  monta o time convidando até 5 pessoas por e-mail, optando entre "advogado" (exige CPF e OAB) e
+  "administrativo" (só CPF). O convite fica pendente até a pessoa convidada logar com esse
+  e-mail — `aceitar_convite_equipe()` roda em todo login autenticado (`lib/auth/aceitar-convite.ts`)
+  e vincula a conta ao escritório automaticamente, sem exigir que a pessoa convidada tenha
+  passado por qualquer cadastro manual antes. A OAB de um convite de advogado é atribuída pelo
+  próprio admin que convidou (`oab_verificado_por` grava quem convidou, nunca a própria pessoa —
+  diferente da autodeclaração do cadastro self-service). O papel "administrativo" ainda não
+  enxerga casos (mesma regra que já vale para "citizen") — é o próximo passo, que estende as
+  políticas de RLS existentes para dar a ele o mesmo acesso de leitura/gestão do advogado, menos
+  assinar. `remove_from_office` passou a soltar também um perfil "administrativo" e a limpar o
+  CPF de quem sai da equipe, advogado ou não (migração 0021).
 - **OAB autodeclarada no cadastro** (decisão consciente do dono do produto, trocando uma postura
   de segurança): o advogado passa a ter acesso a casos liberado na hora, sem esperar um admin
   checar manualmente o número contra o Cadastro Nacional dos Advogados. Como não existe
