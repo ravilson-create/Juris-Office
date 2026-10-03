@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
 import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
+import { ConsultaProtocoloForm } from "@/components/case/consulta-protocolo-form";
 import { CASE_STATUS_LABEL, isDeletable } from "@/domain/case/status";
 import { formatInstantDateTime } from "@/domain/time";
 import { currentSessionHash } from "@/lib/auth/case-access";
@@ -104,6 +105,15 @@ export default async function MeusAtendimentosPage({
           </ul>
         </section>
       )}
+
+      <section className="mt-12 border-t border-line pt-8">
+        <h2 className="text-2xl">Consultar outro atendimento por protocolo</h2>
+        <p className="mt-2 max-w-prose text-muted">
+          Anotou o protocolo em outro aparelho ou navegador? Informe o protocolo e o CPF usado na
+          identificação para ver o andamento — não depende deste navegador nem de login.
+        </p>
+        <ConsultaProtocoloForm />
+      </section>
     </div>
   );
 }
