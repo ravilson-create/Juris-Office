@@ -4,6 +4,14 @@
 
 ### Adicionado
 
+- **OAB autodeclarada no cadastro** (decisão consciente do dono do produto, trocando uma postura
+  de segurança): o advogado passa a ter acesso a casos liberado na hora, sem esperar um admin
+  checar manualmente o número contra o Cadastro Nacional dos Advogados. Como não existe
+  verificação automática possível (OAB não tem dígito verificador público), a trilha de auditoria
+  deixa isso explícito — `oab_verificado_por` grava a própria pessoa quando é autodeclaração, um
+  admin de verdade quando foi checada. `/equipe/time` mostra "autodeclarada (não conferida)" nesse
+  caso, com botão para um admin revogar a qualquer momento (`revoke_lawyer_oab`, migração 0020) —
+  volta ao estado pendente e tira o acesso até alguém confirmar de novo.
 - **CPF no atendimento**: o cidadão agora informa o CPF na identificação, validado pelo dígito
   verificador oficial (algoritmo da Receita Federal) — CPF com dígito errado ou sequência
   repetida (`00000000000`) não passa. Aparece na revisão e no dossiê final, ao lado dos demais
