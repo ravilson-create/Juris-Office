@@ -1,31 +1,34 @@
 @import "tailwindcss";
 
 /*
- * Júris Office IA — tokens visuais da marca
- * Azul-marinho quase preto (institucional — cabeçalho, faixa do advogado, textos de destaque)
- * e dourado (acento — botão principal, selos, ícones) sobre fundo creme. Dourado claro
- * (--color-gold) é só para fundo de selo/ícone, nunca para texto — contraste insuficiente sobre
- * claro ou escuro; para texto e foco use --color-gold-strong.
+ * Júris Office IA — tokens visuais da marca (redesign "SaaS Jurídico Moderno", 2026-10)
+ * Azul institucional sobre cinza-azulado claro, tipografia Manrope (títulos) + IBM Plex Sans
+ * (texto). Os nomes das variáveis (--color-navy, --color-gold etc.) ficaram os mesmos da versão
+ * anterior de propósito: são usados em dezenas de arquivos via classes Tailwind geradas
+ * (bg-navy, text-gold-strong...) e trocar só o valor revisa o app inteiro sem tocar em cada
+ * página. --color-gold continua reservado para avisos/alertas (nunca é o azul principal).
  */
 @theme {
-  --color-paper: #faf8f3;
+  --color-paper: #f5f7fb;
   --color-surface: #ffffff;
-  --color-ink: #16213a;
-  --color-muted: #5b5f6e;
-  --color-line: #e3e0d4;
-  --color-navy: #141b33;
-  --color-navy-strong: #0a0e1c;
-  --color-navy-soft: #e7e9ef;
-  --color-gold: #c79a4e;
-  --color-gold-strong: #8a6328;
-  --color-gold-soft: #f6ead0;
+  --color-ink: #1e293b;
+  --color-muted: #475569;
+  --color-line: #e2e8f0;
+  --color-navy: #1456cc;
+  --color-navy-strong: #0e3f9e;
+  --color-navy-soft: #eaf1fd;
+  --color-gold: #d97706;
+  --color-gold-strong: #92400e;
+  --color-gold-soft: #fef3e0;
+  /* Mantidos do token anterior de propósito: já passavam na auditoria de contraste (axe/WCAG AA)
+     contra links dentro do Alert de erro; não fazem parte da identidade visual em si. */
   --color-danger: #9e2b1e;
   --color-danger-soft: #fbedea;
 
-  /* Títulos seguem o logotipo: sans geométrica, peso forte. Sem fontes externas (build offline). */
-  --font-serif:
-    "Avenir Next", "Montserrat", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Auto-hospedadas via next/font em app/layout.tsx (ver variáveis --font-manrope/--font-plex);
+     os nomes --font-serif/--font-sans ficaram os mesmos pelo mesmo motivo do bloco de cores. */
+  --font-serif: var(--font-manrope), "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  --font-sans: var(--font-plex), "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
 }
 
 @layer base {
