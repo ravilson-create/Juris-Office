@@ -33,6 +33,14 @@ export const tipoPecaSchema = z.enum([
   "cumprimento_alimentos",
   "pedido_prisao_civil",
   "justificativa_impossibilidade_pagamento",
+  // Previdenciário: corre na Justiça Federal (INSS é Fazenda Pública) — a maioria das causas de
+  // benefício tramita no Juizado Especial Federal, onde o recurso contra a sentença se chama
+  // "Recurso Inominado", não Apelação; e o cumprimento de sentença contra a Fazenda Pública
+  // segue rito de RPV/precatório, não o cumprimento comum (art. 523 CPC) usado acima.
+  "recurso_inominado",
+  "contrarrazoes_recurso_inominado",
+  "cumprimento_fazenda_publica",
+  "implantacao_beneficio",
 ]);
 export type TipoPeca = z.infer<typeof tipoPecaSchema>;
 
@@ -54,6 +62,10 @@ export const TITULO_PECA: Record<TipoPeca, string> = {
   cumprimento_alimentos: "Cumprimento de Sentença de Alimentos",
   pedido_prisao_civil: "Pedido de Prisão Civil do Devedor de Alimentos",
   justificativa_impossibilidade_pagamento: "Justificativa de Impossibilidade de Pagamento",
+  recurso_inominado: "Recurso Inominado",
+  contrarrazoes_recurso_inominado: "Contrarrazões ao Recurso Inominado",
+  cumprimento_fazenda_publica: "Cumprimento de Sentença contra a Fazenda Pública (RPV/Precatório)",
+  implantacao_beneficio: "Pedido de Implantação Imediata do Benefício",
 };
 
 export type CampoPeca = { chave: string; rotulo: string; placeholder?: string };
@@ -143,13 +155,30 @@ export const CAMPOS_PECA: Record<TipoPeca, CampoPeca[]> = {
     { chave: "motivoImpossibilidade", rotulo: "Motivo da impossibilidade de pagar (ex.: desemprego, doença)" },
     { chave: "provasAnexadas", rotulo: "Provas anexadas que comprovam o motivo" },
   ],
+  recurso_inominado: [
+    { chave: "razoesRecurso", rotulo: "Razões do recurso (por que a sentença está errada)" },
+    { chave: "pedidoReforma", rotulo: "O que deve ser reformado ou anulado" },
+  ],
+  contrarrazoes_recurso_inominado: [
+    { chave: "argumentosRecorrente", rotulo: "O que o recorrente alegou no recurso" },
+    { chave: "contrarrazoes", rotulo: "Resposta a cada argumento do recorrente" },
+  ],
+  cumprimento_fazenda_publica: [
+    { chave: "valorApurado", rotulo: "Valor apurado dos atrasados" },
+    { chave: "periodoAtrasados", rotulo: "Período a que se referem os valores atrasados" },
+  ],
+  implantacao_beneficio: [
+    { chave: "beneficioConcedido", rotulo: "Benefício concedido na sentença (espécie e NB, se houver)" },
+    { chave: "dataInicioBeneficio", rotulo: "Data de início do benefício (DIB) fixada na sentença" },
+  ],
 };
 
 /** Peças com nome e rito específicos de uma área não fazem sentido nas demais — "Apelação" não
- * existe na Justiça do Trabalho (lá é "Recurso Ordinário"), e a execução de alimentos (família)
- * não é a mesma coisa que o cumprimento de sentença comum. Peças genéricas (embargos de
- * declaração, tutela de urgência, homologação de acordo) não entram em nenhuma lista abaixo, e
- * por isso ficam disponíveis em qualquer área. */
+ * existe na Justiça do Trabalho (lá é "Recurso Ordinário"), a execução de alimentos (família)
+ * não é a mesma coisa que o cumprimento de sentença comum, e o INSS (previdenciário) é Fazenda
+ * Pública — não paga pelo rito comum do art. 523 CPC. Peças genéricas (embargos de declaração,
+ * tutela de urgência, homologação de acordo) não entram em nenhuma lista abaixo, e por isso
+ * ficam disponíveis em qualquer área. */
 const SOMENTE_TRABALHISTA: TipoPeca[] = [
   "manifestacao_defesa",
   "recurso_ordinario",
@@ -163,18 +192,30 @@ const SOMENTE_FAMILIA: TipoPeca[] = [
   "pedido_prisao_civil",
   "justificativa_impossibilidade_pagamento",
 ];
+const SOMENTE_PREVIDENCIARIO: TipoPeca[] = [
+  "recurso_inominado",
+  "contrarrazoes_recurso_inominado",
+  "cumprimento_fazenda_publica",
+  "implantacao_beneficio",
+];
 const EXCETO_TRABALHISTA: TipoPeca[] = [
   "replica",
   "apelacao",
   "contrarrazoes_apelacao",
   "cumprimento_sentenca",
 ];
+/** Cumprimento de sentença comum pressupõe devedor privado (multa de 10% do art. 523, CPC) — o
+ * INSS é Fazenda Pública e segue outro rito (ver cumprimento_fazenda_publica). Oferecer os dois
+ * juntos arriscaria o advogado escolher o errado contra o INSS. */
+const EXCETO_PREVIDENCIARIO: TipoPeca[] = ["cumprimento_sentenca"];
 
 export function tiposDisponiveisParaArea(area: LegalAreaSlug): TipoPeca[] {
   return tipoPecaSchema.options.filter((tipo) => {
     if (SOMENTE_TRABALHISTA.includes(tipo)) return area === "trabalhista";
     if (SOMENTE_FAMILIA.includes(tipo)) return area === "familia";
-    if (EXCETO_TRABALHISTA.includes(tipo)) return area !== "trabalhista";
+    if (SOMENTE_PREVIDENCIARIO.includes(tipo)) return area === "previdenciario";
+    if (EXCETO_TRABALHISTA.includes(tipo) && area === "trabalhista") return false;
+    if (EXCETO_PREVIDENCIARIO.includes(tipo) && area === "previdenciario") return false;
     return true;
   });
 }

@@ -16,6 +16,7 @@ const CTX_CIVEL = {
 };
 const CTX_TRABALHISTA = { ...CTX_CIVEL, areaSlug: "trabalhista" as const };
 const CTX_FAMILIA = { ...CTX_CIVEL, areaSlug: "familia" as const };
+const CTX_PREVIDENCIARIO = { ...CTX_CIVEL, areaSlug: "previdenciario" as const };
 
 describe("gerarPeca: as peças pós-decisão", () => {
   it.each(tipoPecaSchema.options)("%s: gera documento com título correto e nunca inventa campo vazio", (tipo) => {
@@ -115,6 +116,44 @@ describe("gerarPeca: as peças pós-decisão", () => {
     });
   });
 
+  describe("endereçamento previdenciário: Justiça Federal", () => {
+    it("juízo: Juiz Federal / Vara Federal-JEF", () => {
+      const juizo = gerarPeca("cumprimento_fazenda_publica", CTX_PREVIDENCIARIO, {}).secoes[0]!;
+      expect(juizo.corpo).toContain("JUIZ(A) FEDERAL");
+    });
+    it("tribunal (apelação/agravo): TRF", () => {
+      const tribunal = gerarPeca("contrarrazoes_apelacao", CTX_PREVIDENCIARIO, {}).secoes[0]!;
+      expect(tribunal.corpo).toContain("TRIBUNAL REGIONAL FEDERAL");
+    });
+    it("contrarrazões de recurso inominado: Turma Recursal (JEF), não o TRF", () => {
+      const turma = gerarPeca("contrarrazoes_recurso_inominado", CTX_PREVIDENCIARIO, {}).secoes[0]!;
+      expect(turma.corpo).toContain("TURMA RECURSAL");
+      expect(turma.corpo).not.toContain("TRIBUNAL REGIONAL FEDERAL");
+    });
+  });
+
+  describe("peças previdenciárias: citam o artigo certo", () => {
+    it("recurso inominado: Lei 9.099/95 art. 41 e Lei 10.259/2001 art. 1º", () => {
+      const doc = gerarPeca("recurso_inominado", CTX_PREVIDENCIARIO, {});
+      const corpo = doc.secoes.find((s) => s.chave === "do_cabimento")!.corpo;
+      expect(corpo).toContain("9.099");
+      expect(corpo).toContain("10.259");
+    });
+    it("cumprimento contra a Fazenda Pública: art. 535 CPC e RPV/precatório", () => {
+      const doc = gerarPeca("cumprimento_fazenda_publica", CTX_PREVIDENCIARIO, {});
+      const corpo = doc.secoes.find((s) => s.chave === "do_cabimento")!.corpo;
+      expect(corpo).toContain("535");
+      expect(corpo).toContain("RPV");
+      expect(corpo).toContain("precatório");
+    });
+    it("implantação do benefício: arts. 497 e 536 CPC", () => {
+      const doc = gerarPeca("implantacao_beneficio", CTX_PREVIDENCIARIO, {});
+      const corpo = doc.secoes.find((s) => s.chave === "do_cabimento")!.corpo;
+      expect(corpo).toContain("497");
+      expect(corpo).toContain("536");
+    });
+  });
+
   describe("tiposDisponiveisParaArea", () => {
     it("trabalhista não lista Apelação/Réplica (nomes cíveis), mas lista Recurso Ordinário", () => {
       const tipos = tiposDisponiveisParaArea("trabalhista");
@@ -128,12 +167,14 @@ describe("gerarPeca: as peças pós-decisão", () => {
       expect(tipos).toContain("homologacao_acordo");
     });
 
-    it("cível não lista Recurso Ordinário (nome trabalhista) nem peças de alimentos (família)", () => {
+    it("cível não lista Recurso Ordinário (nome trabalhista) nem peças de alimentos (família) ou INSS (previdenciário)", () => {
       const tipos = tiposDisponiveisParaArea("civel");
       expect(tipos).toContain("apelacao");
+      expect(tipos).toContain("cumprimento_sentenca");
       expect(tipos).not.toContain("recurso_ordinario");
       expect(tipos).not.toContain("agravo_peticao");
       expect(tipos).not.toContain("cumprimento_alimentos");
+      expect(tipos).not.toContain("recurso_inominado");
     });
 
     it("família lista as peças de alimentos e as genéricas, mas não as trabalhistas", () => {
@@ -145,6 +186,20 @@ describe("gerarPeca: as peças pós-decisão", () => {
       expect(tipos).toContain("homologacao_acordo");
       expect(tipos).not.toContain("recurso_ordinario");
       expect(tipos).not.toContain("agravo_peticao");
+    });
+
+    it("previdenciário lista as peças do INSS/JEF e as genéricas, mas não cumprimento_sentenca comum", () => {
+      const tipos = tiposDisponiveisParaArea("previdenciario");
+      expect(tipos).toContain("recurso_inominado");
+      expect(tipos).toContain("contrarrazoes_recurso_inominado");
+      expect(tipos).toContain("cumprimento_fazenda_publica");
+      expect(tipos).toContain("implantacao_beneficio");
+      expect(tipos).toContain("apelacao"); // Vara Federal comum, fora do JEF
+      expect(tipos).toContain("agravo_tutela");
+      expect(tipos).toContain("embargos_declaracao");
+      expect(tipos).not.toContain("cumprimento_sentenca"); // rito de devedor privado, não serve contra o INSS
+      expect(tipos).not.toContain("recurso_ordinario");
+      expect(tipos).not.toContain("cumprimento_alimentos");
     });
   });
 });
