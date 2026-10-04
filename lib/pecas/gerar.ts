@@ -198,6 +198,151 @@ function gerarHomologacaoAcordo(ctx: ContextoPeca, c: ValoresCamposPeca): Petiti
   ]);
 }
 
+// ------------------------------------------------------------ Trabalhista (rito da CLT)
+
+function gerarManifestacaoDefesa(ctx: ContextoPeca, c: ValoresCamposPeca): PetitionDocument {
+  return documento("manifestacao_defesa", [
+    enderecamentoJuizo(ctx),
+    qualificacaoResumida(ctx, "parte reclamante"),
+    {
+      chave: "da_defesa",
+      titulo: "Da Síntese da Defesa",
+      corpo: `A parte reclamada apresentou defesa, alegando, em síntese: ${campoDe("manifestacao_defesa", c, "pontosDefesa")}`,
+    },
+    {
+      chave: "da_impugnacao",
+      titulo: "Da Impugnação",
+      corpo: "Nenhum dos argumentos da defesa é capaz de afastar o direito da parte reclamante, pelos fundamentos já expostos na petição inicial, que aqui se reiteram e passam a integrar esta manifestação.",
+    },
+    {
+      chave: "do_pedido",
+      titulo: "Do Pedido",
+      corpo: "Requer o prosseguimento do feito, com a improcedência das teses defensivas e a procedência dos pedidos formulados na petição inicial.",
+    },
+    fechoPeca(),
+  ]);
+}
+
+function gerarRecursoOrdinario(ctx: ContextoPeca, c: ValoresCamposPeca): PetitionDocument {
+  return documento("recurso_ordinario", [
+    enderecamentoJuizo(ctx),
+    qualificacaoResumida(ctx, "parte recorrente"),
+    {
+      chave: "das_razoes",
+      titulo: "Das Razões do Recurso",
+      corpo: campoDe("recurso_ordinario", c, "razoesRecurso"),
+    },
+    {
+      chave: "do_cabimento",
+      titulo: "Do Cabimento",
+      corpo: "O presente recurso ordinário é cabível nos termos do art. 895, I, da CLT, contra a sentença proferida pela Vara do Trabalho.",
+    },
+    {
+      chave: "do_pedido",
+      titulo: "Do Pedido de Reforma",
+      corpo: `Requer o conhecimento e provimento do presente recurso, para ${campoDe("recurso_ordinario", c, "pedidoReforma")}`,
+    },
+    fechoPeca(),
+  ]);
+}
+
+function gerarContrarrazoesRecursoOrdinario(ctx: ContextoPeca, c: ValoresCamposPeca): PetitionDocument {
+  return documento("contrarrazoes_recurso_ordinario", [
+    enderecamentoTribunal(ctx),
+    qualificacaoResumida(ctx, "parte recorrida"),
+    {
+      chave: "dos_argumentos_recorrente",
+      titulo: "Da Síntese do Recurso",
+      corpo: `O recorrente sustenta, em síntese: ${campoDe("contrarrazoes_recurso_ordinario", c, "argumentosRecorrente")}`,
+    },
+    {
+      chave: "das_contrarrazoes",
+      titulo: "Das Contrarrazões",
+      corpo: campoDe("contrarrazoes_recurso_ordinario", c, "contrarrazoes"),
+    },
+    {
+      chave: "do_pedido",
+      titulo: "Do Pedido",
+      corpo: "Requer o conhecimento e desprovimento do recurso, mantendo-se a sentença recorrida em todos os seus termos.",
+    },
+    fechoPeca(),
+  ]);
+}
+
+function gerarCumprimentoExecucaoTrabalhista(ctx: ContextoPeca, c: ValoresCamposPeca): PetitionDocument {
+  return documento("cumprimento_execucao_trabalhista", [
+    enderecamentoJuizo(ctx),
+    qualificacaoResumida(ctx, "parte exequente"),
+    {
+      chave: "da_obrigacao",
+      titulo: "Das Verbas Devidas",
+      corpo: `A sentença/acordo transitado em julgado determinou: ${campoDe("cumprimento_execucao_trabalhista", c, "obrigacaoExequenda")}. Valor apurado na planilha de cálculos anexa: ${campoDe("cumprimento_execucao_trabalhista", c, "valorCalculado")}`,
+    },
+    {
+      chave: "do_cabimento",
+      titulo: "Da Execução",
+      corpo: "Nos termos dos arts. 876 e 880 da CLT, requer-se a citação da parte executada para pagamento no prazo legal, sob pena de penhora de bens suficientes para a garantia do juízo.",
+    },
+    fechoPeca(),
+  ]);
+}
+
+function gerarImpugnacaoCalculos(ctx: ContextoPeca, c: ValoresCamposPeca): PetitionDocument {
+  return documento("impugnacao_calculos", [
+    enderecamentoJuizo(ctx),
+    qualificacaoResumida(ctx, "parte"),
+    {
+      chave: "dos_calculos_impugnados",
+      titulo: "Dos Cálculos Impugnados",
+      corpo: `Os cálculos apresentados contêm o seguinte erro: ${campoDe("impugnacao_calculos", c, "calculosImpugnados")}`,
+    },
+    {
+      chave: "do_criterio_correto",
+      titulo: "Do Critério Correto",
+      corpo: campoDe("impugnacao_calculos", c, "criterioCorreto"),
+    },
+    {
+      chave: "do_cabimento",
+      titulo: "Do Cabimento",
+      corpo: "Nos termos do art. 884 da CLT, cabe à parte impugnar os cálculos de liquidação no prazo legal, sob pena de preclusão.",
+    },
+    {
+      chave: "do_pedido",
+      titulo: "Do Pedido",
+      corpo: "Requer o acolhimento da presente impugnação, com a retificação dos cálculos na forma aqui exposta.",
+    },
+    fechoPeca(),
+  ]);
+}
+
+function gerarAgravoPeticao(ctx: ContextoPeca, c: ValoresCamposPeca): PetitionDocument {
+  return documento("agravo_peticao", [
+    enderecamentoTribunal(ctx),
+    qualificacaoResumida(ctx, "parte agravante"),
+    {
+      chave: "da_decisao_agravada",
+      titulo: "Da Decisão Agravada",
+      corpo: `A decisão agravada, proferida na fase de execução, decidiu: ${campoDe("agravo_peticao", c, "decisaoAgravada")}`,
+    },
+    {
+      chave: "do_cabimento",
+      titulo: "Do Cabimento",
+      corpo: "O presente agravo de petição é cabível nos termos do art. 897, \"a\", da CLT, contra decisões proferidas na execução trabalhista.",
+    },
+    {
+      chave: "do_fundamento",
+      titulo: "Da Reforma da Decisão",
+      corpo: campoDe("agravo_peticao", c, "fundamentoReforma"),
+    },
+    {
+      chave: "do_pedido",
+      titulo: "Do Pedido",
+      corpo: "Requer o conhecimento e provimento do presente agravo, para reformar a decisão agravada na forma aqui exposta.",
+    },
+    fechoPeca(),
+  ]);
+}
+
 const GERADORES: Record<TipoPeca, (ctx: ContextoPeca, c: ValoresCamposPeca) => PetitionDocument> = {
   replica: gerarReplica,
   agravo_tutela: gerarAgravoTutela,
@@ -207,6 +352,12 @@ const GERADORES: Record<TipoPeca, (ctx: ContextoPeca, c: ValoresCamposPeca) => P
   cumprimento_sentenca: gerarCumprimentoSentenca,
   pedido_multa: gerarPedidoMulta,
   homologacao_acordo: gerarHomologacaoAcordo,
+  manifestacao_defesa: gerarManifestacaoDefesa,
+  recurso_ordinario: gerarRecursoOrdinario,
+  contrarrazoes_recurso_ordinario: gerarContrarrazoesRecursoOrdinario,
+  cumprimento_execucao_trabalhista: gerarCumprimentoExecucaoTrabalhista,
+  impugnacao_calculos: gerarImpugnacaoCalculos,
+  agravo_peticao: gerarAgravoPeticao,
 };
 
 export function gerarPeca(

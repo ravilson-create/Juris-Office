@@ -4,6 +4,21 @@
 
 ### Adicionado
 
+- **6 peças específicas do rito trabalhista (CLT)**, nas mesmas Peças do processo
+  (`/equipe/[caseId]/pecas`): manifestação sobre a defesa e documentos, recurso ordinário,
+  contrarrazões ao recurso ordinário, execução de sentença trabalhista (cumprimento + planilha de
+  cálculos), impugnação à sentença de liquidação/aos cálculos e agravo de petição — as peças
+  trabalhistas mais usadas no dia a dia, no lugar dos nomes e ritos cíveis que não existem na
+  Justiça do Trabalho ("Apelação" lá é "Recurso Ordinário", "Cumprimento de Sentença" cita os
+  arts. 876/880 da CLT em vez do art. 523 do CPC etc.). A tela só lista as peças que fazem
+  sentido para a área do caso (`tiposDisponiveisParaArea`, `domain/pecas/schema.ts`) — um caso
+  trabalhista não vê "Apelação"/"Réplica", um caso cível não vê "Recurso Ordinário"/"Agravo de
+  Petição"; as peças genéricas (embargos de declaração, tutela de urgência, homologação de
+  acordo) continuam em qualquer área. O endereçamento também passou a variar pela área —
+  "Juiz(a) do Trabalho"/"Vara do Trabalho"/"Tribunal Regional do Trabalho" para trabalhista,
+  mantendo "Juiz(a) de Direito"/"Comarca"/"Tribunal de Justiça" para as demais
+  (`lib/pecas/comum.ts`). Mesma cota de 50 auxílios de IA por mês, mesmo editor, mesma exportação
+  em .docx/PDF — nenhuma peça nova precisou de infraestrutura própria.
 - **Peças pós-decisão, com auxílio de IA e limite mensal** (`/equipe/[caseId]/pecas`): as 8 peças
   mais comuns depois da petição inicial — réplica à contestação, agravo de instrumento contra
   indeferimento de tutela de urgência, embargos de declaração, apelação, contrarrazões de

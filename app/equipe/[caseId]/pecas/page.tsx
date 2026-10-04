@@ -8,17 +8,11 @@ import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
 import { getCaseService } from "@/lib/services";
 import { buscarAuxiliosIARestantes, LIMITE_AUXILIOS_IA_MES } from "@/lib/services/ai-quota";
-import { CAMPOS_PECA, TITULO_PECA, tipoPecaSchema, type TipoPeca } from "@/domain/pecas/schema";
+import { CAMPOS_PECA, TITULO_PECA, tiposDisponiveisParaArea, type TipoPeca } from "@/domain/pecas/schema";
 import type { PetitionSection } from "@/domain/petition/schema";
 import { excluirPeticaoAction, salvarPeticaoAction } from "../peticao/actions";
 
 export const dynamic = "force-dynamic";
-
-const TIPOS_PECA = tipoPecaSchema.options.map((tipo) => ({
-  tipo,
-  titulo: TITULO_PECA[tipo],
-  campos: CAMPOS_PECA[tipo],
-}));
 
 export default async function PecasPage({ params }: { params: Promise<{ caseId: string }> }) {
   const actor = await currentUserId();
@@ -45,6 +39,12 @@ export default async function PecasPage({ params }: { params: Promise<{ caseId: 
   // A política RLS é o filtro definitivo: um caseId de outro escritório/sem atribuição não acha nada.
   const ctx = await getCaseService().getTriageContext(caseId);
   if (!ctx) notFound();
+
+  const tiposPeca = tiposDisponiveisParaArea(ctx.area.slug).map((tipo) => ({
+    tipo,
+    titulo: TITULO_PECA[tipo],
+    campos: CAMPOS_PECA[tipo],
+  }));
 
   const pecas = await db.query<{
     id: string;
@@ -80,7 +80,7 @@ export default async function PecasPage({ params }: { params: Promise<{ caseId: 
         única, compartilhada com a correção de redação da petição inicial).
       </p>
 
-      <GerarPecaForm caseId={caseId} tipos={TIPOS_PECA} />
+      <GerarPecaForm caseId={caseId} tipos={tiposPeca} />
 
       {pecas.length === 0 ? (
         <p className="mt-8 text-muted">Nenhuma peça gerada ainda.</p>
