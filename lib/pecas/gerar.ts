@@ -3,6 +3,7 @@ import { CAMPOS_PECA, TITULO_PECA, type TipoPeca } from "@/domain/pecas/schema";
 import {
   enderecamentoJuizo,
   enderecamentoTribunal,
+  enderecamentoTurmaRecursal,
   fechoPeca,
   qualificacaoResumida,
   type ContextoPeca,
@@ -412,6 +413,90 @@ function gerarJustificativaImpossibilidadePagamento(
   ]);
 }
 
+// ------------------------------------------------------------ Previdenciário (Justiça Federal)
+
+function gerarRecursoInominado(ctx: ContextoPeca, c: ValoresCamposPeca): PetitionDocument {
+  return documento("recurso_inominado", [
+    enderecamentoJuizo(ctx),
+    qualificacaoResumida(ctx, "parte recorrente"),
+    {
+      chave: "das_razoes",
+      titulo: "Das Razões do Recurso",
+      corpo: campoDe("recurso_inominado", c, "razoesRecurso"),
+    },
+    {
+      chave: "do_cabimento",
+      titulo: "Do Cabimento",
+      corpo: "O presente recurso inominado é cabível nos termos do art. 41 da Lei nº 9.099/1995 e do art. 1º da Lei nº 10.259/2001, contra a sentença proferida pelo Juizado Especial Federal.",
+    },
+    {
+      chave: "do_pedido",
+      titulo: "Do Pedido de Reforma",
+      corpo: `Requer o conhecimento e provimento do presente recurso, para ${campoDe("recurso_inominado", c, "pedidoReforma")}`,
+    },
+    fechoPeca(),
+  ]);
+}
+
+function gerarContrarrazoesRecursoInominado(ctx: ContextoPeca, c: ValoresCamposPeca): PetitionDocument {
+  return documento("contrarrazoes_recurso_inominado", [
+    enderecamentoTurmaRecursal(ctx),
+    qualificacaoResumida(ctx, "parte recorrida"),
+    {
+      chave: "dos_argumentos_recorrente",
+      titulo: "Da Síntese do Recurso",
+      corpo: `O recorrente sustenta, em síntese: ${campoDe("contrarrazoes_recurso_inominado", c, "argumentosRecorrente")}`,
+    },
+    {
+      chave: "das_contrarrazoes",
+      titulo: "Das Contrarrazões",
+      corpo: campoDe("contrarrazoes_recurso_inominado", c, "contrarrazoes"),
+    },
+    {
+      chave: "do_pedido",
+      titulo: "Do Pedido",
+      corpo: "Requer o conhecimento e desprovimento do recurso, mantendo-se a sentença recorrida em todos os seus termos.",
+    },
+    fechoPeca(),
+  ]);
+}
+
+function gerarCumprimentoFazendaPublica(ctx: ContextoPeca, c: ValoresCamposPeca): PetitionDocument {
+  return documento("cumprimento_fazenda_publica", [
+    enderecamentoJuizo(ctx),
+    qualificacaoResumida(ctx, "parte exequente"),
+    {
+      chave: "dos_valores_atrasados",
+      titulo: "Dos Valores Atrasados",
+      corpo: `Encontram-se em aberto os valores atrasados referentes ao período de ${campoDe("cumprimento_fazenda_publica", c, "periodoAtrasados")}, apurados em ${campoDe("cumprimento_fazenda_publica", c, "valorApurado")}.`,
+    },
+    {
+      chave: "do_cabimento",
+      titulo: "Do Cabimento",
+      corpo: "Nos termos do art. 535 do Código de Processo Civil e do art. 17 da Lei nº 10.259/2001, por se tratar de execução contra a Fazenda Pública, requer-se a intimação do INSS para impugnar no prazo de 30 (trinta) dias e, não havendo impugnação ou após seu julgamento, a expedição de Requisição de Pequeno Valor (RPV) — ou, caso o valor supere 60 (sessenta) salários mínimos, de precatório — para pagamento dos valores atrasados.",
+    },
+    fechoPeca(),
+  ]);
+}
+
+function gerarImplantacaoBeneficio(ctx: ContextoPeca, c: ValoresCamposPeca): PetitionDocument {
+  return documento("implantacao_beneficio", [
+    enderecamentoJuizo(ctx),
+    qualificacaoResumida(ctx, "parte autora/beneficiária"),
+    {
+      chave: "do_beneficio",
+      titulo: "Do Benefício Concedido",
+      corpo: `A sentença concedeu o seguinte benefício: ${campoDe("implantacao_beneficio", c, "beneficioConcedido")}, com data de início (DIB) em ${campoDe("implantacao_beneficio", c, "dataInicioBeneficio")}, e até o momento o INSS não o implantou.`,
+    },
+    {
+      chave: "do_cabimento",
+      titulo: "Do Cabimento",
+      corpo: "Nos termos dos arts. 497 e 536 do Código de Processo Civil, a obrigação de implantar o benefício é obrigação de fazer, exigível independentemente do trânsito em julgado quanto aos valores atrasados. Requer-se a intimação do INSS para implantar o benefício no prazo de 30 (trinta) dias, sob pena de multa diária a ser arbitrada por este Juízo.",
+    },
+    fechoPeca(),
+  ]);
+}
+
 const GERADORES: Record<TipoPeca, (ctx: ContextoPeca, c: ValoresCamposPeca) => PetitionDocument> = {
   replica: gerarReplica,
   agravo_tutela: gerarAgravoTutela,
@@ -430,6 +515,10 @@ const GERADORES: Record<TipoPeca, (ctx: ContextoPeca, c: ValoresCamposPeca) => P
   cumprimento_alimentos: gerarCumprimentoAlimentos,
   pedido_prisao_civil: gerarPedidoPrisaoCivil,
   justificativa_impossibilidade_pagamento: gerarJustificativaImpossibilidadePagamento,
+  recurso_inominado: gerarRecursoInominado,
+  contrarrazoes_recurso_inominado: gerarContrarrazoesRecursoInominado,
+  cumprimento_fazenda_publica: gerarCumprimentoFazendaPublica,
+  implantacao_beneficio: gerarImplantacaoBeneficio,
 };
 
 export function gerarPeca(

@@ -4,6 +4,20 @@
 
 ### Adicionado
 
+- **4 peças de previdenciário, e endereçamento correto à Justiça Federal**, nas mesmas Peças do
+  processo (`/equipe/[caseId]/pecas`): recurso inominado, contrarrazões ao recurso inominado,
+  cumprimento de sentença contra a Fazenda Pública (RPV/precatório) e pedido de implantação
+  imediata do benefício. Previdenciário corre na Justiça Federal (o INSS é Fazenda Pública) — a
+  maioria das causas de benefício tramita no Juizado Especial Federal, onde o recurso contra a
+  sentença se chama "Recurso Inominado" (não Apelação) e é endereçado, em contrarrazões, à Turma
+  Recursal (não ao TRF). O cumprimento de sentença também segue rito próprio: o INSS não paga
+  como devedor comum (sem a multa de 10% do art. 523, CPC) — por isso "Cumprimento de Sentença"
+  comum deixou de ser listado para previdenciário, substituído pelo que cita o art. 535 do CPC e
+  o art. 17 da Lei nº 10.259/2001. O endereçamento das peças genéricas (réplica, embargos,
+  apelação, agravo de instrumento) também passou a reconhecer a área — "Juiz(a) Federal"/"Vara
+  Federal ou Juizado Especial Federal"/"Tribunal Regional Federal" em vez de "Juiz(a) de
+  Direito"/"Comarca"/"Tribunal de Justiça" (`lib/pecas/comum.ts`). Mesma tela, mesmo editor,
+  mesma correção por IA (dentro da cota de 50/mês), mesma exportação em .docx/PDF.
 - **3 peças de execução de alimentos (família)**, nas mesmas Peças do processo
   (`/equipe/[caseId]/pecas`): cumprimento de sentença de alimentos, pedido de prisão civil do
   devedor e justificativa de impossibilidade de pagamento — a execução de alimentos tem rito
