@@ -26,7 +26,12 @@ export async function gerarPecaAction(form: FormData) {
 
   const documento = gerarPeca(
     tipo.data,
-    { applicant: ctx.legalCase.applicant, protocolo: ctx.legalCase.protocol, numeroProcesso },
+    {
+      applicant: ctx.legalCase.applicant,
+      protocolo: ctx.legalCase.protocol,
+      numeroProcesso,
+      areaSlug: ctx.area.slug,
+    },
     valores,
   );
 
