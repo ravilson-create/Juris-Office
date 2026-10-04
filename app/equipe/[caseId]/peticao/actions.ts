@@ -122,7 +122,7 @@ export async function corrigirSecaoIAAction(
   );
   if (!permitido) {
     return {
-      error: "Limite de 50 auxílios de IA deste mês já foi atingido. Volta a liberar no mês seguinte.",
+      error: "Limite de 100 auxílios de IA deste mês já foi atingido. Volta a liberar no mês seguinte.",
     };
   }
 

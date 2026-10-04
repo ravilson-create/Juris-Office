@@ -4,6 +4,17 @@
 
 ### Adicionado
 
+- **Auxílio de IA para preencher os campos livres das peças** (não da petição inicial), em
+  `/equipe/[caseId]/pecas`: cada campo do formulário de geração ganhou um botão "Auxílio de IA"
+  que transforma a anotação informal do advogado no texto no padrão jurídico esperado — mesma
+  regra de nunca inventar fato além do que foi informado, mesma forma de propor e só aplicar com
+  "Usar esta versão" já usada em "Corrigir com IA" (`PeticaoSecaoEditor`). É uma etapa anterior a
+  essa: ajuda a escrever o campo ANTES de gerar a peça, enquanto "Corrigir com IA" continua
+  corrigindo a redação de cada seção DEPOIS de gerada. Consome a mesma cota mensal única de
+  auxílio de IA.
+- **Limite mensal de auxílio da IA elevado de 50 para 100** por advogado — mesma cota
+  compartilhada entre a correção de redação (petição e peças) e, a partir desta versão, o novo
+  auxílio de preenchimento dos campos das peças.
 - **7 peças cíveis genéricas de defesa e execução**, nas mesmas Peças do processo
   (`/equipe/[caseId]/pecas`): impugnação à contestação, reconvenção, agravo de instrumento e
   suas contrarrazões, impugnação ao cumprimento de sentença, embargos à execução e exceção de

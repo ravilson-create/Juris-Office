@@ -12,8 +12,8 @@ async function migrar(db: PGlite) {
   }
 }
 
-describe("consumir_auxilio_ia / auxilios_ia_restantes: cota mensal de 50 por advogado", () => {
-  it("consome até 50 no mês, a 51ª chamada é negada, e é isolada por advogado", async () => {
+describe("consumir_auxilio_ia / auxilios_ia_restantes: cota mensal de 100 por advogado", () => {
+  it("consome até 100 no mês, a 101ª chamada é negada, e é isolada por advogado", async () => {
     const db = new PGlite();
     try {
       await migrar(db);
@@ -26,7 +26,7 @@ describe("consumir_auxilio_ia / auxilios_ia_restantes: cota mensal de 50 por adv
       ]);
 
       await db.query("SELECT set_config('app.user_id', 'lawyer_a', false)");
-      for (let i = 0; i < 50; i++) {
+      for (let i = 0; i < 100; i++) {
         const { rows } = await db.query<{ consumir_auxilio_ia: boolean }>(
           "SELECT consumir_auxilio_ia()",
         );
@@ -47,7 +47,7 @@ describe("consumir_auxilio_ia / auxilios_ia_restantes: cota mensal de 50 por adv
       const restantesB = await db.query<{ auxilios_ia_restantes: number }>(
         "SELECT auxilios_ia_restantes()",
       );
-      expect(restantesB.rows[0]!.auxilios_ia_restantes).toBe(50);
+      expect(restantesB.rows[0]!.auxilios_ia_restantes).toBe(100);
       const permitidoB = await db.query<{ consumir_auxilio_ia: boolean }>(
         "SELECT consumir_auxilio_ia()",
       );
