@@ -4,6 +4,17 @@
 
 ### Adicionado
 
+- **3 peças de execução de alimentos (família)**, nas mesmas Peças do processo
+  (`/equipe/[caseId]/pecas`): cumprimento de sentença de alimentos, pedido de prisão civil do
+  devedor e justificativa de impossibilidade de pagamento — a execução de alimentos tem rito
+  próprio (art. 528 do CPC, com risco de prisão civil do executado), bem diferente do
+  cumprimento de sentença comum (art. 523), que continua existindo para as demais obrigações de
+  família (ex.: partilha de bens). É o contencioso mais recorrente depois da sentença em causas
+  de família — alimentos em atraso é o motivo mais comum de o processo continuar ativo. As
+  demais peças já informadas para família (réplica, embargos de declaração, tutela de urgência,
+  apelação, contrarrazões, homologação de acordo) já eram genéricas e já valiam para a área, sem
+  nenhuma mudança. Mesma tela, mesmo editor, mesma correção por IA (dentro da cota de 50/mês),
+  mesma exportação em .docx/PDF.
 - **6 peças específicas do rito trabalhista (CLT)**, nas mesmas Peças do processo
   (`/equipe/[caseId]/pecas`): manifestação sobre a defesa e documentos, recurso ordinário,
   contrarrazões ao recurso ordinário, execução de sentença trabalhista (cumprimento + planilha de

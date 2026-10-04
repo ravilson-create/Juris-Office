@@ -27,6 +27,12 @@ export const tipoPecaSchema = z.enum([
   "cumprimento_execucao_trabalhista",
   "impugnacao_calculos",
   "agravo_peticao",
+  // Família: a execução de alimentos tem rito próprio (art. 528 CPC, com risco de prisão
+  // civil), bem diferente do cumprimento de sentença comum acima — por isso não reaproveita
+  // "cumprimento_sentenca".
+  "cumprimento_alimentos",
+  "pedido_prisao_civil",
+  "justificativa_impossibilidade_pagamento",
 ]);
 export type TipoPeca = z.infer<typeof tipoPecaSchema>;
 
@@ -45,6 +51,9 @@ export const TITULO_PECA: Record<TipoPeca, string> = {
   cumprimento_execucao_trabalhista: "Execução de Sentença Trabalhista (Cumprimento + Cálculos)",
   impugnacao_calculos: "Impugnação à Sentença de Liquidação / aos Cálculos",
   agravo_peticao: "Agravo de Petição",
+  cumprimento_alimentos: "Cumprimento de Sentença de Alimentos",
+  pedido_prisao_civil: "Pedido de Prisão Civil do Devedor de Alimentos",
+  justificativa_impossibilidade_pagamento: "Justificativa de Impossibilidade de Pagamento",
 };
 
 export type CampoPeca = { chave: string; rotulo: string; placeholder?: string };
@@ -119,12 +128,28 @@ export const CAMPOS_PECA: Record<TipoPeca, CampoPeca[]> = {
     { chave: "decisaoAgravada", rotulo: "Teor da decisão agravada, na fase de execução" },
     { chave: "fundamentoReforma", rotulo: "Por que a decisão deveria ser reformada" },
   ],
+  cumprimento_alimentos: [
+    { chave: "valorDevido", rotulo: "Valor das parcelas em atraso" },
+    { chave: "periodoDebito", rotulo: "Período/quantidade de parcelas em aberto" },
+  ],
+  pedido_prisao_civil: [
+    {
+      chave: "justificativaApresentada",
+      rotulo: "O que o executado alegou (ou que não apresentou nenhuma justificativa)",
+    },
+    { chave: "parcelasInadimplidas", rotulo: "Quais parcelas continuam em aberto" },
+  ],
+  justificativa_impossibilidade_pagamento: [
+    { chave: "motivoImpossibilidade", rotulo: "Motivo da impossibilidade de pagar (ex.: desemprego, doença)" },
+    { chave: "provasAnexadas", rotulo: "Provas anexadas que comprovam o motivo" },
+  ],
 };
 
 /** Peças com nome e rito específicos de uma área não fazem sentido nas demais — "Apelação" não
- * existe na Justiça do Trabalho (lá é "Recurso Ordinário"), e vice-versa. Peças genéricas
- * (embargos de declaração, tutela de urgência, homologação de acordo) não entram em nenhuma das
- * duas listas abaixo, e por isso ficam disponíveis em qualquer área. */
+ * existe na Justiça do Trabalho (lá é "Recurso Ordinário"), e a execução de alimentos (família)
+ * não é a mesma coisa que o cumprimento de sentença comum. Peças genéricas (embargos de
+ * declaração, tutela de urgência, homologação de acordo) não entram em nenhuma lista abaixo, e
+ * por isso ficam disponíveis em qualquer área. */
 const SOMENTE_TRABALHISTA: TipoPeca[] = [
   "manifestacao_defesa",
   "recurso_ordinario",
@@ -132,6 +157,11 @@ const SOMENTE_TRABALHISTA: TipoPeca[] = [
   "cumprimento_execucao_trabalhista",
   "impugnacao_calculos",
   "agravo_peticao",
+];
+const SOMENTE_FAMILIA: TipoPeca[] = [
+  "cumprimento_alimentos",
+  "pedido_prisao_civil",
+  "justificativa_impossibilidade_pagamento",
 ];
 const EXCETO_TRABALHISTA: TipoPeca[] = [
   "replica",
@@ -143,6 +173,7 @@ const EXCETO_TRABALHISTA: TipoPeca[] = [
 export function tiposDisponiveisParaArea(area: LegalAreaSlug): TipoPeca[] {
   return tipoPecaSchema.options.filter((tipo) => {
     if (SOMENTE_TRABALHISTA.includes(tipo)) return area === "trabalhista";
+    if (SOMENTE_FAMILIA.includes(tipo)) return area === "familia";
     if (EXCETO_TRABALHISTA.includes(tipo)) return area !== "trabalhista";
     return true;
   });
