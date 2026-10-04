@@ -15,6 +15,7 @@ const CTX_CIVEL = {
   areaSlug: "civel" as const,
 };
 const CTX_TRABALHISTA = { ...CTX_CIVEL, areaSlug: "trabalhista" as const };
+const CTX_FAMILIA = { ...CTX_CIVEL, areaSlug: "familia" as const };
 
 describe("gerarPeca: as peças pós-decisão", () => {
   it.each(tipoPecaSchema.options)("%s: gera documento com título correto e nunca inventa campo vazio", (tipo) => {
@@ -98,6 +99,22 @@ describe("gerarPeca: as peças pós-decisão", () => {
     });
   });
 
+  describe("peças de família: citam o artigo certo do CPC (execução de alimentos)", () => {
+    it("cumprimento de alimentos: art. 528 CPC", () => {
+      const doc = gerarPeca("cumprimento_alimentos", CTX_FAMILIA, {});
+      expect(doc.secoes.find((s) => s.chave === "do_cabimento")!.corpo).toContain("528");
+    });
+    it("pedido de prisão civil: art. 528, §§3º a 7º, CPC", () => {
+      const doc = gerarPeca("pedido_prisao_civil", CTX_FAMILIA, {});
+      expect(doc.secoes.find((s) => s.chave === "do_cabimento")!.corpo).toContain("528");
+    });
+    it("justificativa de impossibilidade: art. 528, §2º, CPC, qualifica a parte executada", () => {
+      const doc = gerarPeca("justificativa_impossibilidade_pagamento", CTX_FAMILIA, {});
+      expect(doc.secoes.find((s) => s.chave === "do_cabimento")!.corpo).toContain("528");
+      expect(doc.secoes.find((s) => s.chave === "qualificacao")!.corpo).toContain("parte executada");
+    });
+  });
+
   describe("tiposDisponiveisParaArea", () => {
     it("trabalhista não lista Apelação/Réplica (nomes cíveis), mas lista Recurso Ordinário", () => {
       const tipos = tiposDisponiveisParaArea("trabalhista");
@@ -105,14 +122,27 @@ describe("gerarPeca: as peças pós-decisão", () => {
       expect(tipos).toContain("manifestacao_defesa");
       expect(tipos).not.toContain("apelacao");
       expect(tipos).not.toContain("replica");
+      expect(tipos).not.toContain("cumprimento_alimentos");
       // genéricas continuam disponíveis
       expect(tipos).toContain("embargos_declaracao");
       expect(tipos).toContain("homologacao_acordo");
     });
 
-    it("cível não lista Recurso Ordinário (nome trabalhista), mas lista Apelação", () => {
+    it("cível não lista Recurso Ordinário (nome trabalhista) nem peças de alimentos (família)", () => {
       const tipos = tiposDisponiveisParaArea("civel");
       expect(tipos).toContain("apelacao");
+      expect(tipos).not.toContain("recurso_ordinario");
+      expect(tipos).not.toContain("agravo_peticao");
+      expect(tipos).not.toContain("cumprimento_alimentos");
+    });
+
+    it("família lista as peças de alimentos e as genéricas, mas não as trabalhistas", () => {
+      const tipos = tiposDisponiveisParaArea("familia");
+      expect(tipos).toContain("cumprimento_alimentos");
+      expect(tipos).toContain("pedido_prisao_civil");
+      expect(tipos).toContain("justificativa_impossibilidade_pagamento");
+      expect(tipos).toContain("apelacao");
+      expect(tipos).toContain("homologacao_acordo");
       expect(tipos).not.toContain("recurso_ordinario");
       expect(tipos).not.toContain("agravo_peticao");
     });

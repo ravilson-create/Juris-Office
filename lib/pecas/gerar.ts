@@ -343,6 +343,75 @@ function gerarAgravoPeticao(ctx: ContextoPeca, c: ValoresCamposPeca): PetitionDo
   ]);
 }
 
+// ------------------------------------------------------------ Família (execução de alimentos)
+
+function gerarCumprimentoAlimentos(ctx: ContextoPeca, c: ValoresCamposPeca): PetitionDocument {
+  return documento("cumprimento_alimentos", [
+    enderecamentoJuizo(ctx),
+    qualificacaoResumida(ctx, "parte exequente/alimentando(a)"),
+    {
+      chave: "do_debito",
+      titulo: "Do Débito Alimentar",
+      corpo: `Encontram-se em aberto as seguintes parcelas de alimentos: ${campoDe("cumprimento_alimentos", c, "periodoDebito")}, totalizando o valor de ${campoDe("cumprimento_alimentos", c, "valorDevido")}.`,
+    },
+    {
+      chave: "do_cabimento",
+      titulo: "Do Cabimento",
+      corpo: "Nos termos do art. 528 do Código de Processo Civil, requer-se a intimação do executado para, em 3 (três) dias, pagar o débito, provar que o fez ou justificar a impossibilidade de fazê-lo, sob pena de protesto do pronunciamento judicial e, não havendo justificativa idônea, decretação de prisão civil pelo prazo de 1 (um) a 3 (três) meses.",
+    },
+    fechoPeca(),
+  ]);
+}
+
+function gerarPedidoPrisaoCivil(ctx: ContextoPeca, c: ValoresCamposPeca): PetitionDocument {
+  return documento("pedido_prisao_civil", [
+    enderecamentoJuizo(ctx),
+    qualificacaoResumida(ctx, "parte exequente/alimentando(a)"),
+    {
+      chave: "da_inadimplencia",
+      titulo: "Da Inadimplência Persistente",
+      corpo: `Intimado nos termos do art. 528 do CPC, o executado não efetuou o pagamento. Permanecem em aberto: ${campoDe("pedido_prisao_civil", c, "parcelasInadimplidas")}. Quanto à justificativa apresentada: ${campoDe("pedido_prisao_civil", c, "justificativaApresentada")}`,
+    },
+    {
+      chave: "do_cabimento",
+      titulo: "Do Cabimento",
+      corpo: "Nos termos do art. 528, §§3º a 7º, do Código de Processo Civil, não paga a dívida, não comprovado o pagamento e não apresentada justificativa que comporte deferimento, cabe a decretação da prisão civil do executado, pelo prazo de 1 (um) a 3 (três) meses.",
+    },
+    {
+      chave: "do_pedido",
+      titulo: "Do Pedido",
+      corpo: "Requer a decretação da prisão civil do executado, até o limite de 3 (três) meses, ou até que comprove o pagamento integral do débito.",
+    },
+    fechoPeca(),
+  ]);
+}
+
+function gerarJustificativaImpossibilidadePagamento(
+  ctx: ContextoPeca,
+  c: ValoresCamposPeca,
+): PetitionDocument {
+  return documento("justificativa_impossibilidade_pagamento", [
+    enderecamentoJuizo(ctx),
+    qualificacaoResumida(ctx, "parte executada"),
+    {
+      chave: "do_motivo",
+      titulo: "Do Motivo da Impossibilidade",
+      corpo: `A parte executada não efetuou o pagamento integral do débito alimentar pelo seguinte motivo: ${campoDe("justificativa_impossibilidade_pagamento", c, "motivoImpossibilidade")}. Em comprovação, junta: ${campoDe("justificativa_impossibilidade_pagamento", c, "provasAnexadas")}`,
+    },
+    {
+      chave: "do_cabimento",
+      titulo: "Do Cabimento",
+      corpo: "Nos termos do art. 528, §2º, do Código de Processo Civil, somente a impossibilidade absoluta de pagar justifica o não pagamento, cabendo à parte executada o ônus de comprovar tal circunstância.",
+    },
+    {
+      chave: "do_pedido",
+      titulo: "Do Pedido",
+      corpo: "Requer o acolhimento da presente justificativa, com o consequente afastamento da decretação de prisão civil.",
+    },
+    fechoPeca(),
+  ]);
+}
+
 const GERADORES: Record<TipoPeca, (ctx: ContextoPeca, c: ValoresCamposPeca) => PetitionDocument> = {
   replica: gerarReplica,
   agravo_tutela: gerarAgravoTutela,
@@ -358,6 +427,9 @@ const GERADORES: Record<TipoPeca, (ctx: ContextoPeca, c: ValoresCamposPeca) => P
   cumprimento_execucao_trabalhista: gerarCumprimentoExecucaoTrabalhista,
   impugnacao_calculos: gerarImpugnacaoCalculos,
   agravo_peticao: gerarAgravoPeticao,
+  cumprimento_alimentos: gerarCumprimentoAlimentos,
+  pedido_prisao_civil: gerarPedidoPrisaoCivil,
+  justificativa_impossibilidade_pagamento: gerarJustificativaImpossibilidadePagamento,
 };
 
 export function gerarPeca(
