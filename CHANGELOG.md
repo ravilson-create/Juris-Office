@@ -4,6 +4,19 @@
 
 ### Adicionado
 
+- **7 peças cíveis genéricas de defesa e execução**, nas mesmas Peças do processo
+  (`/equipe/[caseId]/pecas`): impugnação à contestação, reconvenção, agravo de instrumento e
+  suas contrarrazões, impugnação ao cumprimento de sentença, embargos à execução e exceção de
+  pré-executividade. Cobrem o que faltava na fase de conhecimento (resposta a preliminar/
+  documento novo da contestação, pedido do réu contra o autor) e na execução — a defesa do
+  executado, tanto contra cumprimento de sentença (art. 525 CPC, par do `cumprimento_sentenca`
+  já existente, do lado do credor) quanto contra execução de título extrajudicial, que não passa
+  por sentença nenhuma (embargos à execução, art. 914 CPC, ou a defesa mais rápida e sem garantia
+  do juízo da exceção de pré-executividade). Disponíveis para cível, consumidor, família e
+  previdenciário; o agravo de instrumento genérico e sua contrarrazão, a impugnação ao
+  cumprimento e as peças de execução de título extrajudicial não entram no rito trabalhista, que
+  já tem suas próprias (agravo de petição, impugnação aos cálculos). Mesma tela, mesmo editor,
+  mesma correção por IA (dentro da cota de 50/mês), mesma exportação em .docx/PDF.
 - **4 peças de previdenciário, e endereçamento correto à Justiça Federal**, nas mesmas Peças do
   processo (`/equipe/[caseId]/pecas`): recurso inominado, contrarrazões ao recurso inominado,
   cumprimento de sentença contra a Fazenda Pública (RPV/precatório) e pedido de implantação

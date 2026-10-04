@@ -497,6 +497,182 @@ function gerarImplantacaoBeneficio(ctx: ContextoPeca, c: ValoresCamposPeca): Pet
   ]);
 }
 
+// ------------------------------------------------------------ Cível (genérico)
+
+function gerarImpugnacaoContestacao(ctx: ContextoPeca, c: ValoresCamposPeca): PetitionDocument {
+  return documento("impugnacao_contestacao", [
+    enderecamentoJuizo(ctx),
+    qualificacaoResumida(ctx, "parte autora"),
+    {
+      chave: "da_preliminar",
+      titulo: "Das Preliminares e Documentos Novos",
+      corpo: `A contestação trouxe preliminar e/ou documento novo, nos seguintes termos: ${campoDe("impugnacao_contestacao", c, "preliminaresDocumentos")}`,
+    },
+    {
+      chave: "da_resposta",
+      titulo: "Da Resposta",
+      corpo: campoDe("impugnacao_contestacao", c, "resposta"),
+    },
+    {
+      chave: "do_cabimento",
+      titulo: "Do Cabimento",
+      corpo: "Nos termos do art. 350 do Código de Processo Civil, aberto prazo para manifestação sobre preliminar ou documento novo juntado na contestação, apresenta-se a presente impugnação.",
+    },
+    fechoPeca(),
+  ]);
+}
+
+function gerarReconvencao(ctx: ContextoPeca, c: ValoresCamposPeca): PetitionDocument {
+  return documento("reconvencao", [
+    enderecamentoJuizo(ctx),
+    qualificacaoResumida(ctx, "parte ré-reconvinte"),
+    {
+      chave: "dos_fatos",
+      titulo: "Dos Fatos",
+      corpo: campoDe("reconvencao", c, "fatosReconvencao"),
+    },
+    {
+      chave: "do_cabimento",
+      titulo: "Do Cabimento",
+      corpo: "Nos termos do art. 343 do Código de Processo Civil, a parte ré, na própria contestação ou em peça autônoma no mesmo prazo, pode formular pedido contra a parte autora, desde que conexo com a ação principal ou com a defesa.",
+    },
+    {
+      chave: "do_pedido",
+      titulo: "Do Pedido",
+      corpo: `Requer o processamento da presente reconvenção, conjuntamente com a ação principal, para ${campoDe("reconvencao", c, "pedidoReconvencao")}`,
+    },
+    fechoPeca(),
+  ]);
+}
+
+function gerarAgravoInstrumento(ctx: ContextoPeca, c: ValoresCamposPeca): PetitionDocument {
+  return documento("agravo_instrumento", [
+    enderecamentoTribunal(ctx),
+    qualificacaoResumida(ctx, "parte agravante"),
+    {
+      chave: "da_decisao_agravada",
+      titulo: "Da Decisão Agravada",
+      corpo: `A decisão agravada decidiu: ${campoDe("agravo_instrumento", c, "decisaoAgravada")}`,
+    },
+    {
+      chave: "do_cabimento",
+      titulo: "Do Cabimento",
+      corpo: `O presente recurso é cabível nos termos do art. 1.015 do Código de Processo Civil, por se tratar de decisão interlocutória que versa sobre: ${campoDe("agravo_instrumento", c, "hipoteseCabimento")}`,
+    },
+    {
+      chave: "do_fundamento",
+      titulo: "Da Reforma da Decisão",
+      corpo: campoDe("agravo_instrumento", c, "fundamentoReforma"),
+    },
+    {
+      chave: "do_pedido",
+      titulo: "Do Pedido",
+      corpo: "Requer o conhecimento e provimento do presente agravo, para reformar a decisão agravada na forma aqui exposta.",
+    },
+    fechoPeca(),
+  ]);
+}
+
+function gerarContrarrazoesAgravoInstrumento(
+  ctx: ContextoPeca,
+  c: ValoresCamposPeca,
+): PetitionDocument {
+  return documento("contrarrazoes_agravo_instrumento", [
+    enderecamentoTribunal(ctx),
+    qualificacaoResumida(ctx, "parte agravada"),
+    {
+      chave: "dos_argumentos_agravante",
+      titulo: "Da Síntese do Recurso",
+      corpo: `O agravante sustenta, em síntese: ${campoDe("contrarrazoes_agravo_instrumento", c, "argumentosAgravante")}`,
+    },
+    {
+      chave: "das_contrarrazoes",
+      titulo: "Das Contrarrazões",
+      corpo: campoDe("contrarrazoes_agravo_instrumento", c, "contrarrazoes"),
+    },
+    {
+      chave: "do_pedido",
+      titulo: "Do Pedido",
+      corpo: "Requer o conhecimento e desprovimento do presente agravo, mantendo-se a decisão agravada em todos os seus termos.",
+    },
+    fechoPeca(),
+  ]);
+}
+
+function gerarImpugnacaoCumprimento(ctx: ContextoPeca, c: ValoresCamposPeca): PetitionDocument {
+  return documento("impugnacao_cumprimento", [
+    enderecamentoJuizo(ctx),
+    qualificacaoResumida(ctx, "parte executada"),
+    {
+      chave: "da_materia",
+      titulo: "Da Matéria Alegada",
+      corpo: `A parte executada impugna o cumprimento de sentença pela seguinte matéria: ${campoDe("impugnacao_cumprimento", c, "materiaImpugnada")}. Valor que entende correto, se o caso: ${campoDe("impugnacao_cumprimento", c, "valorCorreto")}`,
+    },
+    {
+      chave: "do_cabimento",
+      titulo: "Do Cabimento",
+      corpo: "Nos termos do art. 525 do Código de Processo Civil, no prazo de 15 (quinze) dias contado do término do prazo para pagamento voluntário, independentemente de garantia do juízo, a parte executada pode impugnar o cumprimento de sentença.",
+    },
+    {
+      chave: "do_pedido",
+      titulo: "Do Pedido",
+      corpo: "Requer o acolhimento da presente impugnação, com a extinção ou redução da execução na forma aqui exposta.",
+    },
+    fechoPeca(),
+  ]);
+}
+
+function gerarEmbargosExecucao(ctx: ContextoPeca, c: ValoresCamposPeca): PetitionDocument {
+  return documento("embargos_execucao", [
+    enderecamentoJuizo(ctx),
+    qualificacaoResumida(ctx, "parte executada/embargante"),
+    {
+      chave: "do_titulo",
+      titulo: "Do Título Executado",
+      corpo: `A presente execução tem por base o seguinte título extrajudicial: ${campoDe("embargos_execucao", c, "tituloExecutado")}`,
+    },
+    {
+      chave: "da_materia",
+      titulo: "Da Matéria de Defesa",
+      corpo: campoDe("embargos_execucao", c, "materiaEmbargos"),
+    },
+    {
+      chave: "do_cabimento",
+      titulo: "Do Cabimento",
+      corpo: "Nos termos do art. 914 do Código de Processo Civil, independentemente de garantia do juízo, o executado pode se opor à execução por meio de embargos, no prazo de 15 (quinze) dias.",
+    },
+    {
+      chave: "do_pedido",
+      titulo: "Do Pedido",
+      corpo: "Requer o acolhimento dos presentes embargos, com a extinção ou redução da execução na forma aqui exposta.",
+    },
+    fechoPeca(),
+  ]);
+}
+
+function gerarExcecaoPreExecutividade(ctx: ContextoPeca, c: ValoresCamposPeca): PetitionDocument {
+  return documento("excecao_pre_executividade", [
+    enderecamentoJuizo(ctx),
+    qualificacaoResumida(ctx, "parte executada"),
+    {
+      chave: "da_materia",
+      titulo: "Da Matéria de Ordem Pública",
+      corpo: campoDe("excecao_pre_executividade", c, "materiaOrdemPublica"),
+    },
+    {
+      chave: "do_cabimento",
+      titulo: "Do Cabimento",
+      corpo: "A exceção de pré-executividade é cabível independentemente de penhora ou de qualquer garantia do juízo, restrita a matérias de ordem pública cognoscíveis de ofício ou a questões que possam ser comprovadas de plano, sem necessidade de dilação probatória, conforme entendimento consolidado do Superior Tribunal de Justiça.",
+    },
+    {
+      chave: "do_pedido",
+      titulo: "Do Pedido",
+      corpo: "Requer o acolhimento da presente exceção, com a extinção da execução ou o reconhecimento da matéria arguida.",
+    },
+    fechoPeca(),
+  ]);
+}
+
 const GERADORES: Record<TipoPeca, (ctx: ContextoPeca, c: ValoresCamposPeca) => PetitionDocument> = {
   replica: gerarReplica,
   agravo_tutela: gerarAgravoTutela,
@@ -519,6 +695,13 @@ const GERADORES: Record<TipoPeca, (ctx: ContextoPeca, c: ValoresCamposPeca) => P
   contrarrazoes_recurso_inominado: gerarContrarrazoesRecursoInominado,
   cumprimento_fazenda_publica: gerarCumprimentoFazendaPublica,
   implantacao_beneficio: gerarImplantacaoBeneficio,
+  impugnacao_contestacao: gerarImpugnacaoContestacao,
+  reconvencao: gerarReconvencao,
+  agravo_instrumento: gerarAgravoInstrumento,
+  contrarrazoes_agravo_instrumento: gerarContrarrazoesAgravoInstrumento,
+  impugnacao_cumprimento: gerarImpugnacaoCumprimento,
+  embargos_execucao: gerarEmbargosExecucao,
+  excecao_pre_executividade: gerarExcecaoPreExecutividade,
 };
 
 export function gerarPeca(
