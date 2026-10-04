@@ -154,6 +154,36 @@ describe("gerarPeca: as peças pós-decisão", () => {
     });
   });
 
+  describe("peças cíveis genéricas: citam o artigo certo do CPC", () => {
+    it("impugnação à contestação: art. 350 CPC", () => {
+      const doc = gerarPeca("impugnacao_contestacao", CTX_CIVEL, {});
+      expect(doc.secoes.find((s) => s.chave === "do_cabimento")!.corpo).toContain("350");
+    });
+    it("reconvenção: art. 343 CPC", () => {
+      const doc = gerarPeca("reconvencao", CTX_CIVEL, {});
+      expect(doc.secoes.find((s) => s.chave === "do_cabimento")!.corpo).toContain("343");
+    });
+    it("agravo de instrumento: art. 1.015 CPC, endereçado ao tribunal", () => {
+      const doc = gerarPeca("agravo_instrumento", CTX_CIVEL, {});
+      expect(doc.secoes.find((s) => s.chave === "do_cabimento")!.corpo).toContain("1.015");
+      expect(doc.secoes[0]!.corpo).toContain("TRIBUNAL DE JUSTIÇA");
+    });
+    it("impugnação ao cumprimento de sentença: art. 525 CPC", () => {
+      const doc = gerarPeca("impugnacao_cumprimento", CTX_CIVEL, {});
+      expect(doc.secoes.find((s) => s.chave === "do_cabimento")!.corpo).toContain("525");
+    });
+    it("embargos à execução: art. 914 CPC", () => {
+      const doc = gerarPeca("embargos_execucao", CTX_CIVEL, {});
+      expect(doc.secoes.find((s) => s.chave === "do_cabimento")!.corpo).toContain("914");
+    });
+    it("exceção de pré-executividade: dispensa garantia do juízo", () => {
+      const doc = gerarPeca("excecao_pre_executividade", CTX_CIVEL, {});
+      expect(doc.secoes.find((s) => s.chave === "do_cabimento")!.corpo).toContain(
+        "independentemente de penhora",
+      );
+    });
+  });
+
   describe("tiposDisponiveisParaArea", () => {
     it("trabalhista não lista Apelação/Réplica (nomes cíveis), mas lista Recurso Ordinário", () => {
       const tipos = tiposDisponiveisParaArea("trabalhista");
@@ -162,15 +192,28 @@ describe("gerarPeca: as peças pós-decisão", () => {
       expect(tipos).not.toContain("apelacao");
       expect(tipos).not.toContain("replica");
       expect(tipos).not.toContain("cumprimento_alimentos");
-      // genéricas continuam disponíveis
+      expect(tipos).not.toContain("agravo_instrumento");
+      expect(tipos).not.toContain("embargos_execucao");
+      expect(tipos).not.toContain("excecao_pre_executividade");
+      // genéricas continuam disponíveis, incluindo as de defesa/execução cíveis que também
+      // valem subsidiariamente no processo do trabalho
       expect(tipos).toContain("embargos_declaracao");
       expect(tipos).toContain("homologacao_acordo");
+      expect(tipos).toContain("reconvencao");
+      expect(tipos).toContain("impugnacao_contestacao");
     });
 
-    it("cível não lista Recurso Ordinário (nome trabalhista) nem peças de alimentos (família) ou INSS (previdenciário)", () => {
+    it("cível lista as 7 peças novas de defesa e execução, mas não Recurso Ordinário (nome trabalhista) nem peças de alimentos (família) ou INSS (previdenciário)", () => {
       const tipos = tiposDisponiveisParaArea("civel");
       expect(tipos).toContain("apelacao");
       expect(tipos).toContain("cumprimento_sentenca");
+      expect(tipos).toContain("impugnacao_contestacao");
+      expect(tipos).toContain("reconvencao");
+      expect(tipos).toContain("agravo_instrumento");
+      expect(tipos).toContain("contrarrazoes_agravo_instrumento");
+      expect(tipos).toContain("impugnacao_cumprimento");
+      expect(tipos).toContain("embargos_execucao");
+      expect(tipos).toContain("excecao_pre_executividade");
       expect(tipos).not.toContain("recurso_ordinario");
       expect(tipos).not.toContain("agravo_peticao");
       expect(tipos).not.toContain("cumprimento_alimentos");

@@ -41,6 +41,18 @@ export const tipoPecaSchema = z.enum([
   "contrarrazoes_recurso_inominado",
   "cumprimento_fazenda_publica",
   "implantacao_beneficio",
+  // Cível (genérico): defesa e execução de causas comuns (contrato, indenização, cobrança),
+  // que não têm par pronto nas peças de cima. "impugnacao_cumprimento" é o par defensivo do
+  // "cumprimento_sentenca" (que só serve ao credor); "embargos_execucao" e
+  // "excecao_pre_executividade" servem à execução de título extrajudicial, que não passa por
+  // cumprimento de sentença nenhum.
+  "impugnacao_contestacao",
+  "reconvencao",
+  "agravo_instrumento",
+  "contrarrazoes_agravo_instrumento",
+  "impugnacao_cumprimento",
+  "embargos_execucao",
+  "excecao_pre_executividade",
 ]);
 export type TipoPeca = z.infer<typeof tipoPecaSchema>;
 
@@ -66,6 +78,13 @@ export const TITULO_PECA: Record<TipoPeca, string> = {
   contrarrazoes_recurso_inominado: "Contrarrazões ao Recurso Inominado",
   cumprimento_fazenda_publica: "Cumprimento de Sentença contra a Fazenda Pública (RPV/Precatório)",
   implantacao_beneficio: "Pedido de Implantação Imediata do Benefício",
+  impugnacao_contestacao: "Impugnação à Contestação",
+  reconvencao: "Reconvenção",
+  agravo_instrumento: "Agravo de Instrumento",
+  contrarrazoes_agravo_instrumento: "Contrarrazões de Agravo de Instrumento",
+  impugnacao_cumprimento: "Impugnação ao Cumprimento de Sentença",
+  embargos_execucao: "Embargos à Execução",
+  excecao_pre_executividade: "Exceção de Pré-Executividade",
 };
 
 export type CampoPeca = { chave: string; rotulo: string; placeholder?: string };
@@ -171,6 +190,40 @@ export const CAMPOS_PECA: Record<TipoPeca, CampoPeca[]> = {
     { chave: "beneficioConcedido", rotulo: "Benefício concedido na sentença (espécie e NB, se houver)" },
     { chave: "dataInicioBeneficio", rotulo: "Data de início do benefício (DIB) fixada na sentença" },
   ],
+  impugnacao_contestacao: [
+    {
+      chave: "preliminaresDocumentos",
+      rotulo: "Preliminares ou documentos novos trazidos pela contestação",
+    },
+    { chave: "resposta", rotulo: "Resposta a cada preliminar/documento" },
+  ],
+  reconvencao: [
+    { chave: "fatosReconvencao", rotulo: "Fatos em que se baseia o pedido contra o autor" },
+    { chave: "pedidoReconvencao", rotulo: "Pedido formulado contra o autor" },
+  ],
+  agravo_instrumento: [
+    { chave: "decisaoAgravada", rotulo: "Teor da decisão agravada" },
+    { chave: "hipoteseCabimento", rotulo: "Hipótese do art. 1.015 do CPC em que a decisão se encaixa" },
+    { chave: "fundamentoReforma", rotulo: "Por que a decisão deveria ser reformada" },
+  ],
+  contrarrazoes_agravo_instrumento: [
+    { chave: "argumentosAgravante", rotulo: "O que o agravante alegou no recurso" },
+    { chave: "contrarrazoes", rotulo: "Resposta a cada argumento do agravante" },
+  ],
+  impugnacao_cumprimento: [
+    { chave: "materiaImpugnada", rotulo: "Matéria alegada (excesso de execução, pagamento, prescrição etc.)" },
+    { chave: "valorCorreto", rotulo: "Valor que o executado entende correto, se houver excesso" },
+  ],
+  embargos_execucao: [
+    { chave: "tituloExecutado", rotulo: "Título extrajudicial que embasa a execução" },
+    { chave: "materiaEmbargos", rotulo: "Matéria de defesa alegada contra a execução" },
+  ],
+  excecao_pre_executividade: [
+    {
+      chave: "materiaOrdemPublica",
+      rotulo: "Matéria de ordem pública alegada (nulidade do título, prescrição, ilegitimidade etc.)",
+    },
+  ],
 };
 
 /** Peças com nome e rito específicos de uma área não fazem sentido nas demais — "Apelação" não
@@ -203,6 +256,14 @@ const EXCETO_TRABALHISTA: TipoPeca[] = [
   "apelacao",
   "contrarrazoes_apelacao",
   "cumprimento_sentenca",
+  // O rito trabalhista de agravo de instrumento (só contra negativa de seguimento de recurso de
+  // revista) não é o do art. 1.015 do CPC; e a defesa na execução trabalhista já tem peça
+  // própria (impugnacao_calculos) — essas não se aplicam ao rito da CLT.
+  "agravo_instrumento",
+  "contrarrazoes_agravo_instrumento",
+  "impugnacao_cumprimento",
+  "embargos_execucao",
+  "excecao_pre_executividade",
 ];
 /** Cumprimento de sentença comum pressupõe devedor privado (multa de 10% do art. 523, CPC) — o
  * INSS é Fazenda Pública e segue outro rito (ver cumprimento_fazenda_publica). Oferecer os dois
