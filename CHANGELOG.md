@@ -4,6 +4,23 @@
 
 ### Adicionado
 
+- **Peças pós-decisão, com auxílio de IA e limite mensal** (`/equipe/[caseId]/pecas`): as 8 peças
+  mais comuns depois da petição inicial — réplica à contestação, agravo de instrumento contra
+  indeferimento de tutela de urgência, embargos de declaração, apelação, contrarrazões de
+  apelação, cumprimento de sentença, pedido de aplicação/majoração de multa (astreintes) e
+  petição de homologação de acordo. Diferente da petição inicial (só a triagem, sem texto livre),
+  o fato que origina cada peça (o que a contestação alegou, o que a decisão indeferiu) é só o
+  advogado quem sabe — por isso cada tipo tem seu próprio formulário de campos livres
+  (`domain/pecas/schema.ts#CAMPOS_PECA`); campo deixado em branco vira pendência, nunca é
+  inventado (`lib/pecas/gerar.ts`). Reaproveita toda a infraestrutura da petição inicial —
+  `case_petitions` ganhou só uma coluna `tipo` (migração 0025) — então o editor seção por seção,
+  a correção de redação por IA, a exportação em .docx/PDF e a exclusão já funcionam sem nenhuma
+  mudança.
+- **Limite de 50 auxílios de IA por mês, por advogado**: a correção de redação por IA
+  ("Corrigir com IA"), tanto na petição inicial quanto em qualquer peça pós-decisão, passa a
+  contar contra uma cota mensal de 50 por advogado (`consumir_auxilio_ia()`/
+  `auxilios_ia_restantes()`, migração 0025) — atômica, para duas chamadas simultâneas nunca
+  passarem do limite. As duas telas mostram "Restam X de 50" no topo.
 - **Contrato com cláusulas completas, assinado pelos dois lados**: o contrato deixa de ser só
   tipo/valor de honorário e passa a gerar o texto de um contrato de prestação de serviços
   advocatícios comum — qualificação completa das partes (nome, CPF, OAB, escritório, endereços),

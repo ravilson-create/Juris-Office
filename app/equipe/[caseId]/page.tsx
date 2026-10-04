@@ -111,6 +111,9 @@ export default async function CasoEquipe({
           <ButtonLink href={`/equipe/${caseId}/peticao`} variant="secondary" className="text-sm">
             Petição inicial
           </ButtonLink>
+          <ButtonLink href={`/equipe/${caseId}/pecas`} variant="secondary" className="text-sm">
+            Peças
+          </ButtonLink>
           <ButtonLink href={`/equipe/${caseId}/contrato`} variant="secondary" className="text-sm">
             Contrato
           </ButtonLink>

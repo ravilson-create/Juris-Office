@@ -7,6 +7,7 @@ import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
 import { getCaseService } from "@/lib/services";
 import { modelosDisponiveis } from "@/lib/petitions/gerar";
+import { buscarAuxiliosIARestantes, LIMITE_AUXILIOS_IA_MES } from "@/lib/services/ai-quota";
 import type { PetitionSection } from "@/domain/petition/schema";
 import { excluirPeticaoAction, gerarPeticaoAction, salvarPeticaoAction } from "./actions";
 
@@ -89,6 +90,7 @@ export default async function PeticaoPage({
     (peticaoId && existentes.find((p) => p.id === peticaoId)) || existentes[0];
   const outrasVersoes = existentes.filter((p) => p.id !== peticaoAtual?.id);
   const modelos = modelosDisponiveis(ctx.area.slug, ctx.validAnswers);
+  const auxiliosRestantes = await buscarAuxiliosIARestantes(db);
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-10">
@@ -99,6 +101,14 @@ export default async function PeticaoPage({
       <p className="mt-2 text-sm text-muted">
         Gerada automaticamente a partir dos dados do atendimento — nenhum dado é inventado. Revise
         e complete os campos pendentes antes de protocolar.
+      </p>
+      <p className="mt-1 text-xs text-muted">
+        Restam {auxiliosRestantes} de {LIMITE_AUXILIOS_IA_MES} auxílios de IA este mês (vale para
+        a correção de redação aqui e em qualquer peça em{" "}
+        <Link href={`/equipe/${caseId}/pecas`} className="underline">
+          Peças
+        </Link>
+        ).
       </p>
 
       {modelos.length === 0 && !peticaoAtual && (

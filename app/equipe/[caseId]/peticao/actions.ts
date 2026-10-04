@@ -81,12 +81,18 @@ export async function salvarPeticaoAction(form: FormData) {
       JSON.stringify([...revisadasIA]),
     ],
   );
+  // case_petitions serve tanto a petição inicial quanto as peças pós-decisão (app/equipe/
+  // [caseId]/pecas) — revalida as duas, a que não foi a origem do salvamento é um no-op barato.
   revalidatePath(`/equipe/${caseId.data}/peticao`);
+  revalidatePath(`/equipe/${caseId.data}/pecas`);
 }
 
 /**
  * Corrige a redação de UMA seção (nunca a petição inteira de uma vez): o advogado avalia e
- * aceita ou descarta antes de qualquer coisa ser salva (ver gerarCorrecaoSecao).
+ * aceita ou descarta antes de qualquer coisa ser salva (ver gerarCorrecaoSecao). Vale para
+ * qualquer tipo de peça gravada em case_petitions — petição inicial ou qualquer uma das peças
+ * pós-decisão (ver app/equipe/[caseId]/pecas) —, por isso a cota mensal de IA (migração 0025) é
+ * conferida aqui, num único lugar, em vez de em cada action que gera um tipo de peça.
  */
 export async function corrigirSecaoIAAction(
   petitionId: string,
@@ -108,6 +114,17 @@ export async function corrigirSecaoIAAction(
 
   const ctx = await getCaseService().getTriageContext(row.case_id);
   if (!ctx) return { error: "Caso não encontrado." };
+
+  // Só consome a cota depois de confirmar que há mesmo uma chamada de IA a fazer — nunca por um
+  // ID inválido ou seção inexistente.
+  const [{ permitido }] = await db.query<{ permitido: boolean }>(
+    "SELECT consumir_auxilio_ia() AS permitido",
+  );
+  if (!permitido) {
+    return {
+      error: "Limite de 50 auxílios de IA deste mês já foi atingido. Volta a liberar no mês seguinte.",
+    };
+  }
 
   try {
     const { corpoCorrigido } = await gerarCorrecaoSecao({
@@ -133,4 +150,5 @@ export async function excluirPeticaoAction(form: FormData) {
     caseId.data,
   ]);
   revalidatePath(`/equipe/${caseId.data}/peticao`);
+  revalidatePath(`/equipe/${caseId.data}/pecas`);
 }
