@@ -41,9 +41,10 @@ describe("P4: rascunho de petição é visível só a advogado/admin com acesso 
         "INSERT INTO case_assignments(case_id, lawyer_id, office_id) VALUES ($1, 'advogado-pet', $2)",
         [caseId, OFFICE],
       );
+      // A assinatura agora é do escritório (quem paga é o admin), não do advogado individual.
       await db.query(
         `INSERT INTO lawyer_subscriptions(lawyer_id, status, valid_until, provider)
-         VALUES ('advogado-pet', 'trial', now() + interval '7 days', 'asaas')`,
+         VALUES ('admin-pet', 'trial', now() + interval '7 days', 'asaas')`,
       );
 
       await db.exec(

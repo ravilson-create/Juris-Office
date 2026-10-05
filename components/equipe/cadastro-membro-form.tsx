@@ -1,27 +1,63 @@
 "use client";
 
 import { useState } from "react";
-import { convidarMembroAction } from "@/app/equipe/actions";
+import { cadastrarMembroEquipeAction } from "@/app/equipe/actions";
 
 /** OAB só aparece (e só é exigida) quando o papel escolhido é "advogado" — administrativo nunca
- * tem OAB, mesma regra reforçada no banco (office_invites_oab_por_papel). */
-export function ConviteForm() {
+ * tem OAB, mesma regra reforçada no banco (cadastrar_membro_equipe_direto). A conta nasce já
+ * criada e ativa com a senha informada aqui — sem convite, sem e-mail de confirmação. */
+export function CadastroMembroForm() {
   const [role, setRole] = useState<"lawyer" | "staff">("lawyer");
 
   return (
-    <form action={convidarMembroAction} className="mt-4 flex flex-col gap-4 rounded border border-line p-4">
+    <form
+      action={cadastrarMembroEquipeAction}
+      className="mt-4 flex flex-col gap-4 rounded border border-line p-4"
+    >
       <div>
-        <label htmlFor="convite-email" className="block font-medium">
+        <label htmlFor="cadastro-nome" className="block font-medium">
+          Nome
+        </label>
+        <input
+          id="cadastro-nome"
+          name="nome"
+          required
+          autoComplete="off"
+          className="mt-1.5 w-full rounded border border-line px-3 py-2"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="cadastro-email" className="block font-medium">
           E-mail
         </label>
         <input
-          id="convite-email"
+          id="cadastro-email"
           name="email"
           type="email"
           required
-          autoComplete="email"
+          autoComplete="off"
           className="mt-1.5 w-full rounded border border-line px-3 py-2"
         />
+      </div>
+
+      <div>
+        <label htmlFor="cadastro-senha" className="block font-medium">
+          Senha provisória
+        </label>
+        <input
+          id="cadastro-senha"
+          name="senha"
+          type="password"
+          minLength={12}
+          required
+          autoComplete="off"
+          placeholder="Mínimo de 12 caracteres"
+          className="mt-1.5 w-full rounded border border-line px-3 py-2"
+        />
+        <p className="mt-1 text-xs text-muted">
+          A conta já nasce ativa com esta senha — repasse-a à pessoa para o primeiro acesso.
+        </p>
       </div>
 
       <fieldset>
@@ -51,11 +87,11 @@ export function ConviteForm() {
       </fieldset>
 
       <div>
-        <label htmlFor="convite-cpf" className="block font-medium">
+        <label htmlFor="cadastro-cpf" className="block font-medium">
           CPF
         </label>
         <input
-          id="convite-cpf"
+          id="cadastro-cpf"
           name="cpf"
           inputMode="numeric"
           autoComplete="off"
@@ -68,11 +104,11 @@ export function ConviteForm() {
       {role === "lawyer" && (
         <div className="grid grid-cols-[1fr_6rem] gap-3">
           <div>
-            <label htmlFor="convite-oab-numero" className="block font-medium">
+            <label htmlFor="cadastro-oab-numero" className="block font-medium">
               OAB
             </label>
             <input
-              id="convite-oab-numero"
+              id="cadastro-oab-numero"
               name="oabNumero"
               inputMode="numeric"
               required
@@ -80,11 +116,11 @@ export function ConviteForm() {
             />
           </div>
           <div>
-            <label htmlFor="convite-oab-uf" className="block font-medium">
+            <label htmlFor="cadastro-oab-uf" className="block font-medium">
               UF
             </label>
             <input
-              id="convite-oab-uf"
+              id="cadastro-oab-uf"
               name="oabUf"
               maxLength={2}
               required
@@ -93,9 +129,15 @@ export function ConviteForm() {
           </div>
         </div>
       )}
+      {role === "lawyer" && (
+        <p className="text-xs text-muted">
+          A OAB informada aqui fica confirmada em seu nome — você é quem está se responsabilizando
+          por este cadastro, a plataforma não reconfere o número contra o site oficial.
+        </p>
+      )}
 
       <button className="self-start rounded border border-line bg-navy px-4 py-2 text-sm text-white">
-        Enviar convite
+        Cadastrar membro
       </button>
     </form>
   );

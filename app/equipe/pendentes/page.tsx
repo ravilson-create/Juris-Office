@@ -40,7 +40,8 @@ export default async function OabPendentesPage() {
         >
           Cadastro Nacional dos Advogados (OAB)
         </a>{" "}
-        antes de confirmar — só depois disso o advogado passa a ver casos atribuídos. A OAB já sai
+        antes de confirmar — sem OAB confirmada, o advogado continua vendo e elaborando os casos
+        do escritório, só não consegue assinar contrato, petição ou peça. A OAB já sai
         autodeclarada no cadastro (ver /equipe/time): esta lista só mostra quem está sem OAB
         confirmada porque um admin revogou uma autodeclaração.
       </p>

@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { randomUUID } from "node:crypto";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { currentUserId } from "@/lib/auth/session";
@@ -378,8 +377,10 @@ export async function removerDaEquipeAction(form: FormData) {
   revalidatePath("/equipe");
 }
 
-const conviteSchema = z.object({
+const cadastroMembroSchema = z.object({
+  nome: z.string().trim().min(2).max(120),
   email: z.email().trim().toLowerCase(),
+  senha: z.string().min(12).max(128),
   role: z.enum(["lawyer", "staff"]),
   cpf: z
     .string()
@@ -390,30 +391,40 @@ const conviteSchema = z.object({
 });
 
 /**
- * O advogado que administra o escritório monta a equipe convidando por e-mail: "advogado" exige
- * CPF e OAB (o número é só o que o admin digitou — oab_verificado_por grava quem convidou, nunca
- * a própria pessoa, já que não foi autodeclaração); "administrativo" só exige CPF. O limite de 5,
- * o papel de admin do ator e a regra de OAB por papel são conferidos de novo dentro de
- * convidar_membro_equipe — o formulário nunca é a autorização de fato.
+ * Substitui o convite por e-mail: o admin do escritório cadastra o membro direto, com conta já
+ * criada e ativa — sem e-mail de confirmação, sem estado pendente. "Advogado" exige CPF e OAB
+ * (confirmada na hora, pelo próprio admin que cadastrou — ver cadastrar_membro_equipe_direto,
+ * migração 0031: quem adiciona se compromete, a plataforma não reconfere a OAB contra o site
+ * oficial); "administrativo" só exige CPF. O limite de 5 e o papel de admin do ator são
+ * conferidos de novo dentro da função SQL — o formulário nunca é a autorização de fato.
  */
-export async function convidarMembroAction(form: FormData) {
+export async function cadastrarMembroEquipeAction(form: FormData) {
   const actor = await currentUserId();
   if (!actor) redirect("/auth/sign-in");
-  const parsed = conviteSchema.safeParse({
+  const parsed = cadastroMembroSchema.safeParse({
+    nome: form.get("nome"),
     email: form.get("email"),
+    senha: form.get("senha"),
     role: form.get("role"),
     cpf: form.get("cpf"),
     oabNumero: form.get("oabNumero") || undefined,
     oabUf: form.get("oabUf") || undefined,
   });
-  if (!parsed.success) redirect("/equipe/time?erro=convite_dados");
-  const { email, role, cpf, oabNumero, oabUf } = parsed.data;
+  if (!parsed.success) redirect("/equipe/time?erro=cadastro_dados");
+  const { nome, email, senha, role, cpf, oabNumero, oabUf } = parsed.data;
   if (role === "lawyer" && (!oabNumero || !oabUf)) {
-    redirect("/equipe/time?erro=convite_oab_obrigatoria");
+    redirect("/equipe/time?erro=cadastro_oab_obrigatoria");
   }
+
+  const { criarContaEquipe } = await import("@/lib/auth/criar-conta-equipe");
+  const conta = await criarContaEquipe({ email, password: senha, name: nome });
+  if ("error" in conta) {
+    redirect(`/equipe/time?erro=cadastro_conta`);
+  }
+
   try {
-    await getDb().query("SELECT convidar_membro_equipe($1, $2, $3, $4, $5, $6)", [
-      randomUUID(),
+    await getDb().query("SELECT cadastrar_membro_equipe_direto($1, $2, $3, $4, $5, $6)", [
+      conta.userId,
       email,
       role,
       cpf,
@@ -422,7 +433,7 @@ export async function convidarMembroAction(form: FormData) {
     ]);
   } catch (error) {
     const msg = error instanceof Error ? error.message : "";
-    redirect(`/equipe/time?erro=${msg.includes("5 funcionários") ? "convite_limite" : "convite_falhou"}`);
+    redirect(`/equipe/time?erro=${msg.includes("já tem 5") ? "cadastro_limite" : "cadastro_falhou"}`);
   }
   revalidatePath("/equipe/time");
 }

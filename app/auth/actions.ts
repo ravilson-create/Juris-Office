@@ -15,10 +15,10 @@ const credentials = z.object({
 });
 
 /**
- * "Entrar" no cabeçalho é o login da área profissional (advogado/admin) — um cidadão nunca
- * precisa de conta, só o cookie de sessão anônimo. Por isso, depois de autenticar, manda quem
- * tem papel profissional para "/equipe" (o sistema da assinatura) e só cai em "/atendimento/meus"
- * quem logar sem ter escritório nenhum — por ora, nunca o caminho comum deste botão.
+ * "Entrar" no cabeçalho é o login da área profissional (advogado/admin/administrativo) — um
+ * cidadão nunca precisa de conta, só o cookie de sessão anônimo. Por isso, depois de autenticar,
+ * manda quem tem papel de equipe para "/equipe" (o sistema da assinatura) e só cai em
+ * "/atendimento/meus" quem logar sem fazer parte de nenhum escritório.
  */
 async function destinoPosLogin(): Promise<string> {
   if (!hasDatabase()) return "/atendimento/meus";
@@ -27,7 +27,7 @@ async function destinoPosLogin(): Promise<string> {
   const rows = await getDb().query<{ role: string }>("SELECT role FROM profiles WHERE user_id = $1", [
     actor,
   ]);
-  return rows[0] && ["lawyer", "admin"].includes(rows[0].role) ? "/equipe" : "/atendimento/meus";
+  return rows[0] && ["lawyer", "admin", "staff"].includes(rows[0].role) ? "/equipe" : "/atendimento/meus";
 }
 
 export async function signIn(_state: AuthState, form: FormData): Promise<AuthState> {

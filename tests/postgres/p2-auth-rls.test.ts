@@ -34,8 +34,9 @@ describe("P2: isolamento por identidade verificada no banco", () => {
         "INSERT INTO case_assignments(case_id, lawyer_id, office_id) VALUES ($1, 'lawyer', $2)",
         [caseId, office],
       );
+      // A assinatura agora é do escritório (quem paga é o admin), não do advogado individual.
       await db.query(`INSERT INTO lawyer_subscriptions(lawyer_id, status, valid_until, provider, external_ref)
-        VALUES ('lawyer', 'active', now() + interval '1 month', 'test', 'note-paid')`);
+        VALUES ('admin', 'active', now() + interval '1 month', 'test', 'note-paid')`);
       await db.query(
         "INSERT INTO case_notes(id, case_id, author_id, body) VALUES ($1, $2, 'lawyer', 'Nota privada')",
         [noteId, caseId],
@@ -48,7 +49,7 @@ describe("P2: isolamento por identidade verificada no banco", () => {
       await db.query("SELECT set_config('app.user_id', 'lawyer', false)");
       expect((await db.query("SELECT id FROM case_notes")).rows).toEqual([{ id: noteId }]);
       await db.exec(
-        "RESET ROLE; UPDATE lawyer_subscriptions SET status = 'canceled' WHERE lawyer_id = 'lawyer'; SET ROLE note_reader",
+        "RESET ROLE; UPDATE lawyer_subscriptions SET status = 'canceled' WHERE lawyer_id = 'admin'; SET ROLE note_reader",
       );
       expect((await db.query("SELECT id FROM case_notes")).rows).toHaveLength(0);
     } finally {
@@ -96,9 +97,10 @@ describe("P2: isolamento por identidade verificada no banco", () => {
         "INSERT INTO case_assignments(case_id, lawyer_id, office_id) VALUES ($1, 'lawyer', $2)",
         [assigned, office],
       );
+      // A assinatura agora é do escritório (quem paga é o admin), não do advogado individual.
       await db.query(
         `INSERT INTO lawyer_subscriptions(lawyer_id, status, valid_until, provider, external_ref)
-         VALUES ('lawyer', 'active', now() + interval '1 month', 'test', 'test-paid')`,
+         VALUES ('admin', 'active', now() + interval '1 month', 'test', 'test-paid')`,
       );
       await db.exec(
         "CREATE ROLE p2_staff; GRANT SELECT ON legal_cases TO p2_staff; SET ROLE p2_staff",
@@ -125,7 +127,7 @@ describe("P2: isolamento por identidade verificada no banco", () => {
         ),
       ).rejects.toThrow();
       await db.exec(
-        "RESET ROLE; UPDATE lawyer_subscriptions SET status = 'canceled' WHERE lawyer_id = 'lawyer'; SET ROLE p2_staff",
+        "RESET ROLE; UPDATE lawyer_subscriptions SET status = 'canceled' WHERE lawyer_id = 'admin'; SET ROLE p2_staff",
       );
       await db.query("SELECT set_config('app.user_id', 'lawyer', false)");
       expect((await db.query("SELECT id FROM legal_cases")).rows).toHaveLength(0);

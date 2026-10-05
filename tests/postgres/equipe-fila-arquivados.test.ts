@@ -55,6 +55,10 @@ describe("fila do advogado: arquivados ficam fora por padrão (migração 0018)"
         "INSERT INTO profiles(user_id, role, office_id) VALUES ('admin', 'admin', $1)",
         [office],
       );
+      await pglite.query(
+        `INSERT INTO lawyer_subscriptions(lawyer_id, status, valid_until, provider, external_ref)
+         VALUES ('admin', 'active', now() + interval '1 month', 'test', 'fila-arq-admin')`,
+      );
       await pglite.exec(
         "CREATE ROLE fila_arq; GRANT SELECT ON legal_cases TO fila_arq; SET ROLE fila_arq",
       );

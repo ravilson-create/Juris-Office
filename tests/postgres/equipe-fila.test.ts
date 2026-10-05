@@ -50,6 +50,12 @@ describe("fila do advogado: filtro por status e paginação respeitam a RLS", ()
       await db.query("INSERT INTO profiles(user_id, role, office_id) VALUES ('admin', 'admin', $1)", [
         office,
       ]);
+      // A assinatura agora é do escritório (quem paga é o admin) — sem isto, can_read_case não
+      // deixa nem o próprio admin ver caso nenhum (migração 0031).
+      await db.query(
+        `INSERT INTO lawyer_subscriptions(lawyer_id, status, valid_until, provider, external_ref)
+         VALUES ('admin', 'active', now() + interval '1 month', 'test', 'fila-admin')`,
+      );
 
       await db.exec("CREATE ROLE fila_reader; GRANT SELECT ON legal_cases TO fila_reader; SET ROLE fila_reader");
       await db.query("SELECT set_config('app.user_id', 'admin', false)");

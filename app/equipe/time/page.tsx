@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Alert } from "@/components/ui/alert";
-import { ConviteForm } from "@/components/equipe/convite-form";
+import { CadastroMembroForm } from "@/components/equipe/cadastro-membro-form";
 import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
 import { listarConvitesPendentes, listarEquipe, type MembroEquipeRow } from "@/lib/services/equipe-time";
@@ -33,10 +33,11 @@ export const dynamic = "force-dynamic";
 
 const MENSAGEM_ERRO: Record<string, string> = {
   equipe_ultimo_admin: "O escritório precisa manter ao menos um administrador.",
-  convite_dados: "Revise os dados do convite — e-mail e CPF precisam ser válidos.",
-  convite_oab_obrigatoria: "Convite de advogado exige número e UF da OAB.",
-  convite_limite: "O escritório já tem 5 funcionários (contando convites pendentes).",
-  convite_falhou: "Não foi possível enviar o convite.",
+  cadastro_dados: "Revise os dados do cadastro — nome, e-mail, senha (12+ caracteres) e CPF precisam ser válidos.",
+  cadastro_oab_obrigatoria: "Cadastro de advogado exige número e UF da OAB.",
+  cadastro_conta: "Não foi possível criar a conta — confira se o e-mail já não está em uso.",
+  cadastro_limite: "O escritório já tem 5 funcionários.",
+  cadastro_falhou: "Não foi possível cadastrar o membro.",
 };
 
 export default async function GestaoEquipePage({
@@ -178,18 +179,17 @@ export default async function GestaoEquipePage({
         </>
       )}
 
-      <h2 className="mt-10 text-xl">Convidar membro</h2>
+      <h2 className="mt-10 text-xl">Cadastrar membro</h2>
       <p className="mt-2 text-muted">
-        {vagasOcupadas} de 5 vagas usadas (equipe atual + convites pendentes). A pessoa convidada
-        entra assim que logar com esse e-mail.
+        {vagasOcupadas} de 5 vagas usadas. A conta nasce já criada e ativa, com a senha que você
+        definir — sem convite por e-mail, sem confirmação.
       </p>
       {vagasOcupadas >= 5 ? (
         <p className="mt-4 text-sm text-muted">
-          O escritório já tem 5 funcionários — remova alguém ou cancele um convite para liberar
-          uma vaga.
+          O escritório já tem 5 funcionários — remova alguém para liberar uma vaga.
         </p>
       ) : (
-        <ConviteForm />
+        <CadastroMembroForm />
       )}
     </main>
   );

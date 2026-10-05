@@ -40,7 +40,7 @@ export function EquipeShell({
   children,
 }: {
   email: string;
-  role: "lawyer" | "admin";
+  role: "lawyer" | "admin" | "staff";
   officeName: string;
   /** Administrador do aplicativo (dono da plataforma) — item de navegação à parte do admin de
    * escritório, só para quem bate o e-mail configurado (ver lib/auth/bootstrap-admin.ts). */
@@ -82,7 +82,9 @@ export function EquipeShell({
         </nav>
         <div className="mt-auto rounded-lg border border-line bg-paper p-3.5">
           <p className="truncate text-xs font-bold text-ink">{officeName || APP_NAME}</p>
-          <p className="mt-0.5 text-xs text-muted">{role === "admin" ? "Administrador" : "Advogado"}</p>
+          <p className="mt-0.5 text-xs text-muted">
+            {role === "admin" ? "Administrador" : role === "lawyer" ? "Advogado" : "Administrativo"}
+          </p>
         </div>
       </aside>
 

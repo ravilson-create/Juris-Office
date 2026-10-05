@@ -14,9 +14,9 @@ import { buscarMfa } from "@/lib/services/mfa";
  * destinos de redirecionamento diferentes), mas o segundo fator — quando a pessoa o ativou — é
  * checado uma vez só, aqui, antes de qualquer uma delas renderizar.
  *
- * A casca visual (EquipeShell, barra lateral + topo) só aparece para quem já é advogado/admin —
- * uma conta ainda sem papel atribuído continua vendo a página crua, que decide seu próprio
- * redirecionamento (ex.: de volta para "/atendimento/meus").
+ * A casca visual (EquipeShell, barra lateral + topo) só aparece para quem já é membro de equipe
+ * (advogado, admin ou administrativo) — uma conta ainda sem papel atribuído continua vendo a
+ * página crua, que decide seu próprio redirecionamento (ex.: de volta para "/atendimento/meus").
  */
 export default async function EquipeLayout({ children }: { children: ReactNode }) {
   const identity = await currentIdentity();
@@ -40,7 +40,7 @@ export default async function EquipeLayout({ children }: { children: ReactNode }
     [identity.id],
   );
   const profile = rows[0];
-  if (!profile || !["lawyer", "admin"].includes(profile.role)) return <>{children}</>;
+  if (!profile || !["lawyer", "admin", "staff"].includes(profile.role)) return <>{children}</>;
 
   const mfa = await buscarMfa(db, identity.id);
   if (mfa?.enabled_at && !(await mfaVerificadoNesteNavegador(identity.id))) {
@@ -50,7 +50,7 @@ export default async function EquipeLayout({ children }: { children: ReactNode }
   return (
     <EquipeShell
       email={identity.email}
-      role={profile.role as "lawyer" | "admin"}
+      role={profile.role as "lawyer" | "admin" | "staff"}
       officeName={profile.office_name ?? ""}
       isAppOwner={isAppOwner(identity)}
     >

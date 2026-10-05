@@ -42,8 +42,10 @@ describe("P3: cadastro de assinatura do advogado (trial + Asaas)", () => {
           uf: string;
         }>("SELECT role, office_id, email, cidade, uf FROM profiles WHERE user_id = 'advogado-1'")
       ).rows;
+      // 'admin', não 'lawyer': quem assina (funda o escritório) já nasce administrando a
+      // própria equipe — migração 0031.
       expect(perfil).toEqual({
-        role: "lawyer",
+        role: "admin",
         office_id: officeId,
         email: "advogado-1@example.com",
         cidade: "São Luís",
