@@ -73,8 +73,8 @@ export function SiteHeader() {
             <span className="hidden sm:inline">Meus atendimentos</span>
           </Link>
           <Link
-            href="/advogado/cadastro"
-            aria-label="Assinar como advogado — teste grátis de 7 dias"
+            href="/advogado#planos-title"
+            aria-label="Assinar como advogado — ver planos"
             className="whitespace-nowrap rounded-md bg-gold-strong px-2 py-2 text-sm font-medium text-white hover:brightness-90 sm:px-4"
           >
             Assinar
