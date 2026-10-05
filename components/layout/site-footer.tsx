@@ -9,9 +9,9 @@ export function SiteFooter() {
         <div className="flex flex-col gap-3">
           <BrandLogo size="sm" mono />
           <p className="max-w-prose">
-            {APP_NAME} (versão de testes) organiza as informações que você digita em um dossiê de
-            demonstração. Não encaminha nada a advogados, não substitui a orientação de um
-            profissional habilitado nem garante resultado.
+            {APP_NAME} organiza as informações que você digita em um dossiê e encaminha ao
+            advogado responsável pelo seu caso. Não substitui a orientação de um profissional
+            habilitado nem garante resultado.
           </p>
         </div>
         <ul className="flex gap-5">

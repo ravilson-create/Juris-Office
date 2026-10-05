@@ -11,10 +11,10 @@ export interface RetentionResult {
 }
 
 /**
- * Núcleo testável da limpeza periódica (P1 do plano mestre): atendimentos de teste não
- * finalizados há mais de 30 dias, e finalizados há mais de 90 dias. Chamado por
- * app/api/cron/limpeza. Prazos provisórios, a rever com o dono do produto quando houver
- * volume real de uso — hoje o app está só em fase de testes, com dados fictícios.
+ * Núcleo testável da limpeza periódica (P1 do plano mestre): atendimentos não finalizados há
+ * mais de 30 dias, e finalizados há mais de 90 dias. Chamado por app/api/cron/limpeza. Prazos
+ * definidos antes de haver assinatura paga e dados reais de clientes — rever com o dono do
+ * produto se ainda fazem sentido agora.
  */
 export async function runRetentionCleanup(db: Db): Promise<RetentionResult> {
   const naoFinalizados = await db.query(

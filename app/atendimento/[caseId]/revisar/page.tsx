@@ -46,8 +46,8 @@ export default async function RevisarPage({ params }: { params: Promise<{ caseId
       <div className="mx-auto max-w-3xl px-5 py-10">
         <h1 className="text-3xl">Revise antes de finalizar</h1>
         <p className="mt-2 max-w-prose text-muted">
-          Este é o conteúdo do dossiê de demonstração. Confira cada parte e use “Corrigir” se algo
-          estiver errado.
+          Este é o conteúdo do dossiê. Confira cada parte e use “Corrigir” se algo estiver
+          errado.
         </p>
 
         <article

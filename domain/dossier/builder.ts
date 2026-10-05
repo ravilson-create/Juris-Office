@@ -90,7 +90,7 @@ export function buildDossier(input: DossierInput): Dossier {
   chronology.sort((a, b) => compareCivilDates(a.date ?? "", b.date ?? ""));
   chronology.push({
     date: businessDate(input.now),
-    description: "Atendimento de teste finalizado no Júris Office IA",
+    description: "Atendimento finalizado no Júris Office IA",
   });
 
   const categoryLabel = (category: string) =>
@@ -114,12 +114,11 @@ export function buildDossier(input: DossierInput): Dossier {
   if (chronology.length === 1) missingInformation.push("Datas dos fatos não informadas.");
 
   const observations = [
-    "Dossiê gerado em ambiente de testes, para demonstração. Nenhuma informação foi encaminhada a advogado ou escritório.",
     "Resumo montado automaticamente a partir das respostas do interessado, sem uso de inteligência artificial.",
   ];
   if (documents.length > 0) {
     observations.push(
-      "Versão de testes: os documentos listados foram apenas registrados para simulação (nome, tipo e tamanho); nenhum arquivo foi recebido.",
+      "Dos documentos listados, hoje são registrados apenas nome, tipo e tamanho: o envio do arquivo em si ainda não está disponível nesta versão do sistema.",
     );
   }
 

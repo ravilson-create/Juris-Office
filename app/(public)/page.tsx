@@ -84,10 +84,7 @@ export default async function HomePage() {
                 Consultar meu atendimento
               </ButtonLink>
             </div>
-            <p className="text-sm text-muted">
-              Sem cadastro para solicitar atendimento. Versão de demonstração — use dados
-              fictícios.
-            </p>
+            <p className="text-sm text-muted">Sem cadastro para solicitar atendimento.</p>
           </div>
 
           <div className="rounded-xl border border-line bg-surface p-6 shadow-sm">
