@@ -183,9 +183,8 @@ export function IdentificationForm({
             {...register("consentAccepted")}
           />
           <label htmlFor={fieldIds("consentAccepted").input} className="text-sm">
-            Estou ciente de que esta é uma versão de testes, de que devo usar dados fictícios e de
-            que as informações serão usadas somente para montar o dossiê de demonstração deste
-            atendimento, sem encaminhamento a advogados, conforme a{" "}
+            Estou ciente de que as informações fornecidas serão usadas para montar o dossiê deste
+            atendimento e dar acesso a ele ao advogado responsável pelo caso, conforme a{" "}
             <a href="/privacidade" target="_blank" className="text-navy underline">
               política de privacidade
             </a>

@@ -93,7 +93,7 @@ describe("buildDossier — Consumidor", () => {
     ]);
     expect(d.chronology).toEqual([
       { date: "2026-05-10", description: "Compra ou contratação" },
-      { date: "2026-09-27", description: "Atendimento de teste finalizado no Júris Office IA" },
+      { date: "2026-09-27", description: "Atendimento finalizado no Júris Office IA" },
     ]);
     expect(d.amounts).toHaveLength(1);
     expect(d.amounts[0].label).toBe("Valor envolvido");
@@ -112,7 +112,9 @@ describe("buildDossier — Consumidor", () => {
     expect(d.missingInformation).not.toContain(
       "Documento recomendado não registrado: Nota fiscal ou recibo",
     );
-    expect(d.observations.some((o) => /nenhum arquivo foi recebido/.test(o))).toBe(true);
+    expect(d.observations.some((o) => /envio do arquivo em si ainda não está disponível/.test(o))).toBe(
+      true,
+    );
   });
 
   it("organiza a triagem pelas etapas, só com perguntas visíveis", () => {
@@ -149,7 +151,9 @@ describe("buildDossier — informações faltantes", () => {
     expect(d.missingInformation).toContain("Datas dos fatos não informadas.");
     // Pergunta condicional oculta não é cobrada.
     expect(d.missingInformation.join(" ")).not.toMatch(/número de protocolo/);
-    expect(d.observations.some((o) => /nenhum arquivo foi recebido/.test(o))).toBe(false);
+    expect(d.observations.some((o) => /envio do arquivo em si ainda não está disponível/.test(o))).toBe(
+      false,
+    );
   });
 
   it("parte fixa (INSS) entra só quando a resposta é sim", () => {

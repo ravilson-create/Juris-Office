@@ -1,8 +1,7 @@
 /**
- * Proteção opcional do ambiente de testes por usuário e senha (HTTP Basic), ativada apenas
- * quando BASIC_AUTH_USER e BASIC_AUTH_PASSWORD estão definidos. Serve para manter o site de
- * demonstração fora do alcance de qualquer pessoa da internet. NÃO é a autenticação do produto
- * (contas, papéis e RLS chegam na fase F5).
+ * Proteção opcional por usuário e senha (HTTP Basic), ativada apenas quando BASIC_AUTH_USER e
+ * BASIC_AUTH_PASSWORD estão definidos — por exemplo, para manter um ambiente fora do alcance de
+ * qualquer pessoa da internet. NÃO é a autenticação do produto (contas, papéis e RLS).
  * Compatível com o runtime do middleware (Web Crypto, sem módulos do Node).
  */
 async function sha256(text: string): Promise<Uint8Array> {

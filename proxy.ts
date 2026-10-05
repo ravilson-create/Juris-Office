@@ -38,10 +38,10 @@ export async function proxy(request: NextRequest) {
       process.env.BASIC_AUTH_PASSWORD!,
     );
     if (!ok) {
-      return new NextResponse("Acesso restrito ao ambiente de testes.", {
+      return new NextResponse("Acesso restrito.", {
         status: 401,
         headers: {
-          "WWW-Authenticate": 'Basic realm="Juris Office IA (testes)", charset="UTF-8"',
+          "WWW-Authenticate": 'Basic realm="Juris Office IA", charset="UTF-8"',
           "Cache-Control": "no-store",
         },
       });
