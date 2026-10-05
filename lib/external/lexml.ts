@@ -57,27 +57,34 @@ export async function consultarLexml(termo: string, maximo = 10): Promise<Docume
 
   let res: Response;
   try {
-    res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    res = await fetch(url, {
+      signal: AbortSignal.timeout(10_000),
+      // Sem um User-Agent de navegador, a proteção contra robôs do Senado Federal (que hospeda o
+      // SRU do LexML) devolve uma página HTML de "verificação de segurança" em vez do XML —
+      // confirmado em produção (ver histórico desta função). Isso imita um navegador comum.
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+        Accept: "application/xml, text/xml, */*",
+        "Accept-Language": "pt-BR,pt;q=0.9",
+      },
+    });
   } catch {
     throw new Error("Não foi possível consultar o LexML agora.");
   }
   if (!res.ok) throw new Error(`O LexML respondeu com erro ${res.status}.`);
 
   const xml = await res.text();
-  const doc = parser.parse(xml) as Record<string, unknown>;
-  const resposta = doc.searchRetrieveResponse as Record<string, unknown> | undefined;
-  if (!resposta) {
-    // Diagnóstico temporário (ver PR que introduziu isso): formato real da resposta do SRU ainda
-    // não confirmado contra tráfego de produção — nunca testável a partir do sandbox de
-    // desenvolvimento, que bloqueia o domínio lexml.gov.br, e sem acesso aos logs do servidor
-    // desta instalação. Por isso o próprio erro (mostrado na tela, nunca para o cidadão — só o
-    // advogado logado nesta aba) carrega um trecho do XML bruto, só para diagnóstico. Remover
-    // assim que o formato certo for confirmado.
-    const chaves = Object.keys(doc).join(", ") || "(nenhuma)";
+  const pareceHtml = /^\s*<!DOCTYPE html/i.test(xml) || /<html[\s>]/i.test(xml.slice(0, 200));
+  if (pareceHtml) {
     throw new Error(
-      `Resposta do LexML em formato inesperado. [diagnóstico temporário — chaves: ${chaves} — início do XML: ${xml.slice(0, 500)}]`,
+      "O LexML bloqueou esta consulta automática (verificação de segurança do Senado Federal). Tente abrir a busca completa no site, abaixo.",
     );
   }
+
+  const doc = parser.parse(xml) as Record<string, unknown>;
+  const resposta = doc.searchRetrieveResponse as Record<string, unknown> | undefined;
+  if (!resposta) throw new Error("Resposta do LexML em formato inesperado.");
 
   const diagnostico = resposta.diagnostics as Record<string, unknown> | undefined;
   if (diagnostico) {
