@@ -44,14 +44,14 @@ function ContratoCard({
   clientSignedAt: string | null;
 }) {
   return (
-    <div className="rounded-md border border-line bg-surface p-5">
-      <div className="flex items-center justify-between gap-3">
+    <div className="rounded-md border border-line bg-surface p-5 print:rounded-none print:border-0 print:p-0">
+      <div className="flex items-center justify-between gap-3 print:hidden">
         <p className="font-semibold">{ROTULO_TIPO_HONORARIO[contrato.fee_type]}</p>
         <span className="rounded bg-navy-soft px-2 py-1 text-xs text-navy-strong">
           {contrato.status === "signed" ? "Assinado" : "Aguardando sua assinatura"}
         </span>
       </div>
-      <p className="mt-1 text-sm text-muted">
+      <p className="mt-1 text-sm text-muted print:hidden">
         Valor: {formatCents(Number(contrato.fee_value_cents))}
         {contrato.success_percentage && ` · Êxito: ${contrato.success_percentage}%`}
       </p>
@@ -124,14 +124,14 @@ export default async function ContratoCidadaoPage({
   );
 
   return (
-    <main className="mx-auto max-w-3xl px-5 py-10">
-      <p>
+    <main className="mx-auto max-w-3xl px-5 py-10 print:max-w-none print:p-0">
+      <p className="print:hidden">
         <Link href={`/atendimento/${caseId}/dossie`}>Voltar ao dossiê</Link>
       </p>
-      <h1 className="mt-4 text-3xl">Contrato</h1>
+      <h1 className="mt-4 text-3xl print:hidden">Contrato</h1>
 
       {erro && MENSAGEM_ERRO[erro] && (
-        <div className="mt-6">
+        <div className="mt-6 print:hidden">
           <Alert tone="error" title="Não foi possível concluir.">
             {MENSAGEM_ERRO[erro]}
           </Alert>
@@ -153,7 +153,7 @@ export default async function ContratoCidadaoPage({
                 clientSignedAt={clientSignedAt}
               />
               {parcelas.length > 0 && (
-                <ul className="mt-2 space-y-1 pl-5 text-sm text-muted">
+                <ul className="mt-2 space-y-1 pl-5 text-sm text-muted print:hidden">
                   {parcelas.map((p) => (
                     <li key={p.id}>
                       {new Date(p.due_date).toLocaleDateString("pt-BR", { timeZone: "UTC" })} —{" "}
@@ -168,7 +168,7 @@ export default async function ContratoCidadaoPage({
       </div>
 
       {contratos.length === 0 && (
-        <p className="mt-6 text-muted">
+        <p className="mt-6 text-muted print:hidden">
           Nenhum contrato enviado pelo escritório ainda. Ele aparece aqui assim que for enviado
           para sua assinatura.
         </p>

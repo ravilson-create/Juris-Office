@@ -72,14 +72,14 @@ function ContratoCard({
 }) {
   const hojeISO = new Date().toISOString().slice(0, 10);
   return (
-    <div className="rounded-md border border-line bg-surface p-4">
-      <div className="flex items-center justify-between">
+    <div className="rounded-md border border-line bg-surface p-4 print:rounded-none print:border-0 print:p-0">
+      <div className="flex items-center justify-between print:hidden">
         <p className="font-semibold">{ROTULO_TIPO_HONORARIO[contrato.fee_type]}</p>
         <span className="rounded bg-navy-soft px-2 py-1 text-xs text-navy-strong">
           {ROTULO_STATUS_CONTRATO[contrato.status]}
         </span>
       </div>
-      <p className="mt-1 text-sm text-muted">
+      <p className="mt-1 text-sm text-muted print:hidden">
         Valor: {formatCents(Number(contrato.fee_value_cents))}
         {contrato.success_percentage && ` · Êxito: ${contrato.success_percentage}%`}
       </p>
@@ -109,7 +109,10 @@ function ContratoCard({
       )}
 
       {contrato.status === "draft" && (
-        <form action={assinarEEnviarContratoAction} className="mt-3 rounded border border-line p-3">
+        <form
+          action={assinarEEnviarContratoAction}
+          className="mt-3 rounded border border-line p-3 print:hidden"
+        >
           <input type="hidden" name="caseId" value={contrato.case_id} />
           <input type="hidden" name="contractId" value={contrato.id} />
           <label className="flex items-start gap-2 text-sm">
@@ -123,7 +126,7 @@ function ContratoCard({
       )}
 
       {contrato.status !== "cancelled" && contrato.status !== "signed" && (
-        <form action={mudarStatusContratoAction} className="mt-3 flex gap-2">
+        <form action={mudarStatusContratoAction} className="mt-3 flex gap-2 print:hidden">
           <input type="hidden" name="caseId" value={contrato.case_id} />
           <input type="hidden" name="contractId" value={contrato.id} />
           <button
@@ -137,7 +140,7 @@ function ContratoCard({
       )}
 
       {(contrato.status === "draft" || contrato.status === "cancelled") && (
-        <form action={excluirContratoAction} className="mt-3">
+        <form action={excluirContratoAction} className="mt-3 print:hidden">
           <input type="hidden" name="caseId" value={contrato.case_id} />
           <input type="hidden" name="contractId" value={contrato.id} />
           <ConfirmSubmitButton
@@ -149,67 +152,69 @@ function ContratoCard({
         </form>
       )}
 
-      <h3 className="mt-5 font-semibold">Parcelas</h3>
-      <ul className="mt-2 space-y-2 text-sm">
-        {parcelas.map((p) => (
-          <li
-            key={p.id}
-            className={`flex items-center justify-between rounded border p-3 ${
-              p.status === "overdue" ? "border-danger bg-danger-soft" : "border-line"
-            }`}
-          >
-            <span>
-              {new Date(p.due_date).toLocaleDateString("pt-BR", { timeZone: "UTC" })} —{" "}
-              {formatCents(Number(p.amount_cents))} · {ROTULO_STATUS_PARCELA[p.status]}
-            </span>
-            {p.status !== "paid" && (
-              <form action={marcarParcelaPagaAction}>
-                <input type="hidden" name="caseId" value={contrato.case_id} />
-                <input type="hidden" name="installmentId" value={p.id} />
-                <button className="rounded border border-line px-2 py-1 text-xs">
-                  Marcar pago
-                </button>
-              </form>
-            )}
-          </li>
-        ))}
-      </ul>
-      {parcelas.length === 0 && <p className="mt-2 text-sm text-muted">Nenhuma parcela ainda.</p>}
+      <div className="print:hidden">
+        <h3 className="mt-5 font-semibold">Parcelas</h3>
+        <ul className="mt-2 space-y-2 text-sm">
+          {parcelas.map((p) => (
+            <li
+              key={p.id}
+              className={`flex items-center justify-between rounded border p-3 ${
+                p.status === "overdue" ? "border-danger bg-danger-soft" : "border-line"
+              }`}
+            >
+              <span>
+                {new Date(p.due_date).toLocaleDateString("pt-BR", { timeZone: "UTC" })} —{" "}
+                {formatCents(Number(p.amount_cents))} · {ROTULO_STATUS_PARCELA[p.status]}
+              </span>
+              {p.status !== "paid" && (
+                <form action={marcarParcelaPagaAction}>
+                  <input type="hidden" name="caseId" value={contrato.case_id} />
+                  <input type="hidden" name="installmentId" value={p.id} />
+                  <button className="rounded border border-line px-2 py-1 text-xs">
+                    Marcar pago
+                  </button>
+                </form>
+              )}
+            </li>
+          ))}
+        </ul>
+        {parcelas.length === 0 && <p className="mt-2 text-sm text-muted">Nenhuma parcela ainda.</p>}
 
-      {contrato.status !== "cancelled" && (
-        <form action={adicionarParcelaAction} className="mt-4 flex flex-wrap items-end gap-3">
-          <input type="hidden" name="caseId" value={contrato.case_id} />
-          <input type="hidden" name="contractId" value={contrato.id} />
-          <div>
-            <label htmlFor={`venc-${contrato.id}`} className="block text-sm font-medium">
-              Vencimento
-            </label>
-            <input
-              id={`venc-${contrato.id}`}
-              name="dataVencimento"
-              type="date"
-              defaultValue={hojeISO}
-              required
-              className="mt-1 rounded border border-line p-2"
-            />
-          </div>
-          <div>
-            <label htmlFor={`valor-${contrato.id}`} className="block text-sm font-medium">
-              Valor
-            </label>
-            <input
-              id={`valor-${contrato.id}`}
-              name="valorParcela"
-              placeholder="1.250,00"
-              required
-              className="mt-1 w-32 rounded border border-line p-2"
-            />
-          </div>
-          <button className="rounded border border-line px-3 py-2 text-sm">
-            Adicionar parcela
-          </button>
-        </form>
-      )}
+        {contrato.status !== "cancelled" && (
+          <form action={adicionarParcelaAction} className="mt-4 flex flex-wrap items-end gap-3">
+            <input type="hidden" name="caseId" value={contrato.case_id} />
+            <input type="hidden" name="contractId" value={contrato.id} />
+            <div>
+              <label htmlFor={`venc-${contrato.id}`} className="block text-sm font-medium">
+                Vencimento
+              </label>
+              <input
+                id={`venc-${contrato.id}`}
+                name="dataVencimento"
+                type="date"
+                defaultValue={hojeISO}
+                required
+                className="mt-1 rounded border border-line p-2"
+              />
+            </div>
+            <div>
+              <label htmlFor={`valor-${contrato.id}`} className="block text-sm font-medium">
+                Valor
+              </label>
+              <input
+                id={`valor-${contrato.id}`}
+                name="valorParcela"
+                placeholder="1.250,00"
+                required
+                className="mt-1 w-32 rounded border border-line p-2"
+              />
+            </div>
+            <button className="rounded border border-line px-3 py-2 text-sm">
+              Adicionar parcela
+            </button>
+          </form>
+        )}
+      </div>
     </div>
   );
 }
@@ -255,18 +260,18 @@ export default async function ContratoPage({
   const objetoSugerido = `${ctx.area.name}${ctx.legalCase.title ? ` — ${ctx.legalCase.title}` : ""}, conforme relato e documentos do atendimento protocolo ${ctx.legalCase.protocol}.`;
 
   return (
-    <main className="mx-auto max-w-3xl px-5 py-10">
-      <p>
+    <main className="mx-auto max-w-3xl px-5 py-10 print:max-w-none print:p-0">
+      <p className="print:hidden">
         <Link href={`/equipe/${caseId}`}>Voltar ao caso</Link>
       </p>
-      <h1 className="mt-4 text-3xl">Contrato e honorários</h1>
-      <p className="mt-2 text-sm text-muted">
+      <h1 className="mt-4 text-3xl print:hidden">Contrato e honorários</h1>
+      <p className="mt-2 text-sm text-muted print:hidden">
         Sem emissão de nota fiscal ou cobrança automática nesta versão — só o registro do
         contrato, das cláusulas e das parcelas acordadas.
       </p>
 
       {erro && MENSAGEM_ERRO[erro] && (
-        <div className="mt-6">
+        <div className="mt-6 print:hidden">
           <Alert tone="error" title="Não foi possível salvar.">
             {MENSAGEM_ERRO[erro]}
           </Alert>
@@ -289,10 +294,10 @@ export default async function ContratoPage({
         ))}
       </div>
       {contratos.length === 0 && (
-        <p className="mt-6 text-muted">Nenhum contrato registrado ainda.</p>
+        <p className="mt-6 text-muted print:hidden">Nenhum contrato registrado ainda.</p>
       )}
 
-      <section className="mt-8 border-t border-line pt-6">
+      <section className="mt-8 border-t border-line pt-6 print:hidden">
         <h2 className="text-xl">Novo contrato</h2>
         <p className="mt-1 text-sm text-muted">
           OAB, escritório e dados do cliente são preenchidos automaticamente a partir do cadastro
