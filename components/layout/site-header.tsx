@@ -23,7 +23,7 @@ function IconBusca() {
 export function SiteHeader() {
   return (
     <header className="border-b border-line bg-surface print:hidden">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-4 sm:gap-4 sm:px-5">
         <Link
           href="/"
           aria-label={`${APP_NAME} — página inicial`}
@@ -62,20 +62,28 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3">
           <Link
             href="/atendimento/meus"
             aria-label="Meus atendimentos"
-            className="inline-flex items-center gap-2 whitespace-nowrap rounded-md border border-line px-3 py-2 text-sm font-medium text-ink hover:border-navy"
+            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-line px-2 py-2 text-sm font-medium text-ink hover:border-navy sm:gap-2 sm:px-3"
           >
             <IconBusca />
             <span className="sm:hidden">Meus</span>
             <span className="hidden sm:inline">Meus atendimentos</span>
           </Link>
+          <Link
+            href="/advogado/cadastro"
+            aria-label="Assinar como advogado — teste grátis de 7 dias"
+            className="whitespace-nowrap rounded-md bg-gold-strong px-2 py-2 text-sm font-medium text-white hover:brightness-90 sm:px-4"
+          >
+            Assinar
+          </Link>
           {authEnabled && (
             <Link
               href="/auth/sign-in"
-              className="whitespace-nowrap rounded-md bg-navy px-3 py-2 text-sm font-medium text-white hover:bg-navy-strong sm:px-4"
+              aria-label="Entrar — área do advogado"
+              className="hidden whitespace-nowrap rounded-md border border-line px-3 py-2 text-sm font-medium text-ink hover:border-navy sm:inline-block sm:px-4"
             >
               Entrar
             </Link>
