@@ -139,6 +139,28 @@ export async function corrigirSecaoIAAction(
   }
 }
 
+/**
+ * "Assinar" esta versão — trava novas edições (petitions_access, migração 0031, exige
+ * finalizado_em IS NULL para UPDATE) e registra quem, com OAB confirmada, autorizou. Não é a
+ * assinatura que vale para protocolar em juízo — essa continua sendo o certificado ICP-Brasil do
+ * advogado ou o login do sistema do tribunal, fora desta plataforma. É só a confirmação interna
+ * de que esta versão foi revisada e aprovada por um advogado do escritório. finalizar_peticao
+ * (SQL) já confere a OAB confirmada do ator — o formulário nunca é a autorização de fato.
+ */
+export async function finalizarPeticaoAction(form: FormData) {
+  const petitionId = z.uuid().safeParse(form.get("petitionId"));
+  const caseId = z.uuid().safeParse(form.get("caseId"));
+  const actor = await currentUserId();
+  if (!actor || !petitionId.success || !caseId.success) return;
+  try {
+    await getDb().query("SELECT finalizar_peticao($1)", [petitionId.data]);
+  } catch {
+    return;
+  }
+  revalidatePath(`/equipe/${caseId.data}/peticao`);
+  revalidatePath(`/equipe/${caseId.data}/pecas`);
+}
+
 /** Exclui esta versão da petição — não afeta outras versões geradas para o mesmo caso. */
 export async function excluirPeticaoAction(form: FormData) {
   const petitionId = z.uuid().safeParse(form.get("petitionId"));

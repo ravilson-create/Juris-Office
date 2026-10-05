@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
+import { acessoEquipe } from "@/lib/auth/equipe-acesso";
 import { formatCents } from "@/domain/triage/money";
 import { LEGAL_AREAS } from "@/lib/mocks/legal-areas";
 import { listarContratosEquipe } from "@/lib/services/equipe-contratos";
@@ -32,20 +33,8 @@ export default async function ContratosEquipePage() {
   const actor = await currentUserId();
   if (!actor) redirect("/auth/sign-in");
   const db = getDb();
-  const profile = await db.query<{ role: string }>("SELECT role FROM profiles WHERE user_id = $1", [
-    actor,
-  ]);
-  if (!profile[0] || !["lawyer", "admin"].includes(profile[0].role)) redirect("/atendimento/meus");
-  if (profile[0].role === "lawyer") {
-    const acesso = await db.query<{ oab_verificado_em: Date | null }>(
-      `SELECT p.oab_verificado_em FROM profiles p
-       JOIN lawyer_subscriptions s ON s.lawyer_id = p.user_id
-       WHERE p.user_id = $1 AND s.status IN ('active', 'trial') AND s.valid_until > now()`,
-      [actor],
-    );
-    if (!acesso.length) redirect("/assinatura");
-    if (!acesso[0].oab_verificado_em) redirect("/advogado/pendente");
-  }
+  const acesso = await acessoEquipe(db, actor);
+  if (!acesso.ok) redirect(acesso.motivo === "sem_papel" ? "/atendimento/meus" : "/assinatura");
 
   const contratos = await listarContratosEquipe(db);
 

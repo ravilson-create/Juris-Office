@@ -8,6 +8,7 @@ import { ContractDocument } from "@/components/contract/contract-document";
 import { temClausulasCompletas } from "@/lib/contracts/clausulas";
 import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
+import { acessoEquipe } from "@/lib/auth/equipe-acesso";
 import { getCaseService } from "@/lib/services";
 import { BRAZIL_UFS } from "@/domain/case/schema";
 import { formatCents } from "@/domain/triage/money";
@@ -64,11 +65,13 @@ function ContratoCard({
   parcelas,
   lawyerSignedAt,
   clientSignedAt,
+  oabConfirmada,
 }: {
   contrato: ContratoRow;
   parcelas: ParcelaRow[];
   lawyerSignedAt: string | null;
   clientSignedAt: string | null;
+  oabConfirmada: boolean;
 }) {
   const hojeISO = new Date().toISOString().slice(0, 10);
   return (
@@ -108,7 +111,7 @@ function ContratoCard({
         </p>
       )}
 
-      {contrato.status === "draft" && (
+      {contrato.status === "draft" && oabConfirmada && (
         <form action={assinarEEnviarContratoAction} className="mt-3 rounded border border-line p-3">
           <input type="hidden" name="caseId" value={contrato.case_id} />
           <input type="hidden" name="contractId" value={contrato.id} />
@@ -120,6 +123,11 @@ function ContratoCard({
             Assinar e enviar ao cliente
           </button>
         </form>
+      )}
+      {contrato.status === "draft" && !oabConfirmada && (
+        <p className="mt-3 rounded border border-line bg-paper p-3 text-sm text-muted">
+          Só quem tem OAB confirmada no perfil pode assinar este contrato como responsável.
+        </p>
       )}
 
       {contrato.status !== "cancelled" && contrato.status !== "signed" && (
@@ -227,19 +235,10 @@ export default async function ContratoPage({
   if (!z.uuid().safeParse(caseId).success) notFound();
 
   const db = getDb();
-  const profile = await db.query<{ role: string }>("SELECT role FROM profiles WHERE user_id = $1", [
-    actor,
-  ]);
-  if (!profile[0] || !["lawyer", "admin"].includes(profile[0].role)) notFound();
-  if (profile[0].role === "lawyer") {
-    const acesso = await db.query<{ oab_verificado_em: Date | null }>(
-      `SELECT p.oab_verificado_em FROM profiles p
-       JOIN lawyer_subscriptions s ON s.lawyer_id = p.user_id
-       WHERE p.user_id = $1 AND s.status IN ('active', 'trial') AND s.valid_until > now()`,
-      [actor],
-    );
-    if (!acesso.length) redirect("/assinatura");
-    if (!acesso[0].oab_verificado_em) redirect("/advogado/pendente");
+  const acesso = await acessoEquipe(db, actor);
+  if (!acesso.ok) {
+    if (acesso.motivo === "sem_papel") notFound();
+    redirect("/assinatura");
   }
 
   // A política RLS é o filtro definitivo: um caseId de outro escritório/sem atribuição não acha nada.
@@ -285,6 +284,7 @@ export default async function ContratoPage({
             clientSignedAt={
               assinaturasPorContrato[i]!.find((a) => a.signer_role === "client")?.signed_at ?? null
             }
+            oabConfirmada={acesso.oabConfirmada}
           />
         ))}
       </div>

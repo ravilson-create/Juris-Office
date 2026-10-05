@@ -76,6 +76,11 @@ describe("Exclusão de atendimento e contrato — RLS (migração 0017)", () => 
       await db.query("INSERT INTO profiles(user_id, role, office_id) VALUES ('admin', 'admin', $1)", [
         office,
       ]);
+      // A assinatura agora e do escritorio (quem paga e o admin), nao do advogado individual.
+      await db.query(
+        `INSERT INTO lawyer_subscriptions(lawyer_id, status, valid_until, provider, external_ref)
+         VALUES ('admin', 'active', now() + interval '1 month', 'test', 'auto-admin-sub-1')`,
+      );
       await db.query(
         `INSERT INTO profiles(user_id, role, office_id, oab_numero, oab_uf, oab_verificado_em, oab_verificado_por)
          VALUES ('lawyer', 'lawyer', $1, '123456', 'MA', now(), 'admin')`,
@@ -135,6 +140,11 @@ describe("Exclusão de atendimento e contrato — RLS (migração 0017)", () => 
       await db.query("INSERT INTO profiles(user_id, role, office_id) VALUES ('admin', 'admin', $1)", [
         office,
       ]);
+      // A assinatura agora e do escritorio (quem paga e o admin), nao do advogado individual.
+      await db.query(
+        `INSERT INTO lawyer_subscriptions(lawyer_id, status, valid_until, provider, external_ref)
+         VALUES ('admin', 'active', now() + interval '1 month', 'test', 'auto-admin-sub-2')`,
+      );
       await db.query(
         `INSERT INTO contracts(id, case_id, fee_type, fee_value_cents, status, created_by)
          VALUES ($1, $2, 'fixed', 500000, 'draft', 'admin')`,

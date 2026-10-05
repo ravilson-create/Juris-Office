@@ -18,7 +18,7 @@ async function migrarBancoNovo(): Promise<PGlite> {
 const AREA = "11111111-1111-4111-8111-111111111111";
 
 describe("P3/P4: OAB autodeclarada no cadastro, revogável por um admin do escritório", () => {
-  it("advogado com assinatura ativa mas OAB não confirmada não enxerga o caso atribuído", async () => {
+  it("advogado com assinatura do escritório ativa mas OAB não confirmada enxerga o caso (OAB só bloqueia assinar, migração 0031)", async () => {
     const db = await migrarBancoNovo();
     try {
       const office = "00000000-0000-4000-8000-000000000001";
@@ -29,6 +29,9 @@ describe("P3/P4: OAB autodeclarada no cadastro, revogável por um admin do escri
            'submitted', now(), now(), now())`,
         [caseId, AREA, office],
       );
+      await db.query("INSERT INTO profiles(user_id, role, office_id) VALUES ('admin', 'admin', $1)", [
+        office,
+      ]);
       await db.query(
         "INSERT INTO profiles(user_id, role, office_id, oab_numero, oab_uf) VALUES ('lawyer', 'lawyer', $1, '123456', 'MA')",
         [office],
@@ -37,14 +40,15 @@ describe("P3/P4: OAB autodeclarada no cadastro, revogável por um admin do escri
         "INSERT INTO case_assignments(case_id, lawyer_id, office_id) VALUES ($1, 'lawyer', $2)",
         [caseId, office],
       );
+      // A assinatura é do escritório (quem paga é o admin) — não depende da OAB do advogado.
       await db.query(
         `INSERT INTO lawyer_subscriptions(lawyer_id, status, valid_until, provider)
-         VALUES ('lawyer', 'trial', now() + interval '7 days', 'asaas')`,
+         VALUES ('admin', 'trial', now() + interval '7 days', 'asaas')`,
       );
 
       await db.exec("CREATE ROLE oab_reader; GRANT SELECT ON legal_cases TO oab_reader; SET ROLE oab_reader");
       await db.query("SELECT set_config('app.user_id', 'lawyer', false)");
-      expect((await db.query("SELECT id FROM legal_cases")).rows).toHaveLength(0);
+      expect((await db.query("SELECT id FROM legal_cases")).rows).toEqual([{ id: caseId }]);
     } finally {
       await db.close();
     }
@@ -77,9 +81,10 @@ describe("P3/P4: OAB autodeclarada no cadastro, revogável por um admin do escri
         "INSERT INTO case_assignments(case_id, lawyer_id, office_id) VALUES ($1, 'lawyer', $2)",
         [caseId, office],
       );
+      // A assinatura é do escritório (quem paga é o admin) — não depende da OAB do advogado.
       await db.query(
         `INSERT INTO lawyer_subscriptions(lawyer_id, status, valid_until, provider)
-         VALUES ('lawyer', 'trial', now() + interval '7 days', 'asaas')`,
+         VALUES ('admin', 'trial', now() + interval '7 days', 'asaas')`,
       );
 
       await db.exec(
@@ -108,7 +113,8 @@ describe("P3/P4: OAB autodeclarada no cadastro, revogável por um admin do escri
       ).rows;
       expect(confirmado.oab_verificado_em).not.toBeNull();
 
-      // agora o advogado enxerga o caso
+      // O advogado sempre enxergava o caso (OAB não gate de visibilidade desde a migração
+      // 0031) — confirmar a OAB só muda se ele pode assinar, não se pode ver/elaborar.
       await db.exec("RESET ROLE; GRANT SELECT ON legal_cases TO oab_admin; SET ROLE oab_admin");
       await db.query("SELECT set_config('app.user_id', 'lawyer', false)");
       expect((await db.query("SELECT id FROM legal_cases")).rows).toEqual([{ id: caseId }]);
@@ -190,7 +196,7 @@ describe("P3/P4: OAB autodeclarada no cadastro, revogável por um admin do escri
     }
   });
 
-  it("revoke_lawyer_oab só funciona para admin do mesmo escritório, e bloqueia o acesso de novo", async () => {
+  it("revoke_lawyer_oab só funciona para admin do mesmo escritório, e bloqueia assinar de novo (não a visibilidade do caso)", async () => {
     const db = await migrarBancoNovo();
     try {
       const office = "00000000-0000-4000-8000-000000000001";
@@ -219,9 +225,10 @@ describe("P3/P4: OAB autodeclarada no cadastro, revogável por um admin do escri
         "INSERT INTO case_assignments(case_id, lawyer_id, office_id) VALUES ($1, 'lawyer', $2)",
         [caseId, office],
       );
+      // A assinatura é do escritório (quem paga é o admin) — não depende da OAB do advogado.
       await db.query(
         `INSERT INTO lawyer_subscriptions(lawyer_id, status, valid_until, provider)
-         VALUES ('lawyer', 'trial', now() + interval '7 days', 'asaas')`,
+         VALUES ('admin', 'trial', now() + interval '7 days', 'asaas')`,
       );
 
       await db.exec(
@@ -248,10 +255,17 @@ describe("P3/P4: OAB autodeclarada no cadastro, revogável por um admin do escri
       ).rows;
       expect(revogada).toEqual({ oab_verificado_em: null, oab_verificado_por: null });
 
-      // o advogado perde o acesso ao caso
-      await db.exec("RESET ROLE; GRANT SELECT ON legal_cases TO oab_revoke; SET ROLE oab_revoke");
+      // o advogado continua vendo o caso (OAB não é mais gate de visibilidade, só de
+      // assinatura, migração 0031) — mas perde a condição de assinar.
+      await db.exec(
+        "RESET ROLE; GRANT SELECT ON legal_cases TO oab_revoke; GRANT EXECUTE ON FUNCTION actor_oab_confirmada() TO oab_revoke; SET ROLE oab_revoke",
+      );
       await db.query("SELECT set_config('app.user_id', 'lawyer', false)");
-      expect((await db.query("SELECT id FROM legal_cases")).rows).toHaveLength(0);
+      expect((await db.query("SELECT id FROM legal_cases")).rows).toEqual([{ id: caseId }]);
+      const [{ actor_oab_confirmada: oabConfirmada }] = (
+        await db.query<{ actor_oab_confirmada: boolean }>("SELECT actor_oab_confirmada()")
+      ).rows;
+      expect(oabConfirmada).toBe(false);
     } finally {
       await db.close();
     }

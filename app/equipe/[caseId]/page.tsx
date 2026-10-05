@@ -8,6 +8,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
 import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
+import { acessoEquipe } from "@/lib/auth/equipe-acesso";
 import { getCaseService } from "@/lib/services";
 import { CASE_STATUS_LABEL, isDeletable } from "@/domain/case/status";
 import { listarPrazosPorCaso } from "@/lib/services/equipe-prazos";
@@ -59,22 +60,10 @@ export default async function CasoEquipe({
   if (!actor) redirect("/auth/sign-in");
   const { caseId } = await params;
   if (!z.uuid().safeParse(caseId).success) notFound();
-  const profile = await getDb().query<{ role: string }>(
-    "SELECT role FROM profiles WHERE user_id = $1",
-    [actor],
-  );
-  if (!profile[0] || !["lawyer", "admin"].includes(profile[0].role)) notFound();
-  if (profile[0].role === "lawyer") {
-    const active = await getDb().query(
-      "SELECT 1 FROM lawyer_subscriptions WHERE lawyer_id = $1 AND status IN ('active', 'trial') AND valid_until > now()",
-      [actor],
-    );
-    if (!active.length) redirect("/assinatura");
-    const oab = await getDb().query<{ oab_verificado_em: Date | null }>(
-      "SELECT oab_verificado_em FROM profiles WHERE user_id = $1",
-      [actor],
-    );
-    if (!oab[0]?.oab_verificado_em) redirect("/advogado/pendente");
+  const acesso = await acessoEquipe(getDb(), actor);
+  if (!acesso.ok) {
+    if (acesso.motivo === "sem_papel") notFound();
+    redirect("/assinatura");
   }
   // A política RLS é o filtro definitivo: IDs de outro escritório/sem atribuição retornam vazio.
   const submission = await getCaseService().getSubmission(caseId);

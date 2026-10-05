@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUserId } from "@/lib/auth/session";
 import { getDb } from "@/lib/db/connection";
+import { acessoEquipe } from "@/lib/auth/equipe-acesso";
 import type { CaseStatus } from "@/domain/case/schema";
 import { resumirContagemPorStatus } from "@/domain/case/dashboard";
 import { calcularPaginacao, TAMANHO_PAGINA_EQUIPE } from "@/domain/case/listagem";
@@ -54,23 +55,9 @@ export default async function EquipePage({
   const actor = await currentUserId();
   if (!actor) redirect("/auth/sign-in");
   const db = getDb();
-  const profile = await db.query<{ role: string; office_id: string }>(
-    "SELECT role, office_id FROM profiles WHERE user_id = $1",
-    [actor],
-  );
-  if (!profile[0] || !["lawyer", "admin"].includes(profile[0].role)) redirect("/atendimento/meus");
-  if (profile[0].role === "lawyer") {
-    const active = await db.query(
-      "SELECT 1 FROM lawyer_subscriptions WHERE lawyer_id = $1 AND status IN ('active', 'trial') AND valid_until > now()",
-      [actor],
-    );
-    if (!active.length) redirect("/assinatura");
-    const oab = await db.query<{ oab_verificado_em: Date | null }>(
-      "SELECT oab_verificado_em FROM profiles WHERE user_id = $1",
-      [actor],
-    );
-    if (!oab[0]?.oab_verificado_em) redirect("/advogado/pendente");
-  }
+  const acesso = await acessoEquipe(db, actor);
+  if (!acesso.ok) redirect(acesso.motivo === "sem_papel" ? "/atendimento/meus" : "/assinatura");
+  const profile = { role: acesso.role, office_id: acesso.officeId };
   const { busca, status: statusBruto, pagina: paginaBruta, arquivados: arquivadosBruto } =
     await searchParams;
   const query = (busca ?? "").trim().slice(0, 80);
@@ -85,35 +72,36 @@ export default async function EquipePage({
   );
   const cases = await listarCasosFila(db, filtro, TAMANHO_PAGINA_EQUIPE, offset);
 
+  const visaoEscritorio = profile.role !== "lawyer";
+  const podeAtribuir = profile.role === "admin";
   const resumo = resumirContagemPorStatus(await contarCasosPorStatus(db));
-  const semAdvogado =
-    profile[0].role === "admin" ? await contarCasosSemAdvogado(db) : 0;
+  const semAdvogado = visaoEscritorio ? await contarCasosSemAdvogado(db) : 0;
   const prazosProximos = await listarPrazosProximos(db, DIAS_ALERTA_PRAZO);
   const prazosVencidos = await contarPrazosVencidos(db);
   const hojeISO = new Date().toISOString().slice(0, 10);
-  const lawyers =
-    profile[0].role === "admin"
-      ? await db.query<{ user_id: string }>(
-          `SELECT p.user_id FROM profiles p JOIN lawyer_subscriptions s ON s.lawyer_id = p.user_id
-           WHERE p.role = 'lawyer' AND p.office_id = $1 AND s.status IN ('active', 'trial')
-             AND s.valid_until > now() AND p.oab_verificado_em IS NOT NULL ORDER BY p.user_id`,
-          [profile[0].office_id],
-        )
-      : [];
-  const pendentesOab =
-    profile[0].role === "admin"
-      ? await db.query<{ count: string }>(
-          `SELECT count(*) FROM profiles
-           WHERE role = 'lawyer' AND office_id = $1 AND oab_numero IS NOT NULL
-             AND oab_verificado_em IS NULL`,
-          [profile[0].office_id],
-        )
-      : [];
+  // A assinatura é do escritório (acessoEquipe já confirmou que está em dia), não mais de cada
+  // advogado — por isso não há mais join com lawyer_subscriptions aqui.
+  const lawyers = podeAtribuir
+    ? await db.query<{ user_id: string }>(
+        `SELECT user_id FROM profiles
+         WHERE role = 'lawyer' AND office_id = $1 AND oab_verificado_em IS NOT NULL
+         ORDER BY user_id`,
+        [profile.office_id],
+      )
+    : [];
+  const pendentesOab = podeAtribuir
+    ? await db.query<{ count: string }>(
+        `SELECT count(*) FROM profiles
+         WHERE role = 'lawyer' AND office_id = $1 AND oab_numero IS NOT NULL
+           AND oab_verificado_em IS NULL`,
+        [profile.office_id],
+      )
+    : [];
   return (
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
       <h1 className="text-3xl">Área profissional</h1>
       <p className="mt-2 text-muted">
-        {profile[0].role === "admin" ? "Casos do seu escritório" : "Casos atribuídos a você"}
+        {visaoEscritorio ? "Casos do seu escritório" : "Casos atribuídos a você"}
       </p>
 
       <div
@@ -143,7 +131,7 @@ export default async function EquipePage({
           ))}
       </div>
 
-      {profile[0].role === "admin" && semAdvogado > 0 && (
+      {visaoEscritorio && semAdvogado > 0 && (
         <p className="mt-4 rounded-md border border-line bg-surface p-4">
           <strong>{semAdvogado}</strong> caso(s) do escritório ainda sem advogado atribuído.
         </p>
@@ -175,7 +163,7 @@ export default async function EquipePage({
         </div>
       )}
 
-      {profile[0].role === "admin" && Number(pendentesOab[0]?.count ?? 0) > 0 && (
+      {podeAtribuir && Number(pendentesOab[0]?.count ?? 0) > 0 && (
         <Link
           href="/equipe/pendentes"
           className="mt-4 block rounded-md border border-line bg-surface p-4 font-medium text-navy hover:border-navy"
@@ -237,7 +225,7 @@ export default async function EquipePage({
                 <th scope="col" className="px-4 py-3">
                   Status
                 </th>
-                {profile[0].role === "admin" && lawyers.length > 0 && (
+                {podeAtribuir && lawyers.length > 0 && (
                   <th scope="col" className="px-4 py-3">
                     Atribuir
                   </th>
@@ -268,7 +256,7 @@ export default async function EquipePage({
                       {CASE_STATUS_LABEL[item.status as CaseStatus] ?? item.status}
                     </span>
                   </td>
-                  {profile[0].role === "admin" && lawyers.length > 0 && (
+                  {podeAtribuir && lawyers.length > 0 && (
                     <td className="px-4 py-3">
                       <form action={assignLawyer} className="flex gap-2">
                         <input type="hidden" name="caseId" value={item.id} />
