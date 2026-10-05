@@ -8,6 +8,7 @@ import {
   datajudConfigurado,
   type ProcessoDatajud,
 } from "@/lib/external/datajud";
+import { consultarLexml, type DocumentoLexml } from "@/lib/external/lexml";
 import {
   SERVICOS_JURISPRUDENCIA,
   SERVICOS_LEGISLACAO,
@@ -27,6 +28,15 @@ const AREAS: { slug: LegalAreaSlug; nome: string }[] = [
   { slug: "civel", nome: "Cível" },
 ];
 
+const TERMO_MAX = 200;
+
+function formatarData(iso: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("pt-BR", { timeZone: "America/Fortaleza" });
+}
+
 function formatarDataHora(iso: string | null): string {
   if (!iso) return "—";
   const d = new Date(iso);
@@ -42,7 +52,12 @@ function formatarDataHora(iso: string | null): string {
 export default async function ConsultasExternasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ numero?: string; tribunal?: string; area?: string }>;
+  searchParams: Promise<{
+    numero?: string;
+    tribunal?: string;
+    area?: string;
+    termo?: string;
+  }>;
 }) {
   const actor = await currentUserId();
   if (!actor) redirect("/auth/sign-in");
@@ -51,8 +66,9 @@ export default async function ConsultasExternasPage({
   const acesso = await acessoEquipe(db, actor);
   if (!acesso.ok) redirect(acesso.motivo === "sem_papel" ? "/atendimento/meus" : "/assinatura");
 
-  const { numero, tribunal, area: areaRaw } = await searchParams;
+  const { numero, tribunal, area: areaRaw, termo: termoRaw } = await searchParams;
   const area = legalAreaSlugSchema.safeParse(areaRaw).data;
+  const termo = termoRaw?.trim().slice(0, TERMO_MAX) || (area ? TERMO_POR_AREA[area] : "");
 
   let processo: ProcessoDatajud | null = null;
   let erroConsulta: string | null = null;
@@ -61,6 +77,16 @@ export default async function ConsultasExternasPage({
       processo = await consultarProcessoDatajud(tribunal, numero);
     } catch (e) {
       erroConsulta = e instanceof Error ? e.message : "Falha ao consultar o DataJud.";
+    }
+  }
+
+  let documentosLexml: DocumentoLexml[] = [];
+  let erroLexml: string | null = null;
+  if (termo) {
+    try {
+      documentosLexml = await consultarLexml(termo);
+    } catch (e) {
+      erroLexml = e instanceof Error ? e.message : "Falha ao consultar o LexML.";
     }
   }
 
@@ -201,7 +227,7 @@ export default async function ConsultasExternasPage({
           {tribunal && <input type="hidden" name="tribunal" value={tribunal} />}
           <div>
             <label htmlFor="area" className="block text-sm font-medium">
-              Área jurídica (opcional, para pré-preencher a busca)
+              Área jurídica (opcional, pré-preenche o termo)
             </label>
             <select
               id="area"
@@ -216,6 +242,20 @@ export default async function ConsultasExternasPage({
                 </option>
               ))}
             </select>
+          </div>
+          <div>
+            <label htmlFor="termo" className="block text-sm font-medium">
+              Termo de busca (usado na legislação abaixo)
+            </label>
+            <input
+              id="termo"
+              name="termo"
+              key={termo}
+              defaultValue={termo}
+              maxLength={TERMO_MAX}
+              placeholder="ex.: rescisão indireta"
+              className="mt-1 w-64 rounded border border-line p-2"
+            />
           </div>
           <button className="rounded border border-line px-4 py-2">Aplicar</button>
         </form>
@@ -248,11 +288,59 @@ export default async function ConsultasExternasPage({
             <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
               Legislação
             </h3>
-            <ul className="mt-2 space-y-3">
+            <p className="mt-1 text-sm text-muted">
+              Resultado buscado direto no LexML Brasil (rede pública mantida por Senado, Câmara,
+              Judiciário e Ministério Público) — sem precisar abrir outro site.
+            </p>
+
+            {erroLexml && (
+              <div className="mt-3">
+                <Alert tone="error" title="Não foi possível buscar no LexML.">
+                  {erroLexml} Tente abrir a busca completa no site, abaixo.
+                </Alert>
+              </div>
+            )}
+
+            {termo && !erroLexml && documentosLexml.length === 0 && (
+              <div className="mt-3">
+                <Alert title="Nenhum resultado para este termo.">
+                  Tente um termo mais genérico, ou abra a busca completa no site, abaixo.
+                </Alert>
+              </div>
+            )}
+
+            {documentosLexml.length > 0 && (
+              <ul className="mt-3 space-y-3">
+                {documentosLexml.map((doc) => (
+                  <li key={doc.urn} className="rounded-md border border-line p-4">
+                    <a
+                      href={doc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-navy hover:underline"
+                    >
+                      {doc.titulo}
+                    </a>
+                    {doc.ementa && <p className="mt-1 text-sm text-muted">{doc.ementa}</p>}
+                    <p className="mt-1 text-xs text-muted">
+                      {formatarData(doc.data)} · {doc.urn}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {!termo && (
+              <p className="mt-3 text-sm text-muted">
+                Escolha uma área ou digite um termo acima e clique em &ldquo;Aplicar&rdquo; para
+                ver o resultado aqui.
+              </p>
+            )}
+
+            <ul className="mt-4 space-y-3">
               {SERVICOS_LEGISLACAO.map((s) => (
                 <li key={s.id} className="rounded-md border border-line p-4">
-                  <p className="font-semibold">{s.nome}</p>
-                  <p className="mt-1 text-sm text-muted">{s.descricao}</p>
+                  <p className="font-semibold">Busca completa no site do {s.nome}</p>
                   <p className="mt-1 text-sm text-muted">{s.motivoSemIntegracao}</p>
                   <a
                     href={s.url(area)}
