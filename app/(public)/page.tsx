@@ -125,6 +125,34 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <section className="bg-navy">
+        <div className="mx-auto grid max-w-6xl items-center gap-8 px-5 py-14 md:grid-cols-[1.1fr_1fr]">
+          <div>
+            <p className="font-sans text-sm font-semibold uppercase tracking-[.08em] text-navy-soft">
+              Área advogados
+            </p>
+            <h2 className="mt-3 text-3xl text-white sm:text-4xl">Seu escritório começa aqui.</h2>
+            <p className="mt-3 max-w-prose text-navy-soft">
+              Organize atendimentos, documentos e a rotina jurídica. 7 dias de teste grátis, sem
+              cartão de crédito — já começam no cadastro.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center gap-4">
+              <ButtonLink href="/advogado/cadastro" variant="gold">
+                Começar teste grátis
+              </ButtonLink>
+              <ButtonLink href="/advogado" variant="secondary">
+                Ver planos e preços
+              </ButtonLink>
+            </div>
+          </div>
+          <div className="flex flex-col gap-4 text-sm text-navy-soft sm:flex-row sm:gap-8">
+            <p>Gerencie solicitações em um só lugar</p>
+            <p>Acompanhe prazos e andamentos</p>
+            <p>Mais organização para o seu atendimento</p>
+          </div>
+        </div>
+      </section>
+
       <section className="mx-auto max-w-6xl px-5 py-14" aria-labelledby="areas-title">
         <p className="font-sans text-sm font-semibold uppercase tracking-[.08em] text-gold-strong">
           Áreas de atendimento
@@ -148,30 +176,6 @@ export default async function HomePage() {
             </li>
           ))}
         </ul>
-      </section>
-
-      <section className="bg-navy">
-        <div className="mx-auto grid max-w-6xl items-center gap-8 px-5 py-14 md:grid-cols-[1.1fr_1fr]">
-          <div>
-            <p className="font-sans text-sm font-semibold uppercase tracking-[.08em] text-navy-soft">
-              Área advogados
-            </p>
-            <h2 className="mt-3 text-3xl text-white sm:text-4xl">Seu escritório começa aqui.</h2>
-            <p className="mt-3 max-w-prose text-navy-soft">
-              Organize atendimentos, documentos e a rotina jurídica.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-6">
-            <div className="flex flex-col gap-4 text-sm text-navy-soft sm:flex-row sm:gap-8">
-              <p>Gerencie solicitações em um só lugar</p>
-              <p>Acompanhe prazos e andamentos</p>
-              <p>Mais organização para o seu atendimento</p>
-            </div>
-            <ButtonLink href="/advogado" variant="gold">
-              Conhecer planos
-            </ButtonLink>
-          </div>
-        </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-5 py-12">

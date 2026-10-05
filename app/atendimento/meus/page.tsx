@@ -9,6 +9,8 @@ import { currentSessionHash } from "@/lib/auth/case-access";
 import { getCaseService } from "@/lib/services";
 import type { MyCaseItem } from "@/lib/services/case-service";
 import { authEnabled } from "@/lib/auth/session";
+import { getDb, hasDatabase } from "@/lib/db/connection";
+import { listarCasosComContratoPendente } from "@/lib/services/equipe-contratos";
 import { signOut } from "@/app/auth/actions";
 import {
   arquivarAtendimentoAction,
@@ -30,6 +32,11 @@ export default async function MeusAtendimentosPage({
   const items = todos.filter((item) => !item.archived);
   const arquivados = todos.filter((item) => item.archived);
   const { erro } = await searchParams;
+  const finalizadosIds = todos.filter((item) => item.finalized).map((item) => item.id);
+  const contratoPendente =
+    finalizadosIds.length > 0 && hasDatabase()
+      ? await listarCasosComContratoPendente(getDb(), finalizadosIds)
+      : new Set<string>();
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-10">
@@ -81,7 +88,11 @@ export default async function MeusAtendimentosPage({
         <>
           <ul className="mt-8 flex flex-col gap-4" aria-label="Atendimentos deste navegador">
             {items.map((item) => (
-              <AtendimentoItem key={item.id} item={item} />
+              <AtendimentoItem
+                key={item.id}
+                item={item}
+                contratoPendente={contratoPendente.has(item.id)}
+              />
             ))}
           </ul>
           <div className="mt-8">
@@ -100,7 +111,11 @@ export default async function MeusAtendimentosPage({
           </p>
           <ul className="mt-4 flex flex-col gap-4" aria-label="Atendimentos arquivados">
             {arquivados.map((item) => (
-              <AtendimentoItem key={item.id} item={item} />
+              <AtendimentoItem
+                key={item.id}
+                item={item}
+                contratoPendente={contratoPendente.has(item.id)}
+              />
             ))}
           </ul>
         </section>
@@ -118,7 +133,13 @@ export default async function MeusAtendimentosPage({
   );
 }
 
-function AtendimentoItem({ item }: { item: MyCaseItem }) {
+function AtendimentoItem({
+  item,
+  contratoPendente,
+}: {
+  item: MyCaseItem;
+  contratoPendente: boolean;
+}) {
   return (
     <li className="rounded-md border border-line bg-surface p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -131,6 +152,11 @@ function AtendimentoItem({ item }: { item: MyCaseItem }) {
           {CASE_STATUS_LABEL[item.status]}
         </span>
       </div>
+      {contratoPendente && (
+        <p className="mt-2 inline-flex items-center gap-1.5 rounded bg-danger-soft px-2 py-1 text-xs font-medium text-danger">
+          Contrato aguardando sua assinatura
+        </p>
+      )}
       <dl className="mt-2 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
         <div className="flex gap-1.5">
           <dt className="text-muted">Protocolo:</dt>
@@ -157,6 +183,15 @@ function AtendimentoItem({ item }: { item: MyCaseItem }) {
             aria-label={`Abrir dossiê — ${item.areaName}, protocolo ${item.protocol}`}
           >
             Abrir dossiê
+          </ButtonLink>
+        )}
+        {contratoPendente && (
+          <ButtonLink
+            href={`/atendimento/${item.id}/contrato`}
+            variant="primary"
+            aria-label={`Assinar contrato — ${item.areaName}, protocolo ${item.protocol}`}
+          >
+            Assinar contrato
           </ButtonLink>
         )}
         <form action={item.archived ? desarquivarAtendimentoAction : arquivarAtendimentoAction}>

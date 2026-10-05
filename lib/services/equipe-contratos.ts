@@ -111,6 +111,23 @@ export async function listarContratos(db: Db, caseId: string): Promise<ContratoR
   );
 }
 
+/**
+ * Entre os atendimentos informados, quais têm contrato com status 'sent' — enviado pelo
+ * advogado e ainda não assinado pelo cliente. Usado em "Meus atendimentos" para avisar o
+ * cliente sem ele precisar abrir o dossiê de cada um pra descobrir.
+ */
+export async function listarCasosComContratoPendente(
+  db: Db,
+  caseIds: readonly string[],
+): Promise<Set<string>> {
+  if (caseIds.length === 0) return new Set();
+  const rows = await db.query<{ case_id: string }>(
+    "SELECT DISTINCT case_id FROM contracts WHERE status = 'sent' AND case_id = ANY($1::uuid[])",
+    [caseIds],
+  );
+  return new Set(rows.map((r) => r.case_id));
+}
+
 export type ContratoEquipeRow = ContratoRow & {
   protocol: string;
   title: string | null;
