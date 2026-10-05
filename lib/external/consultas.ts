@@ -42,6 +42,27 @@ export const SERVICOS_JURISPRUDENCIA: ServicoConsulta[] = [
   },
 ];
 
+/**
+ * LexML Brasil (Senado Federal/rede LexML): portal público e gratuito que reúne legislação federal,
+ * estadual e municipal, dos três Poderes. É a peça que faltava na aba — Jurisprudência (Jusbrasil) e
+ * Diário Oficial (e-DOU) já tinham link com busca por área; "legislação" não tinha nenhum serviço
+ * listado. Busca simples por palavra-chave via URL (`?keyword=`), sem precisar de conta nem
+ * certificado digital.
+ */
+export const SERVICOS_LEGISLACAO: ServicoConsulta[] = [
+  {
+    id: "lexml",
+    nome: "LexML Brasil",
+    descricao:
+      "Portal público (rede LexML) com legislação federal, estadual e municipal dos três Poderes.",
+    motivoSemIntegracao: "Busca pública via URL, mas sem API de consulta automatizada em lote.",
+    url: (area) =>
+      area
+        ? `https://www.lexml.gov.br/busca/search?keyword=${encodeURIComponent(TERMO_POR_AREA[area])}`
+        : "https://www.lexml.gov.br/busca/search",
+  },
+];
+
 export const SERVICO_DOU: ServicoConsulta = {
   id: "edou",
   nome: "Diário Oficial da União (e-DOU)",

@@ -10,6 +10,7 @@ import {
 } from "@/lib/external/datajud";
 import {
   SERVICOS_JURISPRUDENCIA,
+  SERVICOS_LEGISLACAO,
   SERVICOS_PROCESSUAIS,
   SERVICO_DOU,
   TERMO_POR_AREA,
@@ -219,36 +220,74 @@ export default async function ConsultasExternasPage({
           <button className="rounded border border-line px-4 py-2">Aplicar</button>
         </form>
 
-        <ul className="mt-4 space-y-3">
-          {SERVICOS_JURISPRUDENCIA.map((s) => (
-            <li key={s.id} className="rounded-md border border-line p-4">
-              <p className="font-semibold">{s.nome}</p>
-              <p className="mt-1 text-sm text-muted">{s.descricao}</p>
-              <p className="mt-1 text-sm text-muted">{s.motivoSemIntegracao}</p>
-              <a
-                href={s.url(area)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 inline-block rounded border border-line px-3 py-1.5 text-sm font-medium text-navy hover:border-navy"
-              >
-                Abrir {s.nome} ↗
-              </a>
-            </li>
-          ))}
-          <li className="rounded-md border border-line p-4">
-            <p className="font-semibold">{SERVICO_DOU.nome}</p>
-            <p className="mt-1 text-sm text-muted">{SERVICO_DOU.descricao}</p>
-            <p className="mt-1 text-sm text-muted">{SERVICO_DOU.motivoSemIntegracao}</p>
-            <a
-              href={SERVICO_DOU.url(area)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-block rounded border border-line px-3 py-1.5 text-sm font-medium text-navy hover:border-navy"
-            >
-              Abrir {SERVICO_DOU.nome} ↗
-            </a>
-          </li>
-        </ul>
+        <div className="mt-6 space-y-6">
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
+              Jurisprudência
+            </h3>
+            <ul className="mt-2 space-y-3">
+              {SERVICOS_JURISPRUDENCIA.map((s) => (
+                <li key={s.id} className="rounded-md border border-line p-4">
+                  <p className="font-semibold">{s.nome}</p>
+                  <p className="mt-1 text-sm text-muted">{s.descricao}</p>
+                  <p className="mt-1 text-sm text-muted">{s.motivoSemIntegracao}</p>
+                  <a
+                    href={s.url(area)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-block rounded border border-line px-3 py-1.5 text-sm font-medium text-navy hover:border-navy"
+                  >
+                    Abrir {s.nome} ↗
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
+              Legislação
+            </h3>
+            <ul className="mt-2 space-y-3">
+              {SERVICOS_LEGISLACAO.map((s) => (
+                <li key={s.id} className="rounded-md border border-line p-4">
+                  <p className="font-semibold">{s.nome}</p>
+                  <p className="mt-1 text-sm text-muted">{s.descricao}</p>
+                  <p className="mt-1 text-sm text-muted">{s.motivoSemIntegracao}</p>
+                  <a
+                    href={s.url(area)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-block rounded border border-line px-3 py-1.5 text-sm font-medium text-navy hover:border-navy"
+                  >
+                    Abrir {s.nome} ↗
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
+              Diário Oficial
+            </h3>
+            <ul className="mt-2 space-y-3">
+              <li className="rounded-md border border-line p-4">
+                <p className="font-semibold">{SERVICO_DOU.nome}</p>
+                <p className="mt-1 text-sm text-muted">{SERVICO_DOU.descricao}</p>
+                <p className="mt-1 text-sm text-muted">{SERVICO_DOU.motivoSemIntegracao}</p>
+                <a
+                  href={SERVICO_DOU.url(area)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-block rounded border border-line px-3 py-1.5 text-sm font-medium text-navy hover:border-navy"
+                >
+                  Abrir {SERVICO_DOU.nome} ↗
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
       </section>
     </main>
   );
