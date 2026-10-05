@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getAuth } from "@/lib/auth/server";
 import { claimLegacyCases } from "@/lib/auth/case-access";
+import { currentUserId } from "@/lib/auth/session";
+import { getDb, hasDatabase } from "@/lib/db/connection";
 
 export type AuthState = { error?: string; message?: string } | null;
 
@@ -12,13 +14,29 @@ const credentials = z.object({
   password: z.string().min(12).max(128),
 });
 
+/**
+ * "Entrar" no cabeçalho é o login da área profissional (advogado/admin/administrativo) — um
+ * cidadão nunca precisa de conta, só o cookie de sessão anônimo. Por isso, depois de autenticar,
+ * manda quem tem papel de equipe para "/equipe" (o sistema da assinatura) e só cai em
+ * "/atendimento/meus" quem logar sem fazer parte de nenhum escritório.
+ */
+async function destinoPosLogin(): Promise<string> {
+  if (!hasDatabase()) return "/atendimento/meus";
+  const actor = await currentUserId();
+  if (!actor) return "/atendimento/meus";
+  const rows = await getDb().query<{ role: string }>("SELECT role FROM profiles WHERE user_id = $1", [
+    actor,
+  ]);
+  return rows[0] && ["lawyer", "admin", "staff"].includes(rows[0].role) ? "/equipe" : "/atendimento/meus";
+}
+
 export async function signIn(_state: AuthState, form: FormData): Promise<AuthState> {
   const input = credentials.safeParse({ email: form.get("email"), password: form.get("password") });
   if (!input.success) return { error: "Informe um e-mail e senha válidos." };
   const { error } = await getAuth().signIn.email(input.data);
   if (error) return { error: "Não foi possível entrar. Confira suas credenciais." };
   await claimLegacyCases();
-  redirect("/atendimento/meus");
+  redirect(await destinoPosLogin());
 }
 
 export async function signUp(_state: AuthState, form: FormData): Promise<AuthState> {
