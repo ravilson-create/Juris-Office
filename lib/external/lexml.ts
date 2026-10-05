@@ -66,7 +66,18 @@ export async function consultarLexml(termo: string, maximo = 10): Promise<Docume
   const xml = await res.text();
   const doc = parser.parse(xml) as Record<string, unknown>;
   const resposta = doc.searchRetrieveResponse as Record<string, unknown> | undefined;
-  if (!resposta) throw new Error("Resposta do LexML em formato inesperado.");
+  if (!resposta) {
+    // Diagnóstico temporário (ver PR que introduziu este log): formato real da resposta do SRU
+    // ainda não confirmado contra tráfego de produção — nunca testável a partir do sandbox de
+    // desenvolvimento, que bloqueia o domínio lexml.gov.br. Remover assim que confirmado.
+    console.error(
+      "[lexml] resposta em formato inesperado — chaves do XML parseado:",
+      Object.keys(doc),
+      "| primeiros 1500 caracteres do XML bruto:",
+      xml.slice(0, 1500),
+    );
+    throw new Error("Resposta do LexML em formato inesperado.");
+  }
 
   const diagnostico = resposta.diagnostics as Record<string, unknown> | undefined;
   if (diagnostico) {
