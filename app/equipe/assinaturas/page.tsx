@@ -5,6 +5,7 @@ import { isAppOwner } from "@/lib/auth/bootstrap-admin";
 import { getMaintenanceDb, hasDatabase } from "@/lib/db/connection";
 import { listarAssinaturasAdvogados } from "@/lib/services/equipe-assinaturas";
 import { formatInstantDate } from "@/domain/time";
+import { definirStatusAssinaturaAction } from "./actions";
 
 export const metadata: Metadata = { title: "Assinaturas de advogados" };
 export const dynamic = "force-dynamic";
@@ -73,6 +74,7 @@ export default async function AssinaturasPage() {
                 <th className="py-2 pr-4 font-medium">Plano</th>
                 <th className="py-2 pr-4 font-medium">Válido até</th>
                 <th className="py-2 pr-4 font-medium">Gateway</th>
+                <th className="py-2 pr-4 font-medium">Ação manual</th>
               </tr>
             </thead>
             <tbody>
@@ -103,6 +105,25 @@ export default async function AssinaturasPage() {
                     ) : (
                       l.provider
                     )}
+                  </td>
+                  <td className="py-2 pr-4">
+                    <form action={definirStatusAssinaturaAction} className="inline">
+                      <input type="hidden" name="lawyerId" value={l.lawyer_id} />
+                      <input
+                        type="hidden"
+                        name="acao"
+                        value={l.status === "active" ? "desativar" : "ativar"}
+                      />
+                      <button
+                        className={`rounded border px-2 py-1 text-xs font-medium ${
+                          l.status === "active"
+                            ? "border-danger text-danger hover:bg-danger-soft"
+                            : "border-line hover:border-navy"
+                        }`}
+                      >
+                        {l.status === "active" ? "Desativar" : "Ativar"}
+                      </button>
+                    </form>
                   </td>
                 </tr>
               ))}

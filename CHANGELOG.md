@@ -4,6 +4,10 @@
 
 ### Adicionado
 
+- **Ativar/desativar assinatura manualmente**, na aba Assinaturas de advogados (administrador do
+  app): botão por linha para forçar o status de qualquer advogado para ativo (estende
+  `valid_until` 30 dias e limpa cancelamento agendado) ou cancelado, sem depender do webhook da
+  Asaas — útil para destravar um advogado ou suspender alguém manualmente.
 - **Auxílio de IA para preencher os campos livres das peças** (não da petição inicial), em
   `/equipe/[caseId]/pecas`: cada campo do formulário de geração ganhou um botão "Auxílio de IA"
   que transforma a anotação informal do advogado no texto no padrão jurídico esperado — mesma
