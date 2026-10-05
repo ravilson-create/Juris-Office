@@ -18,22 +18,32 @@ export type AcessoEquipe =
  * só o gate de assinar contrato/petição/peça, nas próprias ações). O chamador decide para onde
  * redirecionar em cada motivo de falha, porque isso varia por página (algumas usam notFound(),
  * outras redirect para /atendimento/meus ou /assinatura).
+ *
+ * O administrador do aplicativo (JURIS_ADMIN_EMAIL, ver lib/auth/bootstrap-admin.ts) nunca passa
+ * por start_lawyer_trial — não é cliente pagante, administra a plataforma — então nunca ganha uma
+ * linha em lawyer_subscriptions. Sem essa exceção, ele próprio ficava trancado fora da área
+ * profissional, redirecionado para /assinatura.
  */
 export async function acessoEquipe(db: Db, actor: string): Promise<AcessoEquipe> {
   const rows = await db.query<{
     role: string;
     office_id: string | null;
+    email: string | null;
     oab_verificado_em: Date | null;
-  }>("SELECT role, office_id, oab_verificado_em FROM profiles WHERE user_id = $1", [actor]);
+  }>("SELECT role, office_id, email, oab_verificado_em FROM profiles WHERE user_id = $1", [actor]);
   const perfil = rows[0];
   if (!perfil || !perfil.office_id || !["lawyer", "admin", "staff"].includes(perfil.role)) {
     return { ok: false, motivo: "sem_papel" };
   }
-  const ativa = await db.query<{ ok: boolean }>(
-    "SELECT office_has_active_subscription($1) AS ok",
-    [perfil.office_id],
-  );
-  if (!ativa[0]?.ok) return { ok: false, motivo: "sem_assinatura" };
+  const emailDono = process.env.JURIS_ADMIN_EMAIL?.trim().toLowerCase();
+  const donoDoApp = Boolean(emailDono) && perfil.email?.trim().toLowerCase() === emailDono;
+  if (!donoDoApp) {
+    const ativa = await db.query<{ ok: boolean }>(
+      "SELECT office_has_active_subscription($1) AS ok",
+      [perfil.office_id],
+    );
+    if (!ativa[0]?.ok) return { ok: false, motivo: "sem_assinatura" };
+  }
   return {
     ok: true,
     role: perfil.role as PapelEquipe,
