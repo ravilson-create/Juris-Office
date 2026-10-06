@@ -19,7 +19,19 @@ export async function criarContaEquipe(params: {
 
   try {
     const auth = createAuthClient(baseUrl);
-    const result = await auth.signUp.email(params);
+    const appOrigin = process.env.NEXT_PUBLIC_APP_URL ?? "https://juris-office-eta.vercel.app";
+    const origin = new URL(appOrigin).origin;
+    const result = await auth.signUp.email(
+      {
+        ...params,
+        callbackURL: `${origin}/equipe/time`,
+      },
+      {
+        headers: {
+          Origin: origin,
+        },
+      },
+    );
 
     if (result.error) {
       console.error("[equipe] Neon Auth recusou criação de membro", {
