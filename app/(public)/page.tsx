@@ -77,7 +77,7 @@ export default async function HomePage() {
             </p>
             <div className="flex flex-wrap items-center gap-4">
               <ButtonLink href="/atendimento" variant="gold">
-                Iniciar atendimento gratuito
+                Iniciar atendimento jurídico
               </ButtonLink>
               <ButtonLink href="/atendimento/meus" variant="secondary">
                 Consultar meu atendimento
