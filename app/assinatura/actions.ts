@@ -17,7 +17,9 @@ type Assinatura = {
   valid_until: string;
   plano_id: string | null;
   external_ref: string | null;
-  cancelar_em_renovacao: boolean;\n  billing_cycle: "MONTHLY" | "YEARLY";\n  cancellation_requested_at: string | null;
+  cancelar_em_renovacao: boolean;
+  billing_cycle: "MONTHLY" | "YEARLY";
+  cancellation_requested_at: string | null;
 };
 
 async function buscarPropriaAssinatura(actor: string): Promise<Assinatura | null> {
@@ -92,7 +94,10 @@ export async function trocarPlano(form: FormData): Promise<{ error?: string }> {
   if (atual.cancelar_em_renovacao) {
     return { error: "Sua assinatura já está marcada para cancelamento." };
   }
-  if (atual.plano_id === planoId.data) return {};\n  if (atual.plano_id === "yearly" && planoId.data === "monthly") {\n    return { error: "A troca do plano anual para o mensal não está disponível durante o período anual contratado." };\n  }
+  if (atual.plano_id === planoId.data) return {};
+  if (atual.plano_id === "yearly" && planoId.data === "monthly") {
+    return { error: "A troca do plano anual para o mensal não está disponível durante o período anual contratado." };
+  }
   const plano = subscriptionPlans.find((p) => p.id === planoId.data)!;
 
   // Sem external_ref (teste grátis sem integração concluída com a Asaas), trocar aqui não muda
@@ -103,11 +108,15 @@ export async function trocarPlano(form: FormData): Promise<{ error?: string }> {
     };
   }
   try {
-    const cycle = plano.id === "yearly" ? "YEARLY" : "MONTHLY";\n    await atualizarAssinaturaAsaas(atual.external_ref, { valor: plano.amountCents / 100, cycle });
+    const cycle = plano.id === "yearly" ? "YEARLY" : "MONTHLY";
+    await atualizarAssinaturaAsaas(atual.external_ref, { valor: plano.amountCents / 100, cycle });
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Erro ao trocar de plano." };
   }
-  await getDb().query("SELECT set_own_subscription_plan($1, $2)", [\n    planoId.data,\n    plano.id === "yearly" ? "YEARLY" : "MONTHLY",\n  ]);
+  await getDb().query("SELECT set_own_subscription_plan($1, $2)", [
+    planoId.data,
+    plano.id === "yearly" ? "YEARLY" : "MONTHLY",
+  ]);
   revalidatePath("/assinatura");
   return {};
 }
