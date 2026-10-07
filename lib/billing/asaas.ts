@@ -76,7 +76,10 @@ export async function atualizarAssinaturaAsaas(
   subscriptionId: string,
   params: { valor: number; cycle?: "MONTHLY" | "YEARLY" },
 ): Promise<void> {
-  await chamarAsaas(\`/subscriptions/${subscriptionId}\`, {\n    value: params.valor,\n    ...(params.cycle ? { cycle: params.cycle } : {}),\n  }, "PUT");
+  await chamarAsaas(`/subscriptions/${subscriptionId}`, {
+    value: params.valor,
+    ...(params.cycle ? { cycle: params.cycle } : {}),
+  }, "PUT");
 }
 
 export async function buscarFaturaAssinaturaAsaas(
