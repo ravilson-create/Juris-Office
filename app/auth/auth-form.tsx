@@ -15,7 +15,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
       <h1 className="text-3xl">{signup ? "Criar conta" : "Entrar"}</h1>
       {!signup && (
         <p className="mt-3 text-muted">
-          Após o cadastro, confirme seu e-mail com o código recebido.{" "}
+          Se sua conta foi criada pelo escritório, entre diretamente com a senha provisória. Se você criou a conta pelo site, confirme seu e-mail.{" "}
           <Link href="/auth/verify" className="underline">
             Digitar código
           </Link>
