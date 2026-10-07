@@ -27,17 +27,17 @@ export function PainelAssinatura({ assinatura }: { assinatura: Assinatura }) {
     timeZone: "America/Fortaleza",
   });
 
-  return (
+  const planoAtual = subscriptionPlans.find((plan) => plan.id === assinatura.plano_id);\n  const podeMigrarParaAnual = assinatura.plano_id === "monthly" && !assinatura.cancelar_em_renovacao;\n\n  return (
     <div className="mt-6 space-y-5">
       <div className="rounded-xl border border-line bg-surface p-5">
-        <p className="font-semibold">{ROTULO_STATUS[assinatura.status] ?? assinatura.status}</p>
+        <p className="font-semibold">Plano atual: {planoAtual?.label ?? "Não identificado"}</p>\n        {planoAtual && (\n          <p className="mt-1 text-lg font-semibold">\n            {formatPlanPrice(planoAtual.amountCents)}/{planoAtual.interval}\n          </p>\n        )}\n        <p className="mt-2 text-sm font-medium">{ROTULO_STATUS[assinatura.status] ?? assinatura.status}</p>
         <p className="mt-1 text-sm text-muted">
           {assinatura.status === "trial" ? "Teste grátis até" : "Válida até"} {validaAte}
-          {assinatura.cancelar_em_renovacao && " · não renova"}
+          {assinatura.cancelar_em_renovacao ? " · cancelamento programado" : " · renovação automática"}
         </p>
       </div>
 
-      {error && (
+      {assinatura.cancelar_em_renovacao && (\n        <div className="rounded-xl border border-line bg-surface p-5">\n          <h2 className="text-xl">Cancelamento programado</h2>\n          <p className="mt-2 text-sm text-muted">\n            Sua assinatura não será renovada. Você continuará com acesso ao Júris Office até {validaAte}.\n          </p>\n        </div>\n      )}\n\n      {error && (
         <p role="alert" className="text-red-700">
           {error}
         </p>
@@ -66,7 +66,7 @@ export function PainelAssinatura({ assinatura }: { assinatura: Assinatura }) {
         <section>
           <h2 className="text-xl">Trocar de plano</h2>
           <div className="mt-3 flex flex-wrap gap-2">
-            {subscriptionPlans.map((plan) => (
+            {subscriptionPlans.filter((plan) => plan.id === "yearly").map((plan) => (
               <form
                 key={plan.id}
                 action={(form) => executar(() => trocarPlano(form))}
@@ -76,7 +76,7 @@ export function PainelAssinatura({ assinatura }: { assinatura: Assinatura }) {
                   className="rounded border border-line px-4 py-2 disabled:opacity-50"
                   disabled={pending || assinatura.plano_id === plan.id}
                 >
-                  {plan.label} — {formatPlanPrice(plan.amountCents)}/{plan.interval}
+                  Mudar para o plano anual — {formatPlanPrice(plan.amountCents)}/{plan.interval}
                 </button>
               </form>
             ))}
