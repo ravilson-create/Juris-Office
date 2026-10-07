@@ -74,9 +74,9 @@ export async function cancelarAssinaturaAsaas(subscriptionId: string): Promise<v
 
 export async function atualizarAssinaturaAsaas(
   subscriptionId: string,
-  params: { valor: number },
+  params: { valor: number; cycle?: "MONTHLY" | "YEARLY" },
 ): Promise<void> {
-  await chamarAsaas(`/subscriptions/${subscriptionId}`, { value: params.valor }, "PUT");
+  await chamarAsaas(\`/subscriptions/${subscriptionId}\`, {\n    value: params.valor,\n    ...(params.cycle ? { cycle: params.cycle } : {}),\n  }, "PUT");
 }
 
 export async function buscarFaturaAssinaturaAsaas(
