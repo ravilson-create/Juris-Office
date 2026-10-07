@@ -27,17 +27,35 @@ export function PainelAssinatura({ assinatura }: { assinatura: Assinatura }) {
     timeZone: "America/Fortaleza",
   });
 
-  const planoAtual = subscriptionPlans.find((plan) => plan.id === assinatura.plano_id);\n  const podeMigrarParaAnual = assinatura.plano_id === "monthly" && !assinatura.cancelar_em_renovacao;\n\n  return (
+  const planoAtual = subscriptionPlans.find((plan) => plan.id === assinatura.plano_id);
+  const podeMigrarParaAnual = assinatura.plano_id === "monthly" && !assinatura.cancelar_em_renovacao;
+
+  return (
     <div className="mt-6 space-y-5">
       <div className="rounded-xl border border-line bg-surface p-5">
-        <p className="font-semibold">Plano atual: {planoAtual?.label ?? "Não identificado"}</p>\n        {planoAtual && (\n          <p className="mt-1 text-lg font-semibold">\n            {formatPlanPrice(planoAtual.amountCents)}/{planoAtual.interval}\n          </p>\n        )}\n        <p className="mt-2 text-sm font-medium">{ROTULO_STATUS[assinatura.status] ?? assinatura.status}</p>
+        <p className="font-semibold">Plano atual: {planoAtual?.label ?? "Não identificado"}</p>
+        {planoAtual && (
+          <p className="mt-1 text-lg font-semibold">
+            {formatPlanPrice(planoAtual.amountCents)}/{planoAtual.interval}
+          </p>
+        )}
+        <p className="mt-2 text-sm font-medium">{ROTULO_STATUS[assinatura.status] ?? assinatura.status}</p>
         <p className="mt-1 text-sm text-muted">
           {assinatura.status === "trial" ? "Teste grátis até" : "Válida até"} {validaAte}
           {assinatura.cancelar_em_renovacao ? " · cancelamento programado" : " · renovação automática"}
         </p>
       </div>
 
-      {assinatura.cancelar_em_renovacao && (\n        <div className="rounded-xl border border-line bg-surface p-5">\n          <h2 className="text-xl">Cancelamento programado</h2>\n          <p className="mt-2 text-sm text-muted">\n            Sua assinatura não será renovada. Você continuará com acesso ao Júris Office até {validaAte}.\n          </p>\n        </div>\n      )}\n\n      {error && (
+      {assinatura.cancelar_em_renovacao && (
+        <div className="rounded-xl border border-line bg-surface p-5">
+          <h2 className="text-xl">Cancelamento programado</h2>
+          <p className="mt-2 text-sm text-muted">
+            Sua assinatura não será renovada. Você continuará com acesso ao Júris Office até {validaAte}.
+          </p>
+        </div>
+      )}
+
+      {error && (
         <p role="alert" className="text-red-700">
           {error}
         </p>
