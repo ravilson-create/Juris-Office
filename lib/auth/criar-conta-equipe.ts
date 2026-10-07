@@ -1,5 +1,6 @@
 import "server-only";
 import { createAuthClient } from "@neondatabase/auth";
+import { getDb } from "@/lib/db/connection";
 
 /**
  * Cria uma conta Neon Auth para outra pessoa sem tocar nos cookies da sessão do administrador.
@@ -50,6 +51,14 @@ export async function criarContaEquipe(params: {
       console.error("[equipe] Neon Auth criou conta sem retornar user.id");
       return { error: "Não foi possível confirmar a criação da conta." };
     }
+
+    // Contas criadas pelo administrador do escritório são provisionadas e ativadas diretamente.
+    // O Neon Auth mantém require_email_verification para o cadastro público; por isso marcamos
+    // somente este usuário administrativo como verificado antes de liberar o primeiro login.
+    await getDb().query(
+      'UPDATE neon_auth."user" SET "emailVerified" = true, "updatedAt" = now() WHERE id = $1',
+      [userId],
+    );
 
     return { userId };
   } catch (error) {
