@@ -15,7 +15,7 @@ const NAV_BASE: ItemNav[] = [
   { href: "/equipe/consultas", label: "Consultas externas" },
 ];
 
-const NAV_ADMIN: ItemNav[] = [{ href: "/equipe/time", label: "Equipe" }];
+const NAV_ADMIN: ItemNav[] = [\n  { href: "/equipe/time", label: "Equipe" },\n  { href: "/assinatura", label: "Minha assinatura" },\n];
 const NAV_APP_OWNER: ItemNav[] = [{ href: "/equipe/assinaturas", label: "Assinaturas de advogados" }];
 
 function iniciais(email: string): string {
