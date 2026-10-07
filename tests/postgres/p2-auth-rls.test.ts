@@ -15,7 +15,8 @@ describe("P2: isolamento por identidade verificada no banco", () => {
       }
       const caseId = crypto.randomUUID();
       const noteId = crypto.randomUUID();
-      const office = "00000000-0000-4000-8000-000000000001";
+      const office = crypto.randomUUID();
+      await db.query("INSERT INTO offices(id, name) VALUES ($1, $2)", [office, "Escritório comercial de teste"]);
       await db.query(
         `INSERT INTO legal_cases(id, protocol, legal_area_id, citizen_id, status,
            submitted_at, created_at, updated_at) VALUES($1, 'JO-NOTE', $2, 'citizen',
@@ -65,7 +66,8 @@ describe("P2: isolamento por identidade verificada no banco", () => {
         .sort()) {
         await db.exec(readFileSync(join(dir, file), "utf8"));
       }
-      const office = "00000000-0000-4000-8000-000000000001";
+      const office = crypto.randomUUID();
+      await db.query("INSERT INTO offices(id, name) VALUES ($1, $2)", [office, "Escritório comercial de teste"]);
       const otherOffice = crypto.randomUUID();
       const assigned = crypto.randomUUID();
       const unassigned = crypto.randomUUID();
