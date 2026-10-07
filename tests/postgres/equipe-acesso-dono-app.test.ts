@@ -70,7 +70,12 @@ describe("acessoEquipe: dono do app não fica preso em /assinatura", () => {
         [OFFICE],
       );
       const acesso = await acessoEquipe(wrap(pg), "outro-admin");
-      expect(acesso).toEqual({\n        ok: true,\n        role: "admin",\n        officeId: OFFICE,\n        oabConfirmada: false,\n      });
+      expect(acesso).toEqual({
+        ok: true,
+        role: "admin",
+        officeId: OFFICE,
+        oabConfirmada: false,
+      });
     } finally {
       await pg.close();
     }
