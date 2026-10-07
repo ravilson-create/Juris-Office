@@ -60,6 +60,11 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
             {state.error}
           </p>
         )}
+        {!signup && (
+          <p className="-mt-2 text-sm">
+            <Link className="underline" href="/auth/forgot-password">Esqueci minha senha</Link>
+          </p>
+        )}
         <button className="rounded bg-navy p-3 text-white" disabled={pending}>
           {pending ? "Aguarde…" : signup ? "Criar conta" : "Entrar"}
         </button>
