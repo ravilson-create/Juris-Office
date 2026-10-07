@@ -62,19 +62,18 @@ export default async function HomePage() {
 
   return (
     <>
-      <section className="border-b border-line bg-paper">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 py-14 md:grid-cols-2 md:py-20">
+      <section className="relative overflow-hidden border-b border-line bg-gradient-to-br from-paper via-white to-sky-50">
+        <div aria-hidden="true" className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-blue-200/30 blur-3xl" />
+        <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-5 py-16 md:grid-cols-2 md:py-24">
           <div className="flex flex-col items-start gap-6">
             <p className="font-sans text-sm font-semibold uppercase tracking-[.08em] text-gold-strong">
               Organização · orientação · mais acesso
             </p>
             <h1 className="text-4xl text-ink sm:text-5xl">
-              Seu primeiro passo para resolver uma questão jurídica.
+              Advocacia, tecnologia e atendimento em um só lugar.
             </h1>
             <p className="max-w-prose text-lg text-muted">
-              Conte seu problema, organize seus documentos e acompanhe seu atendimento. O{" "}
-              {APP_NAME} faz perguntas guiadas e monta um dossiê preliminar — você não precisa
-              saber termos jurídicos.
+              Para quem precisa de atendimento, um caminho simples para organizar o problema e acompanhar a solicitação. Para advogados, um ambiente digital para transformar a rotina do escritório.
             </p>
             <div className="flex flex-wrap items-center gap-4">
               <ButtonLink href="/atendimento" variant="gold">
@@ -87,7 +86,7 @@ export default async function HomePage() {
             <p className="text-sm text-muted">Sem cadastro para solicitar atendimento.</p>
           </div>
 
-          <div className="rounded-xl border border-line bg-surface p-6 shadow-sm">
+          <div className="rounded-2xl border border-blue-100 bg-white/90 p-6 shadow-xl shadow-blue-950/10 backdrop-blur">
             <h2 className="text-lg font-semibold text-ink">Acompanhe seu atendimento</h2>
             <ol className="mt-5 flex flex-col gap-5">
               {[
@@ -122,7 +121,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="bg-navy">
+      <section className="bg-gradient-to-r from-navy via-slate-900 to-blue-950">
         <div className="mx-auto grid max-w-6xl items-center gap-8 px-5 py-14 md:grid-cols-[1.1fr_1fr]">
           <div>
             <p className="font-sans text-sm font-semibold uppercase tracking-[.08em] text-navy-soft">
@@ -130,8 +129,7 @@ export default async function HomePage() {
             </p>
             <h2 className="mt-3 text-3xl text-white sm:text-4xl">Seu escritório começa aqui.</h2>
             <p className="mt-3 max-w-prose text-navy-soft">
-              Organize atendimentos, documentos e a rotina jurídica. 7 dias de teste grátis, sem
-              cartão de crédito — já começam no cadastro.
+              Um ambiente para centralizar atendimentos, clientes, documentos e a rotina jurídica. 7 dias de teste grátis, sem cartão de crédito — já começam no cadastro.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-4">
               <ButtonLink href="/advogado/cadastro" variant="gold">
@@ -146,6 +144,81 @@ export default async function HomePage() {
             <p>Gerencie solicitações em um só lugar</p>
             <p>Acompanhe prazos e andamentos</p>
             <p>Mais organização para o seu atendimento</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-line bg-white">
+        <div className="mx-auto max-w-6xl px-5 py-14">
+          <p className="text-center font-sans text-sm font-semibold uppercase tracking-[.08em] text-gold-strong">
+            Um escritório jurídico digital
+          </p>
+          <h2 className="mx-auto mt-3 max-w-3xl text-center text-3xl text-ink sm:text-4xl">
+            Seu escritório inteiro em uma plataforma.
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-center text-muted">
+            Menos ferramentas dispersas. Mais organização para atender, acompanhar e trabalhar.
+          </p>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ["Atendimentos", "Organize novas solicitações e informações do cliente."],
+              ["Clientes e casos", "Concentre o histórico necessário para acompanhar cada atendimento."],
+              ["Documentos", "Mantenha os arquivos relacionados ao trabalho jurídico organizados."],
+              ["Rotina jurídica", "Tenha uma visão mais clara das atividades do escritório."],
+            ].map(([title, text]) => (
+              <div key={title} className="rounded-xl border border-line bg-surface p-5 shadow-sm">
+                <div className="mb-4 h-1 w-10 rounded-full bg-blue-600" />
+                <h3 className="font-sans font-semibold text-ink">{title}</h3>
+                <p className="mt-2 text-sm text-muted">{text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-slate-950 text-white">
+        <div className="mx-auto max-w-6xl px-5 py-14">
+          <div className="grid gap-10 md:grid-cols-2 md:items-center">
+            <div>
+              <p className="font-sans text-sm font-semibold uppercase tracking-[.08em] text-blue-300">
+                Da chegada do cliente ao acompanhamento
+              </p>
+              <h2 className="mt-3 text-3xl text-white sm:text-4xl">Uma jornada mais organizada.</h2>
+              <p className="mt-4 text-slate-300">
+                O cidadão informa o problema de forma guiada, recebe seu protocolo e acompanha a solicitação. O advogado recebe informações mais estruturadas para iniciar o trabalho.
+              </p>
+            </div>
+            <ol className="grid gap-3 sm:grid-cols-2">
+              {["Solicitação do cliente", "Triagem guiada", "Dossiê organizado", "Análise do advogado", "Acompanhamento", "Histórico do atendimento"].map((item, i) => (
+                <li key={item} className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 p-4">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-sm font-semibold text-blue-200">{i + 1}</span>
+                  <span className="text-sm font-medium">{item}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-paper">
+        <div className="mx-auto grid max-w-6xl gap-5 px-5 py-14 md:grid-cols-2">
+          <div className="rounded-2xl border border-line bg-white p-7 shadow-sm">
+            <p className="font-sans text-sm font-semibold uppercase tracking-[.08em] text-blue-700">Para advogados</p>
+            <h2 className="mt-2 text-2xl text-ink">Transforme a rotina do seu escritório.</h2>
+            <p className="mt-3 text-muted">Centralize o trabalho e tenha um ambiente profissional para organizar a operação jurídica.</p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <ButtonLink href="/advogado/cadastro" variant="gold">Começar teste grátis</ButtonLink>
+              <ButtonLink href="/advogado" variant="secondary">Entrar como advogado</ButtonLink>
+            </div>
+          </div>
+          <div className="rounded-2xl border border-line bg-white p-7 shadow-sm">
+            <p className="font-sans text-sm font-semibold uppercase tracking-[.08em] text-gold-strong">Para clientes</p>
+            <h2 className="mt-2 text-2xl text-ink">Precisa de atendimento jurídico?</h2>
+            <p className="mt-3 text-muted">Conte o que aconteceu sem precisar dominar termos jurídicos e acompanhe a solicitação pelo protocolo.</p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <ButtonLink href="/atendimento" variant="gold">Solicitar atendimento</ButtonLink>
+              <ButtonLink href="/atendimento/meus" variant="secondary">Consultar protocolo</ButtonLink>
+            </div>
           </div>
         </div>
       </section>
