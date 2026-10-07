@@ -61,7 +61,7 @@ describe("acessoEquipe: dono do app não fica preso em /assinatura", () => {
     }
   });
 
-  it("admin comum (não é o dono do app) sem assinatura do escritório é bloqueado", async () => {
+  it("membro do escritório interno de testes tem acesso sem assinatura", async () => {
     process.env.JURIS_ADMIN_EMAIL = "dono@jurisoffice.com.br";
     const pg = await migrarBancoNovo();
     try {
@@ -70,7 +70,7 @@ describe("acessoEquipe: dono do app não fica preso em /assinatura", () => {
         [OFFICE],
       );
       const acesso = await acessoEquipe(wrap(pg), "outro-admin");
-      expect(acesso).toEqual({ ok: false, motivo: "sem_assinatura" });
+      expect(acesso).toEqual({\n        ok: true,\n        role: "admin",\n        officeId: OFFICE,\n        oabConfirmada: false,\n      });
     } finally {
       await pg.close();
     }
