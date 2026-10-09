@@ -111,6 +111,25 @@ describe("consultarLexml", () => {
     );
   });
 
+  it("envia User-Agent de navegador (necessário para passar a verificação de segurança do Senado)", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, text: async () => RESPOSTA_SEM_RESULTADOS });
+    vi.stubGlobal("fetch", fetchMock);
+    await consultarLexml("direito civil");
+    const opcoes = fetchMock.mock.calls[0]![1] as { headers: Record<string, string> };
+    expect(opcoes.headers["User-Agent"]).toMatch(/Mozilla/);
+  });
+
+  it("resposta é a página HTML de verificação de segurança (não XML) — erro claro, sem travar", async () => {
+    const PAGINA_SEGURANCA = `<!DOCTYPE html>
+<meta name="viewport" content="width=device-width">
+<title>Verificação de segurança — Senado Federal</title>
+<style>* { box-sizing: border-box; }</style>`;
+    mockFetch({ ok: true, text: async () => PAGINA_SEGURANCA });
+    await expect(consultarLexml("direito civil")).rejects.toThrow(
+      "O LexML bloqueou esta consulta automática",
+    );
+  });
+
   it("HTTP não-OK lança erro com o status", async () => {
     mockFetch({ ok: false, status: 503, text: async () => "" });
     await expect(consultarLexml("direito civil")).rejects.toThrow(/503/);

@@ -57,27 +57,34 @@ export async function consultarLexml(termo: string, maximo = 10): Promise<Docume
 
   let res: Response;
   try {
-    res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    res = await fetch(url, {
+      signal: AbortSignal.timeout(10_000),
+      // Sem um User-Agent de navegador, a proteção contra robôs do Senado Federal (que hospeda o
+      // SRU do LexML) devolve uma página HTML de "verificação de segurança" em vez do XML —
+      // confirmado em produção (ver histórico desta função). Isso imita um navegador comum.
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+        Accept: "application/xml, text/xml, */*",
+        "Accept-Language": "pt-BR,pt;q=0.9",
+      },
+    });
   } catch {
     throw new Error("Não foi possível consultar o LexML agora.");
   }
   if (!res.ok) throw new Error(`O LexML respondeu com erro ${res.status}.`);
 
   const xml = await res.text();
+  const pareceHtml = /^\s*<!DOCTYPE html/i.test(xml) || /<html[\s>]/i.test(xml.slice(0, 200));
+  if (pareceHtml) {
+    throw new Error(
+      "O LexML bloqueou esta consulta automática (verificação de segurança do Senado Federal). Tente abrir a busca completa no site, abaixo.",
+    );
+  }
+
   const doc = parser.parse(xml) as Record<string, unknown>;
   const resposta = doc.searchRetrieveResponse as Record<string, unknown> | undefined;
-  if (!resposta) {
-    // Diagnóstico temporário (ver PR que introduziu este log): formato real da resposta do SRU
-    // ainda não confirmado contra tráfego de produção — nunca testável a partir do sandbox de
-    // desenvolvimento, que bloqueia o domínio lexml.gov.br. Remover assim que confirmado.
-    console.error(
-      "[lexml] resposta em formato inesperado — chaves do XML parseado:",
-      Object.keys(doc),
-      "| primeiros 1500 caracteres do XML bruto:",
-      xml.slice(0, 1500),
-    );
-    throw new Error("Resposta do LexML em formato inesperado.");
-  }
+  if (!resposta) throw new Error("Resposta do LexML em formato inesperado.");
 
   const diagnostico = resposta.diagnostics as Record<string, unknown> | undefined;
   if (diagnostico) {
