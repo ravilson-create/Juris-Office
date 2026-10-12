@@ -44,10 +44,11 @@ export const SERVICOS_JURISPRUDENCIA: ServicoConsulta[] = [
 
 /**
  * LexML Brasil (Senado Federal/rede LexML): portal público e gratuito que reúne legislação federal,
- * estadual e municipal, dos três Poderes. É a peça que faltava na aba — Jurisprudência (Jusbrasil) e
- * Diário Oficial (e-DOU) já tinham link com busca por área; "legislação" não tinha nenhum serviço
- * listado. Busca simples por palavra-chave via URL (`?keyword=`), sem precisar de conta nem
- * certificado digital.
+ * estadual e municipal, dos três Poderes. Chegou a ter busca embutida (API SRU, ver histórico de
+ * lib/external/lexml.ts, removido), mas o Senado Federal bloqueia a consulta automática por
+ * verificação de segurança anti-robô mesmo com User-Agent de navegador — provavelmente exige
+ * execução de JavaScript, que uma função serverless não reproduz. Por isso fica só como link,
+ * igual Jurisprudência e Diário Oficial.
  */
 export const SERVICOS_LEGISLACAO: ServicoConsulta[] = [
   {
@@ -55,7 +56,8 @@ export const SERVICOS_LEGISLACAO: ServicoConsulta[] = [
     nome: "LexML Brasil",
     descricao:
       "Portal público (rede LexML) com legislação federal, estadual e municipal dos três Poderes.",
-    motivoSemIntegracao: "Busca pública via URL, mas sem API de consulta automatizada em lote.",
+    motivoSemIntegracao:
+      "Busca pública via URL, mas o Senado Federal bloqueia a consulta automática (verificação de segurança anti-robô).",
     url: (area) =>
       area
         ? `https://www.lexml.gov.br/busca/search?keyword=${encodeURIComponent(TERMO_POR_AREA[area])}`
