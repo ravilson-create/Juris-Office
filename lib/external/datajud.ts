@@ -51,7 +51,8 @@ export async function consultarProcessoDatajud(
   if (!/^[a-z0-9]{2,10}$/.test(sigla)) throw new Error("Sigla de tribunal inválida.");
   if (numero.length !== 20) throw new Error("O número do processo (CNJ) deve ter 20 dígitos.");
 
-  const res = await fetch(`${DATAJUD_BASE_URL}/api_publica_${sigla}/_search`, {
+  const url = `${DATAJUD_BASE_URL}/api_publica_${sigla}/_search`;
+  const options = () => ({
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -61,12 +62,36 @@ export async function consultarProcessoDatajud(
       query: { match: { numeroProcesso: numero } },
       size: 1,
     }),
-    // A API pública do DataJud não é rápida; evita travar a página indefinidamente.
-    signal: AbortSignal.timeout(15_000),
+    // O DataJud pode oscilar; damos tempo suficiente sem deixar a página presa indefinidamente.
+    signal: AbortSignal.timeout(30_000),
   });
 
+  let res: Response | null = null;
+  for (let tentativa = 1; tentativa <= 2; tentativa++) {
+    try {
+      res = await fetch(url, options());
+      break;
+    } catch (erro) {
+      const timeout =
+        erro instanceof Error &&
+        (erro.name === "TimeoutError" ||
+          erro.name === "AbortError" ||
+          /timeout|aborted/i.test(erro.message));
+      if (!timeout) throw erro;
+      if (tentativa === 2) {
+        throw new Error(
+          "O DataJud (CNJ) demorou para responder. Tente novamente em alguns instantes.",
+        );
+      }
+    }
+  }
+
+  if (!res) throw new Error("O DataJud (CNJ) está temporariamente indisponível.");
   if (res.status === 404) return null;
   if (!res.ok) {
+    if (res.status >= 500) {
+      throw new Error("O DataJud (CNJ) está temporariamente indisponível. Tente novamente.");
+    }
     throw new Error(`A API pública do DataJud respondeu com erro ${res.status}.`);
   }
 

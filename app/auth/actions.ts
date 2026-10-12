@@ -75,6 +75,39 @@ export async function resendVerification(_state: AuthState, form: FormData): Pro
   return { message: "Se a conta existir, um novo código foi enviado." };
 }
 
+export async function requestPasswordReset(_state: AuthState, form: FormData): Promise<AuthState> {
+  const email = z.email().max(254).safeParse(form.get("email"));
+  if (!email.success) return { error: "Informe um e-mail válido." };
+  const appOrigin = process.env.NEXT_PUBLIC_APP_URL ?? "https://juris-office-eta.vercel.app";
+  const { error } = await getAuth().requestPasswordReset({
+    email: email.data,
+    redirectTo: `${new URL(appOrigin).origin}/auth/reset-password`,
+  });
+  if (error) return { error: "Não foi possível iniciar a redefinição de senha. Tente novamente." };
+  return { message: "Se a conta existir, enviaremos as instruções de redefinição para o e-mail informado." };
+}
+
+export async function resetPassword(_state: AuthState, form: FormData): Promise<AuthState> {
+  const input = z.object({
+    token: z.string().min(1),
+    password: z.string().min(12).max(128),
+    confirmPassword: z.string().min(12).max(128),
+  }).safeParse({
+    token: form.get("token"),
+    password: form.get("password"),
+    confirmPassword: form.get("confirmPassword"),
+  });
+  if (!input.success || input.data.password !== input.data.confirmPassword) {
+    return { error: "Informe duas vezes a nova senha, com no mínimo 12 caracteres." };
+  }
+  const { error } = await getAuth().resetPassword({
+    newPassword: input.data.password,
+    token: input.data.token,
+  });
+  if (error) return { error: "O link é inválido ou expirou. Solicite uma nova redefinição." };
+  redirect("/auth/sign-in?password_reset=1");
+}
+
 export async function signOut() {
   await getAuth().signOut();
   redirect("/");

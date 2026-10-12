@@ -34,7 +34,16 @@ export async function POST(request: Request): Promise<Response> {
     if (!subscriptionId) return Response.json({ ok: true });
 
     const db = getMaintenanceDb();
-    if (evento === "PAYMENT_CREATED") {
+    if (evento === "SUBSCRIPTION_DELETED") {
+      // O cancelamento no gateway interrompe cobranças futuras, mas não encerra o período já pago.
+      // A assinatura só deixa de dar acesso quando valid_until expirar.
+      await db.query(
+        `UPDATE lawyer_subscriptions SET cancelar_em_renovacao = true,
+           cancellation_requested_at = COALESCE(cancellation_requested_at, now()), updated_at = now()
+         WHERE external_ref = $1`,
+        [subscriptionId],
+      );
+    } else if (evento === "PAYMENT_CREATED") {
       await db.query(
         `UPDATE lawyer_subscriptions SET invoice_url = $2, updated_at = now()
          WHERE external_ref = $1`,

@@ -18,11 +18,13 @@ type Assinatura = {
   plano_id: string | null;
   external_ref: string | null;
   cancelar_em_renovacao: boolean;
+  billing_cycle: "MONTHLY" | "YEARLY";
+  cancellation_requested_at: string | null;
 };
 
 async function buscarPropriaAssinatura(actor: string): Promise<Assinatura | null> {
   const rows = await getDb().query<Assinatura>(
-    `SELECT status, invoice_url, valid_until, plano_id, external_ref, cancelar_em_renovacao
+    `SELECT status, invoice_url, valid_until, plano_id, external_ref, cancelar_em_renovacao, billing_cycle, cancellation_requested_at
      FROM lawyer_subscriptions WHERE lawyer_id = $1`,
     [actor],
   );
@@ -93,6 +95,9 @@ export async function trocarPlano(form: FormData): Promise<{ error?: string }> {
     return { error: "Sua assinatura já está marcada para cancelamento." };
   }
   if (atual.plano_id === planoId.data) return {};
+  if (atual.plano_id === "yearly" && planoId.data === "monthly") {
+    return { error: "A troca do plano anual para o mensal não está disponível durante o período anual contratado." };
+  }
   const plano = subscriptionPlans.find((p) => p.id === planoId.data)!;
 
   // Sem external_ref (teste grátis sem integração concluída com a Asaas), trocar aqui não muda
@@ -103,11 +108,15 @@ export async function trocarPlano(form: FormData): Promise<{ error?: string }> {
     };
   }
   try {
-    await atualizarAssinaturaAsaas(atual.external_ref, { valor: plano.amountCents / 100 });
+    const cycle = plano.id === "yearly" ? "YEARLY" : "MONTHLY";
+    await atualizarAssinaturaAsaas(atual.external_ref, { valor: plano.amountCents / 100, cycle });
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Erro ao trocar de plano." };
   }
-  await getDb().query("SELECT set_own_subscription_plan($1)", [planoId.data]);
+  await getDb().query("SELECT set_own_subscription_plan($1, $2)", [
+    planoId.data,
+    plano.id === "yearly" ? "YEARLY" : "MONTHLY",
+  ]);
   revalidatePath("/assinatura");
   return {};
 }

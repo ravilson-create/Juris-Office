@@ -99,7 +99,15 @@ export default async function GestaoEquipePage({
                   {membro.subscription_status && ` · Assinatura: ${membro.subscription_status}`}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
+                {membro.email && membro.user_id !== actor && (
+                  <Link
+                    href={`/auth/forgot-password?email=${encodeURIComponent(membro.email)}`}
+                    className="rounded border border-line px-3 py-2 text-sm"
+                  >
+                    Redefinir senha
+                  </Link>
+                )}
                 {membro.oab_verificado_em && membro.oab_verificado_por === membro.user_id && (
                   <form action={revogarOabAction}>
                     <input type="hidden" name="userId" value={membro.user_id} />

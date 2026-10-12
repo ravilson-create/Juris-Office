@@ -92,17 +92,32 @@ export default async function ConsultasExternasPage({
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-10">
-      <h1 className="text-3xl">Consultas externas</h1>
-      <p className="mt-2 max-w-prose text-muted">
-        Fica fora do atendimento de qualquer caso: nenhum dado de cidadão é enviado
-        automaticamente a estes sites. Você decide o que pesquisar em cada um, com suas próprias
-        credenciais quando for o caso.
-      </p>
+      <div className="rounded-2xl border border-line bg-surface p-6">
+        <p className="text-sm font-semibold uppercase tracking-wide text-muted">Área profissional</p>
+        <h1 className="mt-1 text-3xl">Central de Consultas Jurídicas</h1>
+        <p className="mt-2 max-w-2xl text-muted">
+          Consulte processos, jurisprudência, legislação e publicações oficiais em um só lugar.
+          Escolha abaixo o tipo de pesquisa que deseja realizar.
+        </p>
+        <nav className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Tipos de consulta">
+          {[
+            ["#processos", "🔎", "Processos", "CNJ e PJe"],
+            ["#jurisprudencia", "⚖️", "Jurisprudência", "Decisões e precedentes"],
+            ["#legislacao", "📚", "Legislação", "LexML Brasil"],
+            ["#diario-oficial", "📰", "Diário Oficial", "Publicações oficiais"],
+          ].map(([href, icon, titulo, descricao]) => (
+            <a key={href} href={href} className="rounded-xl border border-line p-4 transition hover:border-navy hover:bg-white">
+              <span className="text-2xl" aria-hidden="true">{icon}</span>
+              <span className="mt-2 block font-semibold">{titulo}</span>
+              <span className="mt-1 block text-sm text-muted">{descricao}</span>
+            </a>
+          ))}
+        </nav>
+      </div>
 
-      <section className="mt-8" aria-labelledby="processo-title">
-        <h2 id="processo-title" className="text-xl">
-          Processo no CNJ
-        </h2>
+      <section id="processos" className="mt-8 scroll-mt-6 rounded-2xl border border-line bg-surface p-6" aria-labelledby="processo-title">
+        <p className="text-sm font-semibold uppercase tracking-wide text-muted">🔎 Processos</p>
+        <h2 id="processo-title" className="mt-1 text-2xl">Consultar processo no CNJ</h2>
         <p className="mt-2 text-sm text-muted">
           A API Pública do DataJud (CNJ) devolve as movimentações de um processo já protocolado,
           sem precisar de certificado digital — basta o número do processo e a sigla do tribunal
@@ -219,9 +234,7 @@ export default async function ConsultasExternasPage({
       </section>
 
       <section className="mt-10" aria-labelledby="jurisprudencia-title">
-        <h2 id="jurisprudencia-title" className="text-xl">
-          Jurisprudência, legislação e Diário Oficial
-        </h2>
+        <h2 id="jurisprudencia-title" className="sr-only">Pesquisa jurídica</h2>
         <form className="mt-3 flex flex-wrap items-end gap-3">
           {numero && <input type="hidden" name="numero" value={numero} />}
           {tribunal && <input type="hidden" name="tribunal" value={tribunal} />}
@@ -261,10 +274,9 @@ export default async function ConsultasExternasPage({
         </form>
 
         <div className="mt-6 space-y-6">
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
-              Jurisprudência
-            </h3>
+          <div id="jurisprudencia" className="scroll-mt-6 rounded-2xl border border-line bg-surface p-6">
+            <p className="text-sm font-semibold uppercase tracking-wide text-muted">⚖️ Jurisprudência</p>
+            <h3 className="mt-1 text-xl font-semibold">Decisões e precedentes</h3>
             <ul className="mt-2 space-y-3">
               {SERVICOS_JURISPRUDENCIA.map((s) => (
                 <li key={s.id} className="rounded-md border border-line p-4">
@@ -284,10 +296,9 @@ export default async function ConsultasExternasPage({
             </ul>
           </div>
 
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
-              Legislação
-            </h3>
+          <div id="legislacao" className="scroll-mt-6 rounded-2xl border border-line bg-surface p-6">
+            <p className="text-sm font-semibold uppercase tracking-wide text-muted">📚 Legislação</p>
+            <h3 className="mt-1 text-xl font-semibold">Pesquisar legislação</h3>
             <p className="mt-1 text-sm text-muted">
               Resultado buscado direto no LexML Brasil (rede pública mantida por Senado, Câmara,
               Judiciário e Ministério Público) — sem precisar abrir outro site.
@@ -355,10 +366,9 @@ export default async function ConsultasExternasPage({
             </ul>
           </div>
 
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
-              Diário Oficial
-            </h3>
+          <div id="diario-oficial" className="scroll-mt-6 rounded-2xl border border-line bg-surface p-6">
+            <p className="text-sm font-semibold uppercase tracking-wide text-muted">📰 Diário Oficial</p>
+            <h3 className="mt-1 text-xl font-semibold">Publicações oficiais</h3>
             <ul className="mt-2 space-y-3">
               <li className="rounded-md border border-line p-4">
                 <p className="font-semibold">{SERVICO_DOU.nome}</p>
