@@ -68,7 +68,9 @@ describe("consultarLexml", () => {
   });
 
   it("monta a URL da API pública SRU do LexML, sem chave nem credencial", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, text: async () => RESPOSTA_SEM_RESULTADOS });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, text: async () => RESPOSTA_SEM_RESULTADOS });
     vi.stubGlobal("fetch", fetchMock);
     await consultarLexml("direito do consumidor");
     const urlChamada = String(fetchMock.mock.calls[0]![0]);
@@ -117,12 +119,63 @@ describe("consultarLexml", () => {
   });
 
   it("falha de rede lança erro amigável", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockRejectedValue(new Error("network error")),
-    );
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network error")));
     await expect(consultarLexml("direito civil")).rejects.toThrow(
       "Não foi possível consultar o LexML agora.",
     );
+  });
+});
+
+describe("respostas reais de indisponibilidade", () => {
+  it("identifica a página de segurança mesmo com HTTP 200", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(
+            '<!DOCTYPE html><title>Verificação de segurança — Senado Federal</title><form action="/_challenge"></form>',
+            { status: 200, headers: { "content-type": "text/html; charset=UTF-8" } },
+          ),
+        ),
+    );
+    await expect(consultarLexml("consumidor")).rejects.toThrow("verificação de segurança");
+  });
+
+  it.each([
+    "<html><body>Manutenção</body></html>",
+    "<searchRetrieveResponse><records>",
+    "<resposta>Outra estrutura</resposta>",
+  ])("não apresenta resposta inválida como busca sem resultados: %s", async (body) => {
+    mockFetch({ ok: true, text: async () => body });
+    await expect(consultarLexml("consumidor")).rejects.toThrow("resposta inválida");
+  });
+
+  it("não informa zero resultados quando o servidor omite registros encontrados", async () => {
+    mockFetch({
+      ok: true,
+      text: async () =>
+        "<searchRetrieveResponse><numberOfRecords>2</numberOfRecords></searchRetrieveResponse>",
+    });
+    await expect(consultarLexml("consumidor")).rejects.toThrow("não enviou os documentos");
+  });
+
+  it("não informa zero resultados quando os registros não podem ser interpretados", async () => {
+    mockFetch({
+      ok: true,
+      text: async () =>
+        RESPOSTA_COM_RESULTADOS.replaceAll("<title>", "<other>").replaceAll("</title>", "</other>"),
+    });
+    await expect(consultarLexml("consumidor")).rejects.toThrow("Não foi possível ler");
+  });
+
+  it("trata interrupção durante a leitura do corpo", async () => {
+    mockFetch({
+      ok: true,
+      text: async () => {
+        throw new Error("aborted");
+      },
+    });
+    await expect(consultarLexml("consumidor")).rejects.toThrow("Não foi possível consultar");
   });
 });

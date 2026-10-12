@@ -56,3 +56,12 @@ describe("registro de serviços de consulta externa", () => {
     }
   });
 });
+
+it("o link LexML preserva o termo personalizado com e sem área", () => {
+  const lexml = SERVICOS_LEGISLACAO[0]!;
+  for (const area of [undefined, "civel"] as const) {
+    expect(lexml.url(area, "rescisão indireta & salário")).toBe(
+      "https://www.lexml.gov.br/busca/search?keyword=rescis%C3%A3o%20indireta%20%26%20sal%C3%A1rio",
+    );
+  }
+});

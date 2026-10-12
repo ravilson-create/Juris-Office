@@ -1,5 +1,5 @@
 import "server-only";
-import { XMLParser } from "fast-xml-parser";
+import { XMLParser, XMLValidator } from "fast-xml-parser";
 
 /**
  * Cliente da API pública SRU do LexML Brasil (rede mantida por Senado, Câmara, Judiciário e MP) —
@@ -29,7 +29,7 @@ const parser = new XMLParser({
 
 /** Escapa aspas dentro do termo para não quebrar a sintaxe CQL da consulta. */
 function escaparCql(termo: string): string {
-  return termo.replace(/"/g, '\\"');
+  return termo.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
 function primeiroTexto(valor: unknown): string | null {
@@ -54,46 +54,61 @@ export async function consultarLexml(termo: string, maximo = 10): Promise<Docume
   url.searchParams.set("query", cql);
   url.searchParams.set("maximumRecords", String(maximo));
   url.searchParams.set("recordSchema", "dc");
+  url.searchParams.set("recordPacking", "xml");
 
   let res: Response;
+  let xml: string;
   try {
-    res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    res = await fetch(url, {
+      signal: AbortSignal.timeout(10_000),
+      headers: { Accept: "application/xml, text/xml;q=0.9" },
+      cache: "no-store",
+    });
+    xml = await res.text();
   } catch {
-    throw new Error("Não foi possível consultar o LexML agora.");
+    throw new Error("Não foi possível consultar o LexML agora. Tente novamente em instantes.");
   }
-  if (!res.ok) throw new Error(`O LexML respondeu com erro ${res.status}.`);
 
-  const xml = await res.text();
+  // O serviço pode devolver o desafio de segurança em HTML com status 200.
+  // Não interpretar essa página como XML nem registrar seu corpo ou a pesquisa.
+  const html =
+    /<!doctype\s+html|<html\b/i.test(xml) ||
+    /text\/html/i.test(res.headers?.get("content-type") ?? "");
+  if (html && /verifica[çc][ãa]o de seguran[çc]a|\/_challenge/i.test(xml)) {
+    throw new Error(
+      "O LexML está exigindo uma verificação de segurança e não permitiu a consulta automática. Abra a pesquisa no site da fonte.",
+    );
+  }
+  if (!res.ok)
+    throw new Error(`O LexML respondeu com erro ${res.status}. Tente novamente em instantes.`);
+  if (html || XMLValidator.validate(xml) !== true) {
+    throw new Error("O LexML devolveu uma resposta inválida. Tente novamente em instantes.");
+  }
   const doc = parser.parse(xml) as Record<string, unknown>;
   const resposta = doc.searchRetrieveResponse as Record<string, unknown> | undefined;
-  if (!resposta) {
-    // Diagnóstico temporário (ver PR que introduziu este log): formato real da resposta do SRU
-    // ainda não confirmado contra tráfego de produção — nunca testável a partir do sandbox de
-    // desenvolvimento, que bloqueia o domínio lexml.gov.br. Remover assim que confirmado.
-    console.error(
-      "[lexml] resposta em formato inesperado — chaves do XML parseado:",
-      Object.keys(doc),
-      "| primeiros 1500 caracteres do XML bruto:",
-      xml.slice(0, 1500),
-    );
-    throw new Error("Resposta do LexML em formato inesperado.");
+  if (!resposta || typeof resposta !== "object") {
+    throw new Error("O LexML devolveu uma resposta inválida. Tente novamente em instantes.");
   }
 
   const diagnostico = resposta.diagnostics as Record<string, unknown> | undefined;
   if (diagnostico) {
     const brutos = diagnostico.diagnostic;
     const primeiro = (Array.isArray(brutos) ? brutos[0] : brutos) as
-      | Record<string, unknown>
-      | undefined;
+      Record<string, unknown> | undefined;
     const mensagem = primeiroTexto(primeiro?.message);
     throw new Error(mensagem ?? "O LexML recusou a consulta.");
   }
 
   const registrosBrutos = (resposta.records as Record<string, unknown> | undefined)?.record;
-  if (!registrosBrutos) return [];
+  if (!registrosBrutos) {
+    if (Number(resposta.numberOfRecords) === 0) return [];
+    throw new Error(
+      "O LexML informou resultados, mas não enviou os documentos. Tente novamente em instantes.",
+    );
+  }
   const registros = Array.isArray(registrosBrutos) ? registrosBrutos : [registrosBrutos];
 
-  return registros
+  const documentos = registros
     .map((registro): DocumentoLexml | null => {
       const r = registro as Record<string, unknown>;
       const recordData = r.recordData as Record<string, unknown> | undefined;
@@ -111,4 +126,10 @@ export async function consultarLexml(termo: string, maximo = 10): Promise<Docume
       };
     })
     .filter((d): d is DocumentoLexml => d !== null);
+  if (documentos.length === 0) {
+    throw new Error(
+      "Não foi possível ler os documentos enviados pelo LexML. Tente novamente em instantes.",
+    );
+  }
+  return documentos;
 }

@@ -18,7 +18,7 @@ export type ServicoConsulta = {
   /** Por que não há integração automática (API/certificado/contrato) — mostrado na tela. */
   motivoSemIntegracao: string;
   /** Sem área escolhida, cai na página inicial de busca — nunca manda dado pessoal. */
-  url: (areaSlug?: LegalAreaSlug) => string;
+  url: (areaSlug?: LegalAreaSlug, termo?: string) => string;
 };
 
 export const TERMO_POR_AREA: Record<LegalAreaSlug, string> = {
@@ -55,11 +55,13 @@ export const SERVICOS_LEGISLACAO: ServicoConsulta[] = [
     nome: "LexML Brasil",
     descricao:
       "Portal público (rede LexML) com legislação federal, estadual e municipal dos três Poderes.",
-    motivoSemIntegracao: "Busca pública via URL, mas sem API de consulta automatizada em lote.",
-    url: (area) =>
-      area
-        ? `https://www.lexml.gov.br/busca/search?keyword=${encodeURIComponent(TERMO_POR_AREA[area])}`
-        : "https://www.lexml.gov.br/busca/search",
+    motivoSemIntegracao: "Consulte a fonte original ou continue a pesquisa no portal LexML.",
+    url: (area, termo) => {
+      const pesquisa = termo?.trim() || (area ? TERMO_POR_AREA[area] : "");
+      return pesquisa
+        ? `https://www.lexml.gov.br/busca/search?keyword=${encodeURIComponent(pesquisa)}`
+        : "https://www.lexml.gov.br/busca/search";
+    },
   },
 ];
 

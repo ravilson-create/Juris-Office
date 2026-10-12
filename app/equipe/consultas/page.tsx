@@ -1,3 +1,4 @@
+import { FiltroPesquisaJuridica } from "@/components/consultas/filtro-pesquisa-juridica";
 import { redirect } from "next/navigation";
 import { Alert } from "@/components/ui/alert";
 import { currentUserId } from "@/lib/auth/session";
@@ -16,17 +17,9 @@ import {
   SERVICO_DOU,
   TERMO_POR_AREA,
 } from "@/lib/external/consultas";
-import { legalAreaSlugSchema, type LegalAreaSlug } from "@/domain/legal-area/schema";
+import { legalAreaSlugSchema } from "@/domain/legal-area/schema";
 
 export const dynamic = "force-dynamic";
-
-const AREAS: { slug: LegalAreaSlug; nome: string }[] = [
-  { slug: "consumidor", nome: "Consumidor" },
-  { slug: "trabalhista", nome: "Trabalhista" },
-  { slug: "familia", nome: "Família" },
-  { slug: "previdenciario", nome: "Previdenciário" },
-  { slug: "civel", nome: "Cível" },
-];
 
 const TERMO_MAX = 200;
 
@@ -93,21 +86,32 @@ export default async function ConsultasExternasPage({
   return (
     <main className="mx-auto max-w-3xl px-5 py-10">
       <div className="rounded-2xl border border-line bg-surface p-6">
-        <p className="text-sm font-semibold uppercase tracking-wide text-muted">Área profissional</p>
+        <p className="text-sm font-semibold uppercase tracking-wide text-muted">
+          Área profissional
+        </p>
         <h1 className="mt-1 text-3xl">Central de Consultas Jurídicas</h1>
         <p className="mt-2 max-w-2xl text-muted">
           Consulte processos, jurisprudência, legislação e publicações oficiais em um só lugar.
           Escolha abaixo o tipo de pesquisa que deseja realizar.
         </p>
-        <nav className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Tipos de consulta">
+        <nav
+          className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+          aria-label="Tipos de consulta"
+        >
           {[
             ["#processos", "🔎", "Processos", "CNJ e PJe"],
             ["#jurisprudencia", "⚖️", "Jurisprudência", "Decisões e precedentes"],
             ["#legislacao", "📚", "Legislação", "LexML Brasil"],
             ["#diario-oficial", "📰", "Diário Oficial", "Publicações oficiais"],
           ].map(([href, icon, titulo, descricao]) => (
-            <a key={href} href={href} className="rounded-xl border border-line p-4 transition hover:border-navy hover:bg-white">
-              <span className="text-2xl" aria-hidden="true">{icon}</span>
+            <a
+              key={href}
+              href={href}
+              className="rounded-xl border border-line p-4 transition hover:border-navy hover:bg-white"
+            >
+              <span className="text-2xl" aria-hidden="true">
+                {icon}
+              </span>
               <span className="mt-2 block font-semibold">{titulo}</span>
               <span className="mt-1 block text-sm text-muted">{descricao}</span>
             </a>
@@ -115,13 +119,19 @@ export default async function ConsultasExternasPage({
         </nav>
       </div>
 
-      <section id="processos" className="mt-8 scroll-mt-6 rounded-2xl border border-line bg-surface p-6" aria-labelledby="processo-title">
+      <section
+        id="processos"
+        className="mt-8 scroll-mt-6 rounded-2xl border border-line bg-surface p-6"
+        aria-labelledby="processo-title"
+      >
         <p className="text-sm font-semibold uppercase tracking-wide text-muted">🔎 Processos</p>
-        <h2 id="processo-title" className="mt-1 text-2xl">Consultar processo no CNJ</h2>
+        <h2 id="processo-title" className="mt-1 text-2xl">
+          Consultar processo no CNJ
+        </h2>
         <p className="mt-2 text-sm text-muted">
-          A API Pública do DataJud (CNJ) devolve as movimentações de um processo já protocolado,
-          sem precisar de certificado digital — basta o número do processo e a sigla do tribunal
-          (ex.: <code>tjsp</code>, <code>trf1</code>, <code>tst</code>, <code>tjma</code>).
+          A API Pública do DataJud (CNJ) devolve as movimentações de um processo já protocolado, sem
+          precisar de certificado digital — basta o número do processo e a sigla do tribunal (ex.:{" "}
+          <code>tjsp</code>, <code>trf1</code>, <code>tst</code>, <code>tjma</code>).
         </p>
 
         {datajudConfigurado() ? (
@@ -234,48 +244,25 @@ export default async function ConsultasExternasPage({
       </section>
 
       <section className="mt-10" aria-labelledby="jurisprudencia-title">
-        <h2 id="jurisprudencia-title" className="sr-only">Pesquisa jurídica</h2>
-        <form className="mt-3 flex flex-wrap items-end gap-3">
-          {numero && <input type="hidden" name="numero" value={numero} />}
-          {tribunal && <input type="hidden" name="tribunal" value={tribunal} />}
-          <div>
-            <label htmlFor="area" className="block text-sm font-medium">
-              Área jurídica (opcional, pré-preenche o termo)
-            </label>
-            <select
-              id="area"
-              name="area"
-              defaultValue={area ?? ""}
-              className="mt-1 w-56 rounded border border-line p-2"
-            >
-              <option value="">Sem área — abre a busca em branco</option>
-              {AREAS.map((a) => (
-                <option key={a.slug} value={a.slug}>
-                  {a.nome} ({TERMO_POR_AREA[a.slug]})
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="termo" className="block text-sm font-medium">
-              Termo de busca (usado na legislação abaixo)
-            </label>
-            <input
-              id="termo"
-              name="termo"
-              key={termo}
-              defaultValue={termo}
-              maxLength={TERMO_MAX}
-              placeholder="ex.: rescisão indireta"
-              className="mt-1 w-64 rounded border border-line p-2"
-            />
-          </div>
-          <button className="rounded border border-line px-4 py-2">Aplicar</button>
-        </form>
+        <h2 id="jurisprudencia-title" className="sr-only">
+          Pesquisa jurídica
+        </h2>
+        <FiltroPesquisaJuridica
+          key={`${area ?? ""}:${termo}`}
+          area={area}
+          termo={termo}
+          numero={numero}
+          tribunal={tribunal}
+        />
 
         <div className="mt-6 space-y-6">
-          <div id="jurisprudencia" className="scroll-mt-6 rounded-2xl border border-line bg-surface p-6">
-            <p className="text-sm font-semibold uppercase tracking-wide text-muted">⚖️ Jurisprudência</p>
+          <div
+            id="jurisprudencia"
+            className="scroll-mt-6 rounded-2xl border border-line bg-surface p-6"
+          >
+            <p className="text-sm font-semibold uppercase tracking-wide text-muted">
+              ⚖️ Jurisprudência
+            </p>
             <h3 className="mt-1 text-xl font-semibold">Decisões e precedentes</h3>
             <ul className="mt-2 space-y-3">
               {SERVICOS_JURISPRUDENCIA.map((s) => (
@@ -296,18 +283,23 @@ export default async function ConsultasExternasPage({
             </ul>
           </div>
 
-          <div id="legislacao" className="scroll-mt-6 rounded-2xl border border-line bg-surface p-6">
-            <p className="text-sm font-semibold uppercase tracking-wide text-muted">📚 Legislação</p>
-            <h3 className="mt-1 text-xl font-semibold">Pesquisar legislação</h3>
+          <div
+            id="legislacao"
+            className="scroll-mt-6 rounded-2xl border border-line bg-surface p-6"
+          >
+            <p className="text-sm font-semibold uppercase tracking-wide text-muted">
+              📚 Legislação e documentos
+            </p>
+            <h3 className="mt-1 text-xl font-semibold">Pesquisar documentos jurídicos</h3>
             <p className="mt-1 text-sm text-muted">
-              Resultado buscado direto no LexML Brasil (rede pública mantida por Senado, Câmara,
-              Judiciário e Ministério Público) — sem precisar abrir outro site.
+              Pesquise documentos jurídicos no LexML Brasil. Os resultados aparecem aqui quando a
+              fonte está disponível.
             </p>
 
             {erroLexml && (
               <div className="mt-3">
                 <Alert tone="error" title="Não foi possível buscar no LexML.">
-                  {erroLexml} Tente abrir a busca completa no site, abaixo.
+                  {erroLexml}
                 </Alert>
               </div>
             )}
@@ -343,8 +335,8 @@ export default async function ConsultasExternasPage({
 
             {!termo && (
               <p className="mt-3 text-sm text-muted">
-                Escolha uma área ou digite um termo acima e clique em &ldquo;Aplicar&rdquo; para
-                ver o resultado aqui.
+                Escolha uma área ou digite um termo acima e clique em &ldquo;Aplicar&rdquo; para ver
+                o resultado aqui.
               </p>
             )}
 
@@ -354,7 +346,7 @@ export default async function ConsultasExternasPage({
                   <p className="font-semibold">Busca completa no site do {s.nome}</p>
                   <p className="mt-1 text-sm text-muted">{s.motivoSemIntegracao}</p>
                   <a
-                    href={s.url(area)}
+                    href={s.url(area, termo)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-3 inline-block rounded border border-line px-3 py-1.5 text-sm font-medium text-navy hover:border-navy"
@@ -366,8 +358,13 @@ export default async function ConsultasExternasPage({
             </ul>
           </div>
 
-          <div id="diario-oficial" className="scroll-mt-6 rounded-2xl border border-line bg-surface p-6">
-            <p className="text-sm font-semibold uppercase tracking-wide text-muted">📰 Diário Oficial</p>
+          <div
+            id="diario-oficial"
+            className="scroll-mt-6 rounded-2xl border border-line bg-surface p-6"
+          >
+            <p className="text-sm font-semibold uppercase tracking-wide text-muted">
+              📰 Diário Oficial
+            </p>
             <h3 className="mt-1 text-xl font-semibold">Publicações oficiais</h3>
             <ul className="mt-2 space-y-3">
               <li className="rounded-md border border-line p-4">
