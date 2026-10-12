@@ -14,6 +14,7 @@ import { CASE_STATUS_LABEL, isDeletable } from "@/domain/case/status";
 import { listarPrazosPorCaso } from "@/lib/services/equipe-prazos";
 import { buscarViabilidade, iniciarAnaliseSeNecessario } from "@/lib/services/equipe-contratos";
 import { registrarLeituraCaso } from "@/lib/services/auditoria";
+import { linkWhatsapp } from "@/lib/whatsapp";
 import { aiEnabled } from "@/lib/ai/client";
 import { buscarResumoIA } from "@/lib/services/resumo-ia";
 import {
@@ -105,6 +106,15 @@ export default async function CasoEquipe({
           </ButtonLink>
           <ButtonLink href={`/equipe/${caseId}/contrato`} variant="secondary" className="text-sm">
             Contrato
+          </ButtonLink>
+          <ButtonLink
+            href={linkWhatsapp(submission.dossier.applicant.phone)}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="secondary"
+            className="text-sm"
+          >
+            WhatsApp ↗
           </ButtonLink>
           <form action={submission.legalCase.archivedAt ? desarquivarCasoAction : arquivarCasoAction}>
             <input type="hidden" name="caseId" value={caseId} />
