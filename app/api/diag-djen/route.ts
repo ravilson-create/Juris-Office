@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
+// Primeira tentativa (região padrão iad1, EUA) levou bloqueio geográfico explícito da CloudFront
+// do PJe ("configured to block access from your country"). Fixa a função em São Paulo para testar
+// se um IP de saída brasileiro passa.
+export const preferredRegion = "gru1";
 
 /**
  * Rota de diagnóstico TEMPORÁRIA — não é feature do produto, só serve para testar, a partir do
