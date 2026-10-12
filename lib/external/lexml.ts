@@ -78,7 +78,7 @@ export async function consultarLexml(termo: string, maximo = 10): Promise<Docume
   const pareceHtml = /^\s*<!DOCTYPE html/i.test(xml) || /<html[\s>]/i.test(xml.slice(0, 200));
   if (pareceHtml) {
     throw new Error(
-      "O LexML bloqueou esta consulta automática (verificação de segurança do Senado Federal). Tente abrir a busca completa no site, abaixo.",
+      "O LexML bloqueou esta consulta automática (verificação de segurança do Senado Federal).",
     );
   }
 
