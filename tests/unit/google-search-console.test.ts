@@ -1,9 +1,11 @@
 import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import robots from "@/app/robots";
 import sitemap from "@/app/sitemap";
 
-const googleVerificationPath = new URL("../../public/google8de219c6908bafb6.html", import.meta.url);
+// Caminho de disco: o Vite pode transformar new URL(asset, import.meta.url) em URL HTTP no jsdom.
+const googleVerificationPath = resolve(process.cwd(), "public/google8de219c6908bafb6.html");
 
 afterEach(() => vi.unstubAllEnvs());
 

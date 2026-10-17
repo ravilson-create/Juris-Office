@@ -64,6 +64,11 @@ O módulo financeiro ainda depende da aplicação de sua migração e publicaç�
 - A suíte local usa uma adaptação fora do repositório apenas para a descoberta opcional
   de unidades de rede do Vite, indisponível nesta estação Windows.
 - Login real e concorrência entre conexões PostgreSQL reais não foram simulados como validados.
-- Resultado local: 15 testes específicos passaram; suíte geral com 585 aprovados e uma falha
-  em `tests/unit/google-search-console.test.ts` (`The URL must be of scheme file`, no Windows).
+- Resultado local: 15 testes específicos passaram. A suíte geral encontrou uma falha em
+  `tests/unit/google-search-console.test.ts`, também reproduzida no GitHub/Linux. Corrigido o caminho
+  usado pelo teste para ler o arquivo de verificação diretamente do disco, evitando a transformação
+  de URL de asset pelo Vite/jsdom. O conteúdo público não foi modificado.
   Lint sem erros (três avisos já existentes de React Hook Form); TypeScript aprovado.
+- A prévia automática Vercel falhou antes do build com `Resource provisioning failed`;
+  a criação manual de branch Neon também falhou por limite de branches. Não foi alterado o plano
+  nem removido ambiente existente para contornar o limite.
