@@ -41,9 +41,12 @@ Por padrão, a integração Neon-Vercel preenche `DATABASE_URL`/`DATABASE_URL_UN
 migrações, mas não para o app rodando em produção — se um único segredo vazar, o ideal é que ele
 não sirva para apagar o esquema inteiro.
 
-Foi criado um papel `juris_app`, só com `SELECT`/`INSERT`/`UPDATE`/`DELETE` nas tabelas do app
-(sem `CREATE`/`ALTER`/`DROP`), com `ALTER DEFAULT PRIVILEGES` garantindo que tabelas criadas por
-migrações futuras já nasçam com essa concessão. A conexão desse papel fica na variável
+O papel de execução é `juris_runtime`, criado **por SQL** sem `SUPERUSER`, `BYPASSRLS`,
+`CREATEDB` ou `CREATEROLE`. Ele não é dono das tabelas e usa RLS com a identidade da sessão.
+As permissões de tabelas/sequências e os privilégios padrão foram configurados separadamente
+da conexão administrativa. Em `profiles`, só tem `UPDATE(email)`; a migração 0038 permite
+o UPSERT do próprio e-mail nos layouts de login sem liberar alteração de papel ou escritório.
+A conexão desse papel fica na variável
 `APP_DATABASE_URL` (não gerenciada pela integração — criada manualmente, para não conflitar com a
 sincronização automática do `DATABASE_URL`).
 
@@ -51,12 +54,10 @@ sincronização automática do `DATABASE_URL`).
   não existe (nada muda em ambientes sem essa variável, como testes e desenvolvimento local).
 - `DATABASE_URL`/`DATABASE_URL_UNPOOLED` continuam sendo usadas só pelo migrador
   (`scripts/migrate.mjs`), que precisa do papel dono para aplicar `CREATE TABLE`/`ALTER TABLE`.
-- **Limitação conhecida da Neon**: papéis criados pela Neon vêm com `CREATEDB`/`CREATEROLE`
-  habilitados, e isso **não pode ser revogado por SQL** (`ALTER ROLE ... NOCREATEDB` dá "permission
-  denied") nesse plano. Ou seja, `juris_app` não pode alterar o esquema das tabelas existentes,
-  mas em teoria poderia criar um banco ou papel novo dentro do mesmo projeto Neon — um risco menor
-  que vazar o papel dono, mas não zero. Reavaliar se a Neon passar a permitir revogar isso, ou ao
-  avaliar upgrade de plano.
+- Papéis criados pela API/Console Neon recebem privilégios elevados, incluindo `BYPASSRLS`.
+  O antigo `juris_app` foi substituído na conexão de produção; não reutilize esse papel para
+  executar o aplicativo. Crie papéis restritos por SQL e confira os atributos reais no banco.
+  Não restaure acesso irrestrito para contornar uma política de RLS ausente.
 
 ## 4. Cuidados
 

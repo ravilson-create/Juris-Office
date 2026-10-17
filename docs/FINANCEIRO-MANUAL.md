@@ -29,7 +29,7 @@ Não chama APIs de cobrança, não gera Pix ou boletos e não altera a assinatur
 ## Acesso e persistência
 
 Mantidos PostgreSQL/Neon, Neon Auth, MFA e assinatura por escritório, conforme confirmação do usuário.
-Nenhum projeto Supabase foi modificado. O papel de execução continua sendo `juris_app`, sem BYPASSRLS.
+Nenhum projeto Supabase foi modificado. A produção usa `juris_runtime`, criado por SQL sem BYPASSRLS.
 
 `financial_entries` e `financial_settlements` têm RLS. Admin/administrativo veem o próprio escritório;
 advogado vê registros sem caso criados por ele e os de casos aos quais já tem acesso. Clientes,
@@ -50,7 +50,9 @@ Valores e vínculos são imutáveis; não há DELETE concedido. Não há funçã
 
 O ajuste de especialidades foi executado no banco real em 17/10/2026: quatro perfis profissionais
 com cinco áreas cada, mantendo dois `lawyer` e dois `admin`. A migração posterior não duplica linhas.
-O módulo financeiro ainda depende da aplicação de sua migração e publicação do código.
+O módulo foi publicado e suas migrações foram aplicadas em produção em 17/10/2026.
+A migração 0038 corrige a sincronização de e-mail no login sob RLS, permitindo apenas o próprio
+e-mail sem conceder alteração de papel, escritório ou OAB ao papel de execução.
 
 ## Verificação e limites desta execução
 
