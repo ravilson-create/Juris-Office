@@ -205,7 +205,12 @@ export default async function HomePage() {
           <div className="rounded-2xl border border-line bg-white p-7 shadow-sm">
             <p className="font-sans text-sm font-semibold uppercase tracking-[.08em] text-blue-700">Para advogados</p>
             <h2 className="mt-2 text-2xl text-ink">Transforme a rotina do seu escritório.</h2>
-            <p className="mt-3 text-muted">Centralize o trabalho e tenha um ambiente profissional para organizar a operação jurídica.</p>
+            <p className="mt-3 text-muted">Centralize o trabalho e tenha um ambiente profissional para organizar a operação jurídica. Advogados assinantes também contam com o Financeiro do escritório.</p>
+            <ul className="mt-4 space-y-2 text-sm text-muted">
+              <li>Honorários e parcelas vinculados aos clientes e atendimentos.</li>
+              <li>Contas a receber e pagar, receitas, despesas, repasses e acertos.</li>
+              <li>Dashboard, fluxo de caixa e relatórios com registros e baixas manuais.</li>
+            </ul>
             <div className="mt-6 flex flex-wrap gap-3">
               <ButtonLink href="/advogado/cadastro" variant="gold">Começar teste grátis</ButtonLink>
               <ButtonLink href="/advogado" variant="secondary">Entrar como advogado</ButtonLink>

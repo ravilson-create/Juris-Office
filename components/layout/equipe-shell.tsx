@@ -12,6 +12,7 @@ type ItemNav = { href: string; label: string };
 const NAV_BASE: ItemNav[] = [
   { href: "/equipe", label: "Atendimento" },
   { href: "/equipe/contratos", label: "Contratos" },
+  { href: "/equipe/financeiro", label: "Financeiro" },
   { href: "/equipe/consultas", label: "Consultas externas" },
 ];
 
