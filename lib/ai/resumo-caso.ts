@@ -1,5 +1,5 @@
 import "server-only";
-import { generateText, Output } from "ai";
+import { generateText, tool } from "ai";
 import type { Dossier } from "@/domain/dossier/schema";
 import { resumoCasoSchema, type ResumoCaso } from "@/domain/ai/resumo";
 import { aiModel } from "./client";
@@ -26,14 +26,19 @@ export async function gerarResumoCaso(dossier: Dossier): Promise<ResumoGerado> {
     model,
     system: INSTRUCAO,
     prompt: `Dossiê do caso, em JSON:\n\n${JSON.stringify(dossier, null, 2)}`,
-    output: Output.object({
-      name: "resumo_caso",
-      description: "Resumo estruturado de um caso, a partir do dossiê já organizado.",
-      schema: resumoCasoSchema,
-    }),
+    // O modelo configurado aceita ferramentas, mas não response_format/json_schema.
+    // A ferramenta apenas transporta os campos: não executa nem grava dados.
+    tools: {
+      resumo_caso: tool({
+        description: "Organize o resumo do dossiê nestes campos, sem acrescentar fatos.",
+        inputSchema: resumoCasoSchema,
+      }),
+    },
+    toolChoice: { type: "tool", toolName: "resumo_caso" },
   });
-  // .output lança NoOutputGeneratedError se o modelo não produzir saída válida contra o
-  // schema — não precisa de checagem extra aqui, o chamador (gerarResumoIAAction) já captura.
+  const chamada = resultado.toolCalls.find((call) => call.toolName === "resumo_caso");
+  if (!chamada || chamada.invalid) throw new Error("IA não retornou um resumo válido.");
+  const resumo = resumoCasoSchema.parse(chamada.input);
   const modeloResolvido = resultado.finalStep.response?.modelId || model;
-  return { resumo: resultado.output, modelo: modeloResolvido };
+  return { resumo, modelo: modeloResolvido };
 }
