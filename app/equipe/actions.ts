@@ -33,30 +33,27 @@ import { getCaseService } from "@/lib/services";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { gerarResumoCaso } from "@/lib/ai/resumo-caso";
 import { salvarResumoIA } from "@/lib/services/resumo-ia";
+import { atribuirAdvogado } from "@/lib/services/equipe-atribuicao";
 
 export async function assignLawyer(form: FormData) {
   const caseId = z.uuid().safeParse(form.get("caseId"));
   const lawyerId = z.string().min(1).max(255).safeParse(form.get("lawyerId"));
   const actor = await currentUserId();
-  if (!actor || !caseId.success || !lawyerId.success) return;
+  if (!actor) redirect("/auth/sign-in");
+  if (!caseId.success || !lawyerId.success) redirect("/equipe?atribuicao=indisponivel");
   const db = getDb();
   // O banco verifica: administrador do escritório, advogado do mesmo escritório,
   // caso finalizado daquele escritório. A atribuição nunca confia no formulário.
-  await db.transaction(async (tx) => {
-    const inserted = await tx.query<{ case_id: string }>(
-      `INSERT INTO case_assignments(case_id, lawyer_id, office_id)
-       SELECT c.id, $2, c.office_id FROM legal_cases c WHERE c.id = $1
-       ON CONFLICT DO NOTHING RETURNING case_id`,
-      [caseId.data, lawyerId.data],
-    );
-    if (inserted.length) {
-      await tx.query(
-        "INSERT INTO audit_logs(actor_id, case_id, action) VALUES ($1, $2, 'assign_lawyer')",
-        [actor, caseId.data],
-      );
-    }
-  });
+  let resultado: "ok" | "existente" | "indisponivel" = "indisponivel";
+  try {
+    resultado = await atribuirAdvogado(db, actor, caseId.data, lawyerId.data);
+  } catch {
+    // Permissão/OAB/assinatura podem mudar após renderizar a lista. A transação
+    // é desfeita e a recusa vira feedback, sem derrubar a página profissional.
+    redirect("/equipe?atribuicao=indisponivel");
+  }
   revalidatePath("/equipe");
+  redirect(`/equipe?atribuicao=${resultado}`);
 }
 
 export async function verifyLawyerOab(form: FormData) {
