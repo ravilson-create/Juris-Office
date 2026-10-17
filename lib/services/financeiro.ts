@@ -151,7 +151,7 @@ export async function importContractInstallment(db: Db, actor: string, office: s
       installment_number,installment_count,case_id,source_installment_id,description,counterparty,
       kind,direction,amount_cents,due_date)
       SELECT $1,$2,$3,$1,1,1,c.case_id,i.id,'Honorários · ' || lc.protocol,
-      coalesce(nullif(lc.applicant->>'name',''),'Cliente do atendimento'),
+      coalesce(nullif(lc.applicant->>'fullName',''),'Cliente do atendimento'),
       'honorarios','receber',i.amount_cents,i.due_date
       FROM contract_installments i JOIN contracts c ON c.id=i.contract_id
       JOIN legal_cases lc ON lc.id=c.case_id
@@ -248,7 +248,7 @@ export async function financialOptions(db: Db) {
       id: string;
       protocol: string;
       name: string;
-    }>(`SELECT id,protocol,coalesce(applicant->>'name',title,protocol) AS name
+    }>(`SELECT id,protocol,coalesce(applicant->>'fullName',title,protocol) AS name
       FROM legal_cases WHERE office_id=actor_office_id() ORDER BY updated_at DESC LIMIT 500`),
     db.query<{
       id: string;

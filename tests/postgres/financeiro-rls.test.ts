@@ -166,7 +166,7 @@ describe("Financeiro: isolamento, dinheiro e integridade", () => {
       parcel = crypto.randomUUID();
     await db.query(
       `INSERT INTO legal_cases(id,protocol,legal_area_id,office_id,status,created_at,updated_at,applicant)
-      VALUES ($1,'FIN-CLIENTE',$3,$4,'active',now(),now(),'{"name":"Cliente existente"}'),
+      VALUES ($1,'FIN-CLIENTE',$3,$4,'active',now(),now(),'{"fullName":"Cliente existente"}'),
       ($2,'FIN-OUTRO',$3,$5,'active',now(),now(),NULL)`,
       [c, foreign, LEGAL_AREAS[0].id, office, otherOffice],
     );
