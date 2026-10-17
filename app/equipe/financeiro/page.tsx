@@ -59,6 +59,7 @@ export default async function FinancialPage({
   return (
     <main className="mx-auto max-w-7xl px-5 py-10 sm:px-8">
       <h1 className="text-3xl">Financeiro</h1>
+      {role === "admin" && <Link href="/equipe/financeiro/pessoal" className="mt-4 inline-flex rounded-md border border-line bg-surface px-4 py-2 text-sm font-semibold text-navy hover:underline">Pessoal e folha de pagamento →</Link>}
       <p className="mt-2 text-muted">
         Controle interno do escritório. Registre manualmente honorários, receitas, despesas,
         repasses e acertos.
