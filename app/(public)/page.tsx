@@ -210,6 +210,7 @@ export default async function HomePage() {
               <li>Honorários e parcelas vinculados aos clientes e atendimentos.</li>
               <li>Contas a receber e pagar, receitas, despesas, repasses e acertos.</li>
               <li>Dashboard, fluxo de caixa e relatórios com registros e baixas manuais.</li>
+              <li>Gestão de pessoal: funcionários, folha mensal, férias, 13º salário e encargos, com registros internos.</li>
             </ul>
             <div className="mt-6 flex flex-wrap gap-3">
               <ButtonLink href="/advogado/cadastro" variant="gold">Começar teste grátis</ButtonLink>
