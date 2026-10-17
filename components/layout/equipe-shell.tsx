@@ -17,6 +17,7 @@ const NAV_BASE: ItemNav[] = [
 ];
 
 const NAV_ADMIN: ItemNav[] = [
+  { href: "/equipe/financeiro/pessoal", label: "Pessoal e folha" },
   { href: "/equipe/time", label: "Equipe" },
   { href: "/assinatura", label: "Minha assinatura" },
 ];
