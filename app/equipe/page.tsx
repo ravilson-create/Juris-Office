@@ -50,7 +50,7 @@ export const dynamic = "force-dynamic";
 export default async function EquipePage({
   searchParams,
 }: {
-  searchParams: Promise<{ busca?: string; status?: string; pagina?: string; arquivados?: string }>;
+  searchParams: Promise<{ busca?: string; status?: string; pagina?: string; arquivados?: string; atribuicao?: string }>;
 }) {
   const actor = await currentUserId();
   if (!actor) redirect("/auth/sign-in");
@@ -58,7 +58,7 @@ export default async function EquipePage({
   const acesso = await acessoEquipe(db, actor);
   if (!acesso.ok) redirect(acesso.motivo === "sem_papel" ? "/atendimento/meus" : "/assinatura");
   const profile = { role: acesso.role, office_id: acesso.officeId };
-  const { busca, status: statusBruto, pagina: paginaBruta, arquivados: arquivadosBruto } =
+  const { busca, status: statusBruto, pagina: paginaBruta, arquivados: arquivadosBruto, atribuicao } =
     await searchParams;
   const query = (busca ?? "").trim().slice(0, 80);
   const status = statusProfissionalValido(statusBruto);
@@ -100,6 +100,9 @@ export default async function EquipePage({
   return (
     <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
       <h1 className="text-3xl">Área profissional</h1>
+      {atribuicao === "ok" && <p role="status" className="mt-4 rounded-md border border-line bg-surface p-4 text-teal-strong">Atendimento atribuído com sucesso.</p>}
+      {atribuicao === "existente" && <p role="status" className="mt-4 rounded-md border border-line bg-surface p-4">Esse advogado já está atribuído ao atendimento.</p>}
+      {atribuicao === "indisponivel" && <p role="alert" className="mt-4 rounded-md border border-danger bg-danger-soft p-4">Não foi possível atribuir. Confira se você é administrador, se o atendimento foi finalizado e se o advogado pertence ao mesmo escritório, tem OAB confirmada e assinatura do escritório ativa.</p>}
       <p className="mt-2 text-muted">
         {visaoEscritorio ? "Casos do seu escritório" : "Casos atribuídos a você"}
       </p>
