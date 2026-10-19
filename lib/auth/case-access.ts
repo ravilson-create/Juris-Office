@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { z } from "zod";
 import type { LegalCase } from "@/domain/case/schema";
 import { currentUserId } from "./session";
+import { runWithDbSession } from "@/lib/db/session-context";
 
 /**
  * Sessão anônima do navegador (cookie httpOnly com um id aleatório — só o hash dele é
@@ -64,6 +65,22 @@ export async function ensureSessionHash(): Promise<string> {
   const userId = await currentUserId();
   if (userId) return userId;
   return ensureAnonHash();
+}
+
+/**
+ * Faz a criação do atendimento usando exatamente a mesma identidade no INSERT e na
+ * política RLS. A sessão anônima pode ter acabado de ser gravada na resposta HTTP:
+ * não dependa de uma segunda leitura de cookies() na mesma Server Action.
+ *
+ * Não recebe identidade do navegador: userId vem da Neon Auth e anonHash do cookie
+ * httpOnly criado/validado no servidor.
+ */
+export async function withNewCaseSession<T>(
+  action: (owner: { userId: string | null; anonHash: string | null }) => Promise<T>,
+): Promise<T> {
+  const userId = await currentUserId();
+  const anonHash = userId ? await currentAnonHash() : await ensureAnonHash();
+  return runWithDbSession({ userId, anonHash }, () => action({ userId, anonHash }));
 }
 
 /** Verdadeiro se quem pede é o dono do atendimento — pela conta (citizenId) ou pelo navegador
