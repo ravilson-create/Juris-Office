@@ -1,5 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
+vi.mock("server-only", () => ({}));
+
 const fake = vi.hoisted(() => ({
   query: vi.fn(async (_text: string, _params?: unknown[]) => ({ rows: [] as unknown[] })),
   release: vi.fn(),
