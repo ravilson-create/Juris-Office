@@ -1,4 +1,3 @@
-import "server-only";
 import { AsyncLocalStorage } from "node:async_hooks";
 
 /** Contexto interno da transação: sempre derivado da Neon Auth ou do cookie httpOnly. */
