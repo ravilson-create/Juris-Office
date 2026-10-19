@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { headers } from "next/headers";
 import type { RawFormValues } from "@/domain/triage/schema";
-import { canAccessCase, currentAnonHash, currentSessionHash, ensureSessionHash } from "@/lib/auth/case-access";
+import { canAccessCase, currentAnonHash, currentSessionHash, withNewCaseSession } from "@/lib/auth/case-access";
 import { currentUserId } from "@/lib/auth/session";
 import { clientIp } from "@/lib/http/client-ip";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -66,19 +66,24 @@ export async function createCaseAction(formData: FormData): Promise<void> {
   }
   // O login (quando houver) decide o dono do atendimento, não uma configuração global: entrar
   // na conta é sempre opcional, então quem não está logado continua dono pela sessão anônima.
-  const owner = await ensureSessionHash();
-  const loggedIn = Boolean(await currentUserId());
   let target: string;
   try {
-    const legalCase = await getCaseService().createCase(
-      slug,
-      loggedIn ? undefined : owner,
-      loggedIn ? owner : undefined,
+    const legalCase = await withNewCaseSession(({ userId, anonHash }) =>
+      getCaseService().createCase(
+        slug,
+        userId ? undefined : (anonHash ?? undefined),
+        userId ?? undefined,
+      ),
     );
     target = `/atendimento/${legalCase.id}/identificacao`;
   } catch (error) {
-    if (!(error instanceof DomainError)) throw error;
-    target = "/atendimento?erro=area";
+    if (error instanceof DomainError) {
+      target = "/atendimento?erro=area";
+    } else {
+      // Evita expor detalhes do banco no navegador e uma tela 500 ao cidadão.
+      console.error("[atendimento] não foi possível iniciar caso", error instanceof Error ? error.name : "unknown");
+      target = "/atendimento?erro=salvar";
+    }
   }
   redirect(target);
 }

@@ -1,6 +1,7 @@
 import { Pool } from "pg";
 import type { Db, Queryable } from "./types";
 import { authEnabled, currentUserId } from "@/lib/auth/session";
+import { currentDbSession } from "./session-context";
 
 /**
  * Cliente PostgreSQL (Neon) sobre `pg`. Em funções serverless, use a URL *pooled* do Neon
@@ -39,7 +40,13 @@ export class PgDb implements Db {
         // next/headers que ele carrega) entre no grafo estático deste módulo, usado também fora
         // de um request Next.js (ex.: testes de integração com repositórios PG).
         const { currentAnonHash } = await import("@/lib/auth/case-access");
-        const [userId, anonHash] = await Promise.all([currentUserId(), currentAnonHash()]);
+        // A criação de um atendimento vincula a identidade à transação a partir
+        // da Server Action. Isso evita divergência quando o cookie anônimo acabou
+        // de ser criado e ainda não aparece numa releitura do request.
+        const fixed = currentDbSession();
+        const [userId, anonHash] = fixed
+          ? [fixed.userId, fixed.anonHash]
+          : await Promise.all([currentUserId(), currentAnonHash()]);
         await client.query(
           "SELECT set_config('app.user_id', $1, true), set_config('app.anon_hash', $2, true)",
           [userId ?? "", anonHash ?? ""],

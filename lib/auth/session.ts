@@ -23,7 +23,10 @@ export async function currentIdentity(): Promise<{
 } | null> {
   if (!authEnabled) return null;
   const { getAuth } = await import("./server");
-  const { data } = await getAuth().getSession();
+  // Leitura passiva: o SDK Neon Auth pode tentar renovar cookies na leitura normal,
+  // o que o Next.js proíbe em Server Components/layouts (Neon issue #196).
+  // A renovação continua reservada a ações/rotas de autenticação.
+  const { data } = await getAuth().getSession({ query: { disableRefresh: "true" } });
   return data?.user
     ? {
         id: data.user.id,

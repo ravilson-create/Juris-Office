@@ -10,8 +10,9 @@ vi.mock("next/headers", () => ({
   }),
 }));
 
-const { canAccessCase, ensureSessionHash, hashSession, SESSION_COOKIE } =
+const { canAccessCase, ensureSessionHash, hashSession, SESSION_COOKIE, withNewCaseSession } =
   await import("@/lib/auth/case-access");
+const { currentDbSession } = await import("@/lib/db/session-context");
 
 beforeEach(() => {
   jar.clear();
@@ -54,5 +55,36 @@ describe("acesso ao atendimento por sessão do navegador", () => {
     expect(await canAccessCase({ ownerSessionHash: owner })).toBe(false);
     jar.set(SESSION_COOKIE, crypto.randomUUID());
     expect(await canAccessCase({ ownerSessionHash: undefined })).toBe(false);
+  });
+});
+
+describe("RLS: identidade da ação de criar atendimento", () => {
+  it("usa o mesmo hash da sessão que será gravado na linha do caso", async () => {
+    const result = await withNewCaseSession(async (owner) => {
+      const context = currentDbSession();
+      expect(context).toEqual(owner);
+      expect(owner.userId).toBeNull();
+      expect(owner.anonHash).toMatch(/^[a-f0-9]{64}$/);
+      expect(owner.anonHash).toBe(hashSession(jar.get(SESSION_COOKIE)!));
+      await Promise.resolve();
+      expect(currentDbSession()).toEqual(owner);
+      return "criado";
+    });
+    expect(result).toBe("criado");
+    expect(currentDbSession()).toBeUndefined();
+    expect(setSpy).toHaveBeenCalledTimes(1);
+  });
+  it("reaproveita cookie existente sem recriar a sessão", async () => {
+    const stored = crypto.randomUUID();
+    jar.set(SESSION_COOKIE, stored);
+    await withNewCaseSession(async ({anonHash}) => {
+      expect(anonHash).toBe(hashSession(stored));
+      expect(currentDbSession()?.anonHash).toBe(hashSession(stored));
+    });
+    expect(setSpy).not.toHaveBeenCalled();
+  });
+  it("limpa o contexto após erro sem vazar a identidade para outro pedido", async () => {
+    await expect(withNewCaseSession(async () => { throw new Error("simulado"); })).rejects.toThrow("simulado");
+    expect(currentDbSession()).toBeUndefined();
   });
 });

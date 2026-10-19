@@ -72,6 +72,14 @@ export default async function AtendimentoPage({
           </div>
         )}
 
+        {erro === "salvar" && (
+          <div className="mt-6">
+            <Alert tone="error" title="Não foi possível iniciar o atendimento.">
+              Tente novamente em instantes. Se o problema continuar, entre em contato com o suporte.
+            </Alert>
+          </div>
+        )}
+
         {erro === "limite" && (
           <div className="mt-6">
             <Alert tone="error" title="Muitos atendimentos em pouco tempo.">
