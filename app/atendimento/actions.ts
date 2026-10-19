@@ -19,6 +19,7 @@ import { cpfCnpjValido, somenteDigitos } from "@/lib/billing/validacao";
 import { isValidProtocol } from "@/domain/case/protocol";
 import { getDb, getMaintenanceDb, hasDatabase } from "@/lib/db/connection";
 import { DomainError, type ServiceResult } from "@/lib/services/errors";
+import { pgErrorCode } from "@/lib/db/types";
 
 const LIMITE_EXCEDIDO = "Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente de novo.";
 
@@ -81,7 +82,14 @@ export async function createCaseAction(formData: FormData): Promise<void> {
       target = "/atendimento?erro=area";
     } else {
       // Evita expor detalhes do banco no navegador e uma tela 500 ao cidadão.
-      console.error("[atendimento] não foi possível iniciar caso", error instanceof Error ? error.name : "unknown");
+      // Diagnóstico seguro: registra SQLSTATE e tipo sem SQL, parâmetros, cookies ou PII.
+      const pgCode = pgErrorCode(error);
+      console.error("[atendimento] falha técnica ao criar caso", {
+        category: error instanceof Error ? error.name : "unknown",
+        sqlstate: pgCode ?? null,
+        table: typeof error === "object" && error !== null && "table" in error
+          && typeof error.table === "string" ? error.table : null,
+      });
       target = "/atendimento?erro=salvar";
     }
   }
