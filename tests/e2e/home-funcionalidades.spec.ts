@@ -4,6 +4,16 @@ test("home apresenta funcionalidades profissionais e preços com links para cada
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Advocacia, tecnologia e atendimento em um só lugar." })).toBeVisible();
 
+  const apresentacao = page.getByRole("region", { name: "O Júris Office IA em menos de um minuto." });
+  await expect(apresentacao).toBeVisible();
+  const video = apresentacao.locator("video");
+  await expect(video).toHaveAttribute("controls", "");
+  await expect(video).not.toHaveAttribute("autoplay", /.*/);
+  await expect(video.locator("track[kind='captions']")).toHaveAttribute("src", "/apresentacao/juris-office-ia.pt-BR.vtt");
+  for (const caminho of ["/apresentacao/juris-office-ia.mp4", "/apresentacao/juris-office-ia-poster.jpg", "/apresentacao/juris-office-ia.pt-BR.vtt"]) {
+    expect((await page.request.get(caminho)).ok(), caminho).toBe(true);
+  }
+
   const recursos = page.getByRole("region", { name: "Do primeiro atendimento à gestão do escritório." });
   for (const titulo of [
     "Triagem e dossiês", "Portal do advogado", "Contratos de honorários",

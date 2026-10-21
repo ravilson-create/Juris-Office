@@ -4,6 +4,13 @@
 
 ### Adicionado
 
+- **Vídeo de apresentação na página inicial**, em seção logo abaixo da área principal ("O Júris
+  Office IA em menos de um minuto"): vídeo narrado de 46 s (9:16, ~2,8 MB) servido pelo próprio
+  site em `public/apresentacao/`, sem autoplay e com `preload="none"` + pôster (não baixa o vídeo
+  de quem não apertar play). Acessível: legendas em WebVTT (`pt-BR`), transcrição em texto e
+  `aria-label`. A CSP não mudou (`default-src 'self'` já cobre o vídeo). O e2e da home confere a
+  seção, a faixa de legendas e a existência dos arquivos.
+
 - **Ativar/desativar assinatura manualmente**, na aba Assinaturas de advogados (administrador do
   app): botão por linha para forçar o status de qualquer advogado para ativo (estende
   `valid_until` 30 dias e limpa cancelamento agendado) ou cancelado, sem depender do webhook da
