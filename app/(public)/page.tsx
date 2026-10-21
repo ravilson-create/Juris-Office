@@ -4,6 +4,7 @@ import { getCaseService } from "@/lib/services";
 import { APP_NAME } from "@/lib/config";
 import type { LegalAreaSlug } from "@/domain/legal-area/schema";
 import { subscriptionPlans, formatPlanPrice } from "@/lib/billing/plans";
+import { ApresentacaoVideo } from "@/components/home/apresentacao-video";
 
 function IconArea({ slug }: { slug: LegalAreaSlug }) {
   const common = {
@@ -122,6 +123,8 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <ApresentacaoVideo />
+
       <section className="bg-gradient-to-r from-navy via-slate-900 to-blue-950">
         <div className="mx-auto grid max-w-6xl items-center gap-8 px-5 py-14 md:grid-cols-[1.1fr_1fr]">
           <div>
@@ -149,7 +152,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-b border-line bg-white" aria-labelledby="recursos-profissionais-title">
+      <section id="funcionalidades" className="border-b border-line bg-white" aria-labelledby="recursos-profissionais-title">
         <div className="mx-auto max-w-6xl px-5 py-16">
           <p className="text-center font-sans text-sm font-semibold uppercase tracking-[.08em] text-gold-strong">
             Funcionalidades do Júris Office IA
