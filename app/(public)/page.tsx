@@ -3,6 +3,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { getCaseService } from "@/lib/services";
 import { APP_NAME } from "@/lib/config";
 import type { LegalAreaSlug } from "@/domain/legal-area/schema";
+import { subscriptionPlans, formatPlanPrice } from "@/lib/billing/plans";
 
 function IconArea({ slug }: { slug: LegalAreaSlug }) {
   const common = {
@@ -148,29 +149,71 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-b border-line bg-white">
-        <div className="mx-auto max-w-6xl px-5 py-14">
+      <section className="border-b border-line bg-white" aria-labelledby="recursos-profissionais-title">
+        <div className="mx-auto max-w-6xl px-5 py-16">
           <p className="text-center font-sans text-sm font-semibold uppercase tracking-[.08em] text-gold-strong">
-            Um escritório jurídico digital
+            Funcionalidades do Júris Office IA
           </p>
-          <h2 className="mx-auto mt-3 max-w-3xl text-center text-3xl text-ink sm:text-4xl">
-            Seu escritório inteiro em uma plataforma.
+          <h2 id="recursos-profissionais-title" className="mx-auto mt-3 max-w-4xl text-center text-3xl text-ink sm:text-4xl">
+            Do primeiro atendimento à gestão do escritório.
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-center text-muted">
-            Menos ferramentas dispersas. Mais organização para atender, acompanhar e trabalhar.
+          <p className="mx-auto mt-4 max-w-3xl text-center text-muted">
+            Conheça as ferramentas já disponíveis no portal profissional. Centralize o trabalho jurídico e a operação do escritório em um só ambiente, com funções de acordo com o perfil de acesso.
           </p>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              ["Atendimentos", "Organize novas solicitações e informações do cliente."],
-              ["Clientes e casos", "Concentre o histórico necessário para acompanhar cada atendimento."],
-              ["Documentos", "Mantenha os arquivos relacionados ao trabalho jurídico organizados."],
-              ["Rotina jurídica", "Tenha uma visão mais clara das atividades do escritório."],
-            ].map(([title, text]) => (
-              <div key={title} className="rounded-xl border border-line bg-surface p-5 shadow-sm">
-                <div className="mb-4 h-1 w-10 rounded-full bg-blue-600" />
-                <h3 className="font-sans font-semibold text-ink">{title}</h3>
-                <p className="mt-2 text-sm text-muted">{text}</p>
-              </div>
+              { categoria: "Atendimento", titulo: "Triagem e dossiês", texto: "Perguntas guiadas em cinco áreas, relato do cliente, dossiê preliminar e acompanhamento por protocolo." },
+              { categoria: "Atendimento", titulo: "Portal do advogado", texto: "Fila de atendimentos, casos atribuídos, histórico, análise de viabilidade e notas internas." },
+              { categoria: "Jurídico", titulo: "Contratos de honorários", texto: "Minutas vinculadas aos casos, assinatura interna do advogado e aceite eletrônico pelo cliente." },
+              { categoria: "Jurídico", titulo: "Petições e peças processuais", texto: "Modelos por área jurídica, edição das seções e exportação dos documentos em PDF ou Word." },
+              { categoria: "Jurídico", titulo: "Inteligência artificial de apoio", texto: "Resumo estruturado dos casos e auxílio na revisão de textos, sempre com conferência do profissional." },
+              { categoria: "Jurídico", titulo: "Prazos processuais", texto: "Registro de compromissos e prazos, acompanhamento dos vencimentos e marcação de conclusão." },
+              { categoria: "Pesquisa", titulo: "Consultas jurídicas", texto: "Acesso a fontes de jurisprudência, legislação e diários oficiais; DataJud quando configurado." },
+              { categoria: "Gestão", titulo: "Financeiro do escritório", texto: "Honorários, contas a pagar e receber, despesas e fluxo de caixa com lançamentos gerenciais manuais." },
+              { categoria: "Gestão", titulo: "Equipe, pessoal e folha", texto: "Gestão de integrantes e controle interno de funcionários, salários, férias e 13º, restrito a administradores." },
+            ].map((recurso) => (
+              <article key={recurso.titulo} className="flex h-full flex-col rounded-xl border border-line bg-surface p-6 shadow-sm transition-colors hover:border-blue-300">
+                <p className="text-xs font-bold uppercase tracking-wider text-gold-strong">{recurso.categoria}</p>
+                <h3 className="mt-3 font-sans text-lg font-semibold text-ink">{recurso.titulo}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted">{recurso.texto}</p>
+              </article>
+            ))}
+          </div>
+          <p className="mx-auto mt-6 max-w-4xl text-center text-xs text-muted">
+            IA, consultas externas e recursos administrativos dependem da configuração, do perfil e das permissões do usuário. Financeiro e folha são controles internos: não executam pagamentos nem transmitem obrigações oficiais.
+          </p>
+          <div className="mt-7 flex flex-wrap justify-center gap-3">
+            <ButtonLink href="/advogado/cadastro" variant="gold">Testar o escritório por 7 dias</ButtonLink>
+            <ButtonLink href="/advogado" variant="secondary">Ver planos profissionais</ButtonLink>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-line bg-paper" aria-labelledby="planos-home-title">
+        <div className="mx-auto grid max-w-6xl items-center gap-7 px-5 py-12 lg:grid-cols-[1.1fr_1.4fr]">
+          <div>
+            <p className="font-sans text-sm font-semibold uppercase tracking-[.08em] text-gold-strong">Assinatura profissional</p>
+            <h2 id="planos-home-title" className="mt-2 text-2xl text-ink sm:text-3xl">
+              Um escritório digital com preço acessível.
+            </h2>
+            <p className="mt-3 max-w-prose text-sm text-muted">
+              Escolha a modalidade de assinatura e conheça a plataforma durante 7 dias, sem cartão de crédito.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {subscriptionPlans.map((plano) => (
+              <Link
+                key={plano.id}
+                href={`/advogado/cadastro?plano=${plano.id}`}
+                className="rounded-xl border border-line bg-white p-5 no-underline transition-colors hover:border-navy"
+              >
+                <h3 className="font-sans text-sm font-semibold text-ink">Plano {plano.label}</h3>
+                <p className="mt-2 text-2xl font-bold text-navy">
+                  {formatPlanPrice(plano.amountCents)}
+                  <span className="ml-1 text-sm font-normal text-muted">/{plano.interval}</span>
+                </p>
+                <p className="mt-3 text-sm font-semibold text-navy">Conhecer este plano →</p>
+              </Link>
             ))}
           </div>
         </div>
@@ -205,12 +248,13 @@ export default async function HomePage() {
           <div className="rounded-2xl border border-line bg-white p-7 shadow-sm">
             <p className="font-sans text-sm font-semibold uppercase tracking-[.08em] text-blue-700">Para advogados</p>
             <h2 className="mt-2 text-2xl text-ink">Transforme a rotina do seu escritório.</h2>
-            <p className="mt-3 text-muted">Centralize o trabalho e tenha um ambiente profissional para organizar a operação jurídica. Advogados assinantes também contam com o Financeiro do escritório.</p>
+            <p className="mt-3 text-muted">Centralize o trabalho e tenha um ambiente profissional para organizar a operação jurídica. Advogados assinantes contam com ferramentas jurídicas e administrativas em uma única plataforma.</p>
             <ul className="mt-4 space-y-2 text-sm text-muted">
-              <li>Honorários e parcelas vinculados aos clientes e atendimentos.</li>
-              <li>Contas a receber e pagar, receitas, despesas, repasses e acertos.</li>
-              <li>Dashboard, fluxo de caixa e relatórios com registros e baixas manuais.</li>
-              <li>Gestão de pessoal: funcionários, folha mensal, férias, 13º salário e encargos, com registros internos.</li>
+              <li>Contratos de honorários e aceite eletrônico do cliente.</li>
+              <li>Modelos de petições, peças processuais e apoio de IA à redação.</li>
+              <li>Consultas jurídicas, prazos e acompanhamento de atendimentos.</li>
+              <li>Financeiro com lançamentos manuais, relatórios e fluxo de caixa.</li>
+              <li>Gestão de equipe, funcionários e folha gerencial de pagamento.</li>
             </ul>
             <div className="mt-6 flex flex-wrap gap-3">
               <ButtonLink href="/advogado/cadastro" variant="gold">Começar teste grátis</ButtonLink>
